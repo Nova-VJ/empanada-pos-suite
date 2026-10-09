@@ -29,12 +29,12 @@ export interface PaymentSplit {
   id: string;
   type: TenderType;
   amountBs: number; // Bs. value credited to the order
-  amountUsd?: number; // for usd_cash
+  amountUsd?: number | undefined; // for usd_cash
   igtfBs: number;
-  bank?: string;
-  phone?: string;
-  reference?: string;
-  lot?: string;
+  bank?: string | undefined;
+  phone?: string | undefined;
+  reference?: string | undefined;
+  lot?: string | undefined;
 }
 
 export type OrderType = "dine_in" | "takeout";
@@ -58,7 +58,7 @@ export interface Order {
   createdAt: number;
   cashier: string;
   type: OrderType;
-  table?: string;
+  table?: string | undefined;
   lines: OrderLine[];
   discountPct: number;
   rate: number;
@@ -71,7 +71,7 @@ export interface Order {
   payments: PaymentSplit[];
   kdsStatus: KdsStatus;
   kdsUpdatedAt: number;
-  zNumber?: number;
+  zNumber?: number | undefined;
 }
 
 export type KdsTicket = Order;
@@ -79,7 +79,7 @@ export type KdsTicket = Order;
 export interface ShiftAudit {
   id: string;
   kind: "X" | "Z";
-  zNumber?: number;
+  zNumber?: number | undefined;
   cashier: string;
   register: string;
   openedAt: number;

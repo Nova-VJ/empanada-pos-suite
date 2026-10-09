@@ -185,7 +185,7 @@ function QrPreview({ payload }: { payload: string }) {
     }
     return out;
   }, [payload]);
-  const finder = (x: number, y: number) => [[0, 0], [14, 0], [0, 14]].some(([fx, fy]) => x >= fx && x < fx + 7 && y >= fy && y < fy + 7);
+  const finder = (x: number, y: number) => ([[0, 0], [14, 0], [0, 14]] as const).some(([fx, fy]) => x >= fx && x < fx + 7 && y >= fy && y < fy + 7);
   return (
     <div className="rounded-lg bg-slate-100 p-1.5" title={payload}>
       <svg viewBox="0 0 21 21" className="h-full w-full">
