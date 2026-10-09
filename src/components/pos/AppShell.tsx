@@ -94,7 +94,7 @@ function BcvModal() {
   const [v, setV] = useState(pos.rate.toFixed(2));
   const save = () => {
     const n = parseFloat(v.replace(",", "."));
-    if (!(n > 0 && n < 100000)) return toast.error("Tasa inválida");
+    if (!(n > 0 && n < 100000)) { toast.error("Tasa inválida"); return; }
     pos.setRate(n);
     toast.success(`Tasa BCV actualizada: Bs. ${n.toFixed(2)}`);
     pos.setModal(null);

@@ -40,9 +40,9 @@ export function PaymentModal() {
   const qr = useMemo(() => `PAGOMOVIL|J501234567|0102|04121234567|${Math.max(0, remaining).toFixed(2)}|DR-EMP-${pos.nextOrder}`, [remaining, pos.nextOrder]);
 
   function add() {
-    if (amt <= 0) return toast.error("Ingresa un monto válido");
-    if ((tender === "pago_movil" || tender === "pos_card") && !/^\d{4,}$/.test(ref)) return toast.error("Referencia: mínimo 4 dígitos");
-    if (tender === "pago_movil" && !/^0\d{3}-?\d{7}$/.test(phone)) return toast.error("Teléfono inválido (0414-1234567)");
+    if (amt <= 0) { toast.error("Ingresa un monto válido"); return; }
+    if ((tender === "pago_movil" || tender === "pos_card") && !/^\d{4,}$/.test(ref)) { toast.error("Referencia: mínimo 4 dígitos"); return; }
+    if (tender === "pago_movil" && !/^0\d{3}-?\d{7}$/.test(phone)) { toast.error("Teléfono inválido (0414-1234567)"); return; }
     const p: PaymentSplit = {
       id: crypto.randomUUID(),
       type: tender,
