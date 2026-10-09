@@ -109,7 +109,7 @@ function Shifts() {
   const { shiftHistory } = usePos();
   const head = ["Tipo", "Nº Z", "Cajero", "Caja", "Apertura", "Cierre", "Tickets", "Declarado Bs.", "Sistema Bs.", "Diferencia", "Observaciones"];
   const rows = shiftHistory.map((s) => [s.kind, s.zNumber ?? "—", s.cashier, s.register, dt(s.openedAt), dt(s.closedAt), s.tickets, fmtBs(s.declaredTotalBs), fmtBs(s.expectedTotalBs), fmtBs(s.differenceBs), s.notes]);
-  const styled = rows.map((r, i) => r.map((c, j) => j === 9 ? <span className={Math.abs(shiftHistory[i].differenceBs) < 0.01 ? "text-emerald-400" : shiftHistory[i].differenceBs > 0 ? "text-amber-400" : "text-rose-400"}>{c}</span> : c));
+  const styled = rows.map((r, i) => r.map((c, j) => j === 9 ? <span className={Math.abs(shiftHistory[i]!.differenceBs) < 0.01 ? "text-emerald-400" : shiftHistory[i]!.differenceBs > 0 ? "text-amber-400" : "text-rose-400"}>{c}</span> : c));
   return <Panel title="Auditoría de Turnos y Cortes Z" onExport={() => downloadCsv("cortes-z", head, rows as string[][])}><Table head={head} rows={styled} empty="Sin cortes. Usa “🔒 Arqueo / Cierre X-Z” en la barra superior." /></Panel>;
 }
 
