@@ -19,6 +19,8 @@
  */
 
 @theme inline {
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -141,4 +143,13 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
   }
+}
+
+body { font-family: var(--font-sans); background: #020617; }
+.print-area { display: none; }
+@media print {
+  @page { margin: 0; size: auto; }
+  body * { visibility: hidden !important; }
+  .print-area, .print-area * { visibility: visible !important; }
+  .print-area { display: block !important; position: absolute; left: 0; top: 0; background: #fff; color: #000; }
 }
