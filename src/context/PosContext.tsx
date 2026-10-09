@@ -3,7 +3,7 @@ import { mockProducts } from "@/data/mockProducts";
 import { breakdown, r2 } from "@/lib/money";
 import { playBeep, playCashChime, playKitchenBell } from "@/services/sound";
 import { api } from "@/services/api";
-import type { CartItem, FiscalConfig, KdsStatus, Order, OrderType, PaymentSplit, Product, Shift, ShiftAudit } from "@/types/pos";
+import type { CartItem, CustomerInfo, FiscalConfig, KdsStatus, Order, OrderType, PaymentSplit, Product, Shift, ShiftAudit } from "@/types/pos";
 
 type ModalName = null | "payment" | "ticket" | "shift" | "printer" | "bcv";
 
@@ -54,7 +54,7 @@ interface Ctx extends PosState {
   setOrderType: (t: OrderType) => void;
   setDiscount: (d: number) => void;
   setRate: (r: number) => void;
-  checkout: (payments: PaymentSplit[], changeBs: number) => Order;
+  checkout: (payments: PaymentSplit[], changeBs: number, customer?: CustomerInfo) => Order;
   advanceKds: (id: number, s: KdsStatus) => void;
   setFiscal: (f: Partial<FiscalConfig>) => void;
   openOrders: Order[]; // current-shift orders (not Z-closed)
@@ -106,7 +106,7 @@ export function PosProvider({ children }: { children: ReactNode }) {
 
   const openOrders = useMemo(() => s.orders.filter((o) => o.zNumber === undefined), [s.orders]);
 
-  const checkout = useCallback((payments: PaymentSplit[], changeBs: number) => {
+  const checkout = useCallback((payments: PaymentSplit[], changeBs: number, customer?: CustomerInfo) => {
     const st = stateRef.current;
     const lines = st.cart.map((l) => {
       const p = st.products.find((x) => x.id === l.productId)!;
@@ -124,6 +124,7 @@ export function PosProvider({ children }: { children: ReactNode }) {
       cashier: st.shift.cashier,
       type: st.orderType,
       table: st.orderType === "dine_in" ? `Mesa ${((st.nextOrder % 8) + 1)}` : undefined,
+      customer,
       lines,
       discountPct: st.discount,
       rate: st.rate,

@@ -1,4 +1,12 @@
-export type Category = "Empanadas Clásicas" | "Empanadas Especiales" | "Combos" | "Bebidas" | "Salsas & Extras";
+export type Category = "Empanadas" | "Pastelitos" | "Horneados" | "Bebidas" | "Salsas & Extras" | "Combos";
+
+export interface CustomerInfo {
+  docType: "V" | "J" | "E" | "G";
+  rif: string;
+  name: string;
+  address?: string;
+  phone?: string;
+}
 
 export interface Product {
   id: string;
@@ -6,6 +14,7 @@ export interface Product {
   name: string;
   short: string; // flavor label for KDS summary
   emoji: string;
+  image?: string;
   category: Category;
   priceUsd: number;
   costUsd: number;
@@ -59,6 +68,7 @@ export interface Order {
   cashier: string;
   type: OrderType;
   table?: string | undefined;
+  customer?: CustomerInfo | undefined;
   lines: OrderLine[];
   discountPct: number;
   rate: number;

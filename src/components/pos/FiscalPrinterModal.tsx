@@ -47,47 +47,52 @@ export function FiscalPrinterModal() {
   }
 
   const Stat = ({ k, v, ok = true }: { k: string; v: string; ok?: boolean }) => (
-    <div className="rounded-lg border border-slate-800 bg-slate-950 p-2.5">
-      <div className="text-[10px] uppercase tracking-wider text-slate-500">{k}</div>
-      <div className={`font-mono text-sm font-semibold ${ok ? "text-emerald-400" : "text-rose-400"}`}>{v}</div>
+    <div className="rounded-xl border border-[#1b3530] bg-[#0c1816] p-3 shadow-sm">
+      <div className="text-[10px] font-semibold uppercase tracking-wider text-[#7e948a]">{k}</div>
+      <div className={`font-mono text-sm font-bold mt-0.5 ${ok ? "text-[#2ea88c]" : "text-[#c85a48]"}`}>{v}</div>
     </div>
   );
 
   return (
-    <Modal title="🖨️ Impresora Fiscal · Diagnóstico de Hardware" onClose={() => pos.setModal(null)}>
-      <button onClick={() => pos.setFiscal({ fiscalMode: !f.fiscalMode })} className={`w-full rounded-xl border px-4 py-3 text-left font-mono text-sm font-bold ${f.fiscalMode ? "border-emerald-500/50 bg-emerald-600/15 text-emerald-300" : "border-slate-700 bg-slate-950 text-slate-400"}`}>
-        {f.fiscalMode ? "● MODO FISCAL ACTIVO" : "○ TICKET VIRTUAL"}
-        <span className="ml-2 text-xs font-normal opacity-70">— toca para cambiar</span>
+    <Modal title="🖨️ Impresora Fiscal SENIAT · Diagnóstico Serial" onClose={() => pos.setModal(null)}>
+      <button
+        onClick={() => pos.setFiscal({ fiscalMode: !f.fiscalMode })}
+        className={`w-full rounded-2xl border px-5 py-3.5 text-left font-mono text-sm font-bold transition shadow-sm ${
+          f.fiscalMode ? "border-[#cca06a]/60 bg-[#cca06a]/15 text-[#e0ab77]" : "border-[#1b3530] bg-[#0c1816] text-[#8fa49b]"
+        }`}
+      >
+        {f.fiscalMode ? "● MODO FISCAL SENIAT ACTIVO (PUERTO SERIAL COM)" : "○ MODO TICKET VIRTUAL (SIMULACIÓN TÉRMICA)"}
+        <span className="ml-2 text-xs font-normal opacity-75">— clic para alternar</span>
       </button>
       <div className="mt-4 grid grid-cols-3 gap-3">
-        <label className="text-xs text-slate-400">Modelo
-          <select value={f.model} onChange={(e) => pos.setFiscal({ model: e.target.value })} className={`${inputCls} mt-1`}>
+        <label className="text-xs font-semibold text-[#a6b9b0]">Modelo
+          <select value={f.model} onChange={(e) => pos.setFiscal({ model: e.target.value })} className={`${inputCls} mt-1.5`}>
             {["The Factory HKA80", "Bixolon SRP-350", "Bematech MP-4200"].map((m) => <option key={m}>{m}</option>)}
           </select>
         </label>
-        <label className="text-xs text-slate-400">Puerto
-          <select value={f.port} onChange={(e) => pos.setFiscal({ port: e.target.value })} className={`${inputCls} mt-1`}>{PORTS.map((p) => <option key={p}>{p}</option>)}</select>
+        <label className="text-xs font-semibold text-[#a6b9b0]">Puerto
+          <select value={f.port} onChange={(e) => pos.setFiscal({ port: e.target.value })} className={`${inputCls} mt-1.5`}>{PORTS.map((p) => <option key={p}>{p}</option>)}</select>
         </label>
-        <label className="text-xs text-slate-400">Baudios
-          <select value={f.baud} onChange={(e) => pos.setFiscal({ baud: Number(e.target.value) as 9600 | 19200 })} className={`${inputCls} mt-1`}>
+        <label className="text-xs font-semibold text-[#a6b9b0]">Velocidad
+          <select value={f.baud} onChange={(e) => pos.setFiscal({ baud: Number(e.target.value) as 9600 | 19200 })} className={`${inputCls} mt-1.5`}>
             <option value={9600}>9600 bps</option><option value={19200}>19200 bps</option>
           </select>
         </label>
       </div>
-      <p className="mt-2 text-[11px] text-slate-500">Comunicación: Web Serial API (navigator.serial) con respaldo a puente local {BRIDGE}.</p>
-      <div className="mt-4 grid grid-cols-4 gap-2">
-        <Stat k="Papel" v={f.paperOk ? "OK" : "SIN PAPEL"} ok={f.paperOk} />
+      <p className="mt-2 text-[11px] text-[#7e948a]">Protocolo HKA/Bixolon vía Web Serial API (navigator.serial) con puente local en {BRIDGE}.</p>
+      <div className="mt-4 grid grid-cols-4 gap-2.5">
+        <Stat k="Papel Térmico" v={f.paperOk ? "OK" : "SIN PAPEL"} ok={f.paperOk} />
         <Stat k="Memoria Fiscal" v={f.memoryOk ? "OK" : "ERROR"} ok={f.memoryOk} />
         <Stat k="Últ. Factura" v={String(f.lastInvoice).padStart(8, "0")} />
         <Stat k="Últ. Reporte Z" v={`#${f.lastZ}`} />
       </div>
       <div className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-4">
         <button disabled={busy} className={btnGhost} onClick={async () => { await send("S1", "Test Status"); pos.setFiscal({ connected: true }); }}>⚡ Test Status (S1)</button>
-        <button disabled={busy} className={btnGhost} onClick={() => send("7", "Abrir Gaveta")}>🗄️ Abrir Gaveta (7)</button>
-        <button disabled={busy} className={btnGhost} onClick={() => send("I0X", "Reporte X")}>📄 Reporte X (I0X)</button>
-        <button disabled={busy} className={btnDanger} onClick={() => confirm("¿Emitir Reporte Z en la impresora fiscal?") && send("I0Z", "Reporte Z")}>🔒 Reporte Z (I0Z)</button>
+        <button disabled={busy} className={btnGhost} onClick={() => send("7", "Abrir Gaveta")}>🗄️ Abrir Gaveta</button>
+        <button disabled={busy} className={btnGhost} onClick={() => send("I0X", "Reporte X")}>📄 Reporte X</button>
+        <button disabled={busy} className={btnDanger} onClick={() => confirm("¿Emitir Reporte Z en la impresora fiscal física?") && send("I0Z", "Reporte Z")}>🔒 Cierre Z Fiscal</button>
       </div>
-      <pre className="mt-4 h-32 overflow-y-auto rounded-lg border border-slate-800 bg-slate-950 p-2 font-mono text-[11px] text-slate-400">{log.length ? log.join("\n") : "Consola serial lista…"}</pre>
+      <pre className="mt-4 h-32 overflow-y-auto rounded-2xl border border-[#1b3530] bg-[#071210] p-3 font-mono text-[11px] text-[#8fa49b]">{log.length ? log.join("\n") : "Consola serial lista…"}</pre>
     </Modal>
   );
 }
