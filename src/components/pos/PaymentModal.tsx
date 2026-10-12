@@ -278,9 +278,9 @@ function QrPreview({ payload }: { payload: string }) {
           if (finder(x, y)) {
             const lx = x % 14 % 7, ly = y % 14 % 7;
             const ring = lx === 0 || ly === 0 || lx === 6 || ly === 6 || (lx >= 2 && lx <= 4 && ly >= 2 && ly <= 4);
-            return ring ? <rect key={i} x={x} y={y} width={1} height={1} fill="#020617" /> : null;
+            return ring ? <rect key={i} x={x} y={y} width={1} height={1} fill="var(--ink)" /> : null;
           }
-          return on ? <rect key={i} x={x} y={y} width={1} height={1} fill="#020617" /> : null;
+          return on ? <rect key={i} x={x} y={y} width={1} height={1} fill="var(--ink)" /> : null;
         })}
       </svg>
     </div>

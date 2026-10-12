@@ -1,8 +1,12 @@
+import { Coffee, CupSoda, Utensils, Plus, Package } from "lucide-react";
+import empanadasPhoto from "@/assets/empanadas.jpg";
 import { Button } from "@/components/ui/button";
 import type { Product } from "@/types/pos";
 import { fmtBs, fmtUsd } from "@/lib/money";
 
 export function ProductCard({ product, rate, onAdd }: { product: Product; rate: number; onAdd: (p: Product, mod?: string) => void }) {
+  const isEmpanada = product.category.startsWith("Empanadas");
+  const Icon = product.name.includes("Café") ? Coffee : product.category === "Bebidas" ? CupSoda : product.category === "Combos" ? Package : Utensils;
   const low = product.stockBar < 25;
   return (
     <div
@@ -10,14 +14,14 @@ export function ProductCard({ product, rate, onAdd }: { product: Product; rate: 
       tabIndex={0}
       onClick={() => onAdd(product)}
       onKeyDown={(e) => e.key === "Enter" && onAdd(product)}
-      className="group flex cursor-pointer flex-col justify-between rounded-lg border border-border bg-card p-4 text-left transition-all duration-200 hover:-translate-y-1 hover:border-primary/60 hover:bg-secondary hover: hover: active:scale-[0.98]"
+      className="product-tile group flex cursor-pointer flex-col justify-between rounded-lg border border-border bg-card p-3.5 text-left transition-colors hover:border-primary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
     >
       <div>
         <div className="flex items-start justify-between gap-2">
-          <div className="flex h-11 w-11 items-center justify-center rounded-md border border-border bg-secondary text-2xl  group-hover:scale-110 group-hover:border-primary/50 transition-all">
-            {product.emoji}
+          <div className="flex h-12 w-16 items-center justify-center overflow-hidden rounded-md bg-secondary text-muted-foreground">
+            {isEmpanada ? <img src={empanadasPhoto} alt="Empanadas venezolanas" width={1024} height={768} loading="lazy" className="h-full w-full object-cover" /> : <Icon className="h-5 w-5" />}
           </div>
-          <span className={`rounded-full border px-2 py-0.5 font-mono text-[10px] font-semibold ${low ? "border-destructive/40 bg-destructive/15 text-destructive" : "border-border bg-background text-muted-foreground"}`}>
+          <span className={`rounded border px-1.5 py-0.5 text-xs font-semibold ${low ? "border-destructive/40 bg-destructive/15 text-destructive" : "border-border bg-background text-muted-foreground"}`}>
             {product.stockBar} disp
           </span>
         </div>
@@ -29,7 +33,7 @@ export function ProductCard({ product, rate, onAdd }: { product: Product; rate: 
       <div className="mt-3 pt-2.5 border-t border-border/80">
         <div className="flex items-baseline justify-between">
           <div className="font-mono text-base font-bold text-foreground">{fmtBs(product.priceUsd * rate)}</div>
-          <div className="font-mono text-xs font-semibold text-warning">{fmtUsd(product.priceUsd)}</div>
+          <div className="font-mono text-xs font-semibold text-currency">{fmtUsd(product.priceUsd)}</div>
         </div>
 
         {product.modifiers.length > 0 && (
@@ -41,9 +45,9 @@ export function ProductCard({ product, rate, onAdd }: { product: Product; rate: 
                   e.stopPropagation();
                   onAdd(product, m);
                 }}
-                className="rounded-full border border-border bg-background px-2 py-0.5 text-[10px] text-muted-foreground hover:border-primary/60 hover:text-warning transition-all"
+                className="rounded border border-border bg-background px-2 py-1 text-[11px] text-muted-foreground hover:border-primary/60 hover:text-currency transition-all"
               >
-                + {m}
+                <Plus className="h-3 w-3" />{m}
               </Button>
             ))}
           </div>

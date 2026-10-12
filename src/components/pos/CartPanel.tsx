@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Trash2, Receipt, CreditCard } from "lucide-react";
 import { usePos } from "@/context/PosContext";
 import { fmtBs, fmtUsd, IGTF } from "@/lib/money";
 
@@ -17,7 +17,7 @@ export function CartPanel() {
   const r = (bs: number) => bs / rate;
 
   return (
-    <aside className="flex h-full flex-col rounded-lg border border-border bg-card   overflow-hidden">
+    <aside className="cart-panel flex h-full flex-col overflow-hidden border-l border-border bg-card">
       <div className="flex items-center justify-between border-b border-border px-5 py-3.5 bg-secondary">
         <div className="flex items-center gap-2.5">
           <span key={pos.cartPulse} className="relative animate-in zoom-in-50 duration-300">
@@ -51,12 +51,12 @@ export function CartPanel() {
         </div>
       </div>
 
-      <div className="flex-1 space-y-2.5 overflow-y-auto p-3">
+      <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto p-3">
         {cart.length === 0 && (
           <div className="flex h-full flex-col items-center justify-center py-12 text-center text-muted-foreground">
-            <span className="text-4xl"></span>
+            <Receipt className="h-8 w-8 text-muted-foreground/60" />
             <p className="mt-3 text-sm font-medium text-muted-foreground">La comanda está vacía</p>
-            <p className="mt-1 text-xs text-muted-foreground">Toca cualquier empanada para sumar al pedido</p>
+            
           </div>
         )}
         {cart.map((l) => {
@@ -65,24 +65,24 @@ export function CartPanel() {
           return (
             <div key={l.lineId} className="rounded-lg border border-border bg-background p-3  transition hover:border-border">
               <div className="flex items-start gap-2.5">
-                <span className="text-xl">{p.emoji}</span>
+                
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-semibold text-foreground">{p.name}</div>
-                  {l.modifiers.length > 0 && <div className="text-[11px] font-medium text-warning">+ {l.modifiers.join(", ")}</div>}
-                  <div className="font-mono text-xs text-muted-foreground mt-0.5">{fmtBs(p.priceUsd * rate * l.qty)} · <span className="text-warning">{fmtUsd(p.priceUsd * l.qty)}</span></div>
+                  <div className="text-sm font-semibold text-foreground">{p.name}</div>
+                  {l.modifiers.length > 0 && <div className="text-[11px] font-medium text-currency">+ {l.modifiers.join(", ")}</div>}
+                  <div className="font-mono text-xs text-muted-foreground mt-0.5">{fmtBs(p.priceUsd * rate * l.qty)} · <span className="text-currency">{fmtUsd(p.priceUsd * l.qty)}</span></div>
                 </div>
                 <div className="flex items-center gap-1 bg-secondary p-1 rounded-md border border-border">
-                  <Button variant="plain" onClick={() => pos.setQty(l.lineId, l.qty - 1)} className="rounded-lg p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"><Minus className="h-3 w-3" /></Button>
+                  <Button variant="plain" aria-label="Reducir cantidad" title="Reducir cantidad" onClick={() => pos.setQty(l.lineId, l.qty - 1)} className="rounded-lg p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"><Minus className="h-3 w-3" /></Button>
                   <span className="w-5 text-center font-mono text-xs font-bold text-foreground">{l.qty}</span>
-                  <Button variant="plain" onClick={() => pos.setQty(l.lineId, l.qty + 1)} className="rounded-lg p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"><Plus className="h-3 w-3" /></Button>
-                  <Button variant="plain" onClick={() => pos.removeLine(l.lineId)} className="ml-1 rounded-lg p-1 text-muted-foreground hover:bg-destructive/20 hover:text-destructive"><Trash2 className="h-3 w-3" /></Button>
+                  <Button variant="plain" aria-label="Aumentar cantidad" title="Aumentar cantidad" onClick={() => pos.setQty(l.lineId, l.qty + 1)} className="rounded-lg p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"><Plus className="h-3 w-3" /></Button>
+                  <Button variant="plain" aria-label="Eliminar producto" title="Eliminar producto" onClick={() => pos.removeLine(l.lineId)} className="ml-1 rounded-lg p-1 text-muted-foreground hover:bg-destructive/20 hover:text-destructive"><Trash2 className="h-3 w-3" /></Button>
                 </div>
               </div>
               <input
                 value={l.note}
                 onChange={(e) => pos.setNote(l.lineId, e.target.value.slice(0, 60))}
                 placeholder="Nota cocina: Bien tostada, Sin salsa…"
-                className="mt-2.5 w-full rounded-md border border-border bg-card px-2.5 py-1 text-xs text-warning placeholder:text-muted-foreground outline-none transition focus:border-primary/50"
+                className="mt-2.5 w-full rounded-md border border-border bg-card px-2.5 py-1 text-xs text-currency placeholder:text-muted-foreground outline-none transition focus:border-primary/50"
               />
             </div>
           );
@@ -97,7 +97,7 @@ export function CartPanel() {
               onClick={() => pos.setDiscount(d.v)}
               className={`flex-1 rounded-md border py-1.5 text-xs font-semibold transition-all ${
                 pos.discount === d.v
-                  ? "border-primary bg-primary/20 text-warning"
+                  ? "border-primary bg-primary/20 text-currency"
                   : "border-border bg-background text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -108,24 +108,24 @@ export function CartPanel() {
         <dl className="space-y-1.5 font-mono text-xs">
           <Row label="Base Imponible (16% IVA)" bs={totals.baseBs} usd={r(totals.baseBs)} />
           <Row label="Débito Fiscal IVA (16%)" bs={totals.ivaBs} usd={r(totals.ivaBs)} />
-          <div className="flex justify-between text-warning/90 text-[11px]">
+          <div className="flex justify-between text-currency/90 text-[11px]">
             <dt>IGTF proyectado (3% divisas)</dt>
             <dd>máx. {fmtBs(totals.totalBs * IGTF)}</dd>
           </div>
         </dl>
-        <div className="mt-3.5 flex items-end justify-between rounded-lg border border-primary/30 bg-accent-soft px-4 py-3 ">
+        <div className="mt-4 flex items-end justify-between border-t border-border pt-4">
           <span className="text-xs font-bold uppercase tracking-normalr text-muted-foreground">Total a pagar</span>
           <div className="text-right">
             <div className="font-mono text-2xl font-black text-foreground">{fmtBs(totals.totalBs)}</div>
-            <div className="font-mono text-sm font-bold text-warning">{fmtUsd(totals.totalUsd)} USD</div>
+            <div className="font-mono text-sm font-bold text-currency">{fmtUsd(totals.totalUsd)} USD</div>
           </div>
         </div>
         <Button variant="plain"
           disabled={cart.length === 0}
           onClick={() => pos.setModal("payment")}
-          className="mt-3 w-full rounded-lg bg-gradient-to-r from-primary to-primary py-4 text-base font-extrabold tracking-normal text-background   transition hover:from-primary hover:to-primary active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
+          className="mt-4 flex h-12 w-full justify-between rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          COBRAR ORDEN <span className="opacity-70">(F10)</span>
+          <span className="flex items-center gap-2"><CreditCard className="h-4 w-4" />Cobrar orden</span><span className="text-xs opacity-70">F10</span>
         </Button>
       </div>
     </aside>
@@ -136,7 +136,7 @@ function Row({ label, bs, usd }: { label: string; bs: number; usd: number }) {
   return (
     <div className="flex justify-between text-muted-foreground">
       <dt>{label}</dt>
-      <dd className="text-foreground">{fmtBs(bs)} <span className="text-warning/90">/ {fmtUsd(usd)}</span></dd>
+      <dd className="text-foreground">{fmtBs(bs)} <span className="text-currency/90">/ {fmtUsd(usd)}</span></dd>
     </div>
   );
 }

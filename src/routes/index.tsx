@@ -29,8 +29,9 @@ function PosTerminal() {
   const list = pos.products.filter((p) => (cat === "Todos" || p.category === cat) && p.name.toLowerCase().includes(q.toLowerCase()));
 
   return (
-    <div className="grid h-[calc(100vh-65px)] grid-cols-1 gap-4 p-4 lg:grid-cols-[66fr_34fr] bg-background">
-      <section className="flex min-h-0 flex-col">
+    <div className="pos-terminal">
+      <section className="flex min-h-0 min-w-0 flex-col">
+        <div className="mb-4 flex items-baseline justify-between"><h1 className="text-xl font-semibold">Catálogo</h1><span className="text-xs text-muted-foreground">{list.length} productos</span></div>
         <div className="relative">
           <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
@@ -39,7 +40,7 @@ function PosTerminal() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter" && list[0]) { pos.addToCart(list[0]); setQ(""); } }}
-            placeholder="Buscar sabor, empanada o escanear código…  (/ o F5)"
+            placeholder="Buscar producto…"
             className="w-full rounded-lg border border-border bg-card py-3.5 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground outline-none transition focus:border-primary focus:ring-1 focus:ring-primary/30 "
           />
         </div>
@@ -48,7 +49,7 @@ function PosTerminal() {
             <Button variant="plain"
               key={c}
               onClick={() => setCat(c)}
-              className={`whitespace-nowrap rounded-md border px-4 py-2 text-xs font-semibold tracking-normal transition-all ${
+              className={`whitespace-nowrap rounded-md border px-3 py-2 text-xs font-semibold tracking-normal transition-all ${
                 cat === c
                   ? "border-primary bg-primary text-background  "
                   : "border-border bg-card text-muted-foreground hover:border-border hover:text-foreground hover:bg-secondary"
@@ -58,7 +59,7 @@ function PosTerminal() {
             </Button>
           ))}
         </div>
-        <div className="mt-3.5 grid flex-1 auto-rows-min grid-cols-2 gap-3 overflow-y-auto pb-4 sm:grid-cols-3 xl:grid-cols-4 pr-1">
+        <div className="catalog-grid mt-4 grid flex-1 auto-rows-min gap-3 overflow-y-auto pb-4 pr-1">
           {list.map((p) => <ProductCard key={p.id} product={p} rate={pos.rate} onAdd={pos.addToCart} />)}
           {list.length === 0 && (
             <div className="col-span-full py-20 text-center text-muted-foreground">

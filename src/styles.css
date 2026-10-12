@@ -1,126 +1,90 @@
-/* Google Fonts: Fraunces (Editorial Serif), Plus Jakarta Sans (Crisp UI Sans), JetBrains Mono (Financial) */
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import "tailwindcss" source(none);
-@source "../src";
 @import "tw-animate-css";
-
+@source "../src";
 @custom-variant dark (&:is(.dark *));
-
 @theme inline {
-  --font-serif: "Fraunces", Georgia, serif;
-  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-sans);
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 8px;
+  --radius-2xl: 8px;
+  --radius-3xl: 8px;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
+  --color-card-foreground: var(--foreground);
+  --color-popover: var(--card);
+  --color-popover-foreground: var(--foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--foreground);
+  --color-muted: var(--secondary);
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-foreground: var(--primary-foreground);
+  --color-accent-soft: var(--accent-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-currency: var(--currency);
   --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-foreground: var(--primary-foreground);
+  --color-destructive-soft: var(--destructive-soft);
   --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
+  --color-input: var(--border);
+  --color-ring: var(--primary);
+  --color-overlay: var(--overlay);
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
 }
-
-:root {
-  --radius: 0.75rem;
-  /* Premium Dark Spruce Pine Palette by default (The Fresh Pooch / Gourmet Artisan OS) */
-  --background: #0b1a18;
-  --foreground: #fbf8f1;
-  --card: #122623;
-  --card-foreground: #fbf8f1;
-  --popover: #122623;
-  --popover-foreground: #fbf8f1;
-  --primary: #cca06a;
-  --primary-foreground: #0b1a18;
-  --secondary: #18332e;
-  --secondary-foreground: #dbe5e0;
-  --muted: #18332e;
-  --muted-foreground: #9eb1a8;
-  --accent: #2ea88c;
-  --accent-foreground: #0b1a18;
-  --destructive: #c85a48;
-  --destructive-foreground: #ffffff;
-  --border: rgba(255, 255, 255, 0.08);
-  --input: rgba(255, 255, 255, 0.1);
-  --ring: #cca06a;
+:root, .dark {
+  --radius: 0.5rem;
+  --background: oklch(0.18 0.004 260);
+  --foreground: oklch(0.95 0.003 260);
+  --card: oklch(0.23 0.005 260);
+  --secondary: oklch(0.28 0.006 260);
+  --primary: oklch(0.75 0.14 164);
+  --primary-foreground: oklch(0.17 0.02 164);
+  --accent: var(--primary);
+  --accent-soft: oklch(0.28 0.032 164);
+  --muted-foreground: oklch(0.7 0.008 260);
+  --currency: oklch(0.79 0.08 230);
+  --warning: oklch(0.82 0.11 85);
+  --warning-soft: oklch(0.29 0.023 85);
+  --destructive: oklch(0.73 0.15 20);
+  --destructive-soft: oklch(0.28 0.025 20);
+  --border: oklch(0.34 0.006 260);
+  --overlay: oklch(0.12 0.004 260);
+  --paper: oklch(0.98 0 0);
+  --ink: oklch(0.2 0 0);
 }
-
-.dark {
-  --background: #0b1a18;
-  --foreground: #fbf8f1;
-  --card: #122623;
-  --card-foreground: #fbf8f1;
-  --popover: #122623;
-  --popover-foreground: #fbf8f1;
-  --primary: #cca06a;
-  --primary-foreground: #0b1a18;
-  --secondary: #18332e;
-  --secondary-foreground: #dbe5e0;
-  --muted: #18332e;
-  --muted-foreground: #9eb1a8;
-  --accent: #2ea88c;
-  --accent-foreground: #0b1a18;
-  --destructive: #c85a48;
-  --destructive-foreground: #ffffff;
-  --border: rgba(255, 255, 255, 0.08);
-  --input: rgba(255, 255, 255, 0.1);
-  --ring: #cca06a;
-}
-
 @layer base {
-  * {
-    border-color: var(--color-border);
-  }
-
-  body {
-    background-color: #0b1a18;
-    color: #fbf8f1;
-    font-family: var(--font-sans);
-    -webkit-font-smoothing: antialiased;
-  }
-
-  h1, h2, .font-serif {
-    font-family: var(--font-serif);
-  }
+  * { border-color: var(--border); letter-spacing: 0; }
+  body { background: var(--background); color: var(--foreground); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+  button, input, select, textarea { font: inherit; }
+  button { cursor: pointer; }
+  button:disabled { cursor: not-allowed; }
 }
-
-/* Custom Scrollbar for tactile cashier speed */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: #0b1a18;
-}
-::-webkit-scrollbar-thumb {
-  background: #1f3d37;
-  border-radius: 9999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #cca06a;
-}
-
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--background); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.pos-terminal { display: grid; grid-template-columns: minmax(0,1fr) 350px; gap: 24px; padding: 24px; height: calc(100dvh - 109px); min-height: 540px; }
+.catalog-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+.product-tile { min-height: 174px; }
+.cart-panel { min-height: 0; }
+.cart-panel dl > div { gap: 8px; }
+.cart-panel dd { text-align: right; white-space: nowrap; }
+@media (min-width: 1500px) { .catalog-grid { grid-template-columns: repeat(4,minmax(0,1fr)); } }
+@media (max-width: 1100px) { .pos-terminal { grid-template-columns: minmax(0,1fr) 320px; padding: 16px; gap: 16px; } .catalog-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media (max-width: 767px) { .pos-terminal { grid-template-columns: minmax(0,1fr); height: auto; min-height: 0; } .cart-panel { min-height: 480px; } .catalog-grid { overflow: visible; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 .print-area { display: none; }
 @media print {
-  @page { margin: 0; size: auto; }
-  body * { visibility: hidden !important; }
-  .print-area, .print-area * { visibility: visible !important; }
-  .print-area { display: block !important; position: absolute; left: 0; top: 0; background: #fff; color: #000; }
+ @page { margin: 0; size: auto; }
+ body * { visibility: hidden !important; }
+ .print-area, .print-area * { visibility: visible !important; }
+ .print-area { display: block !important; position: absolute; left: 0; top: 0; background: var(--paper); color: var(--ink); }
 }

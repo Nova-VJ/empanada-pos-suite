@@ -1,3 +1,4 @@
+import { Store, ShoppingBag, CookingPot, ChartNoAxesCombined, Printer, LockKeyhole, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
@@ -44,40 +45,35 @@ export function AppShell({ children }: { children: ReactNode }) {
   const elapsed = pos.hydrated ? Math.max(0, pos.now - pos.shift.openedAt) : 0;
   const h = Math.floor(elapsed / 3600000), m = Math.floor((elapsed % 3600000) / 60000);
 
-  const tab = (to: "/" | "/kds" | "/backoffice", label: string, badge?: number) => (
-    <Link to={to} className={`relative rounded-md px-3.5 py-2 text-xs font-semibold tracking-normal transition-all ${path === to ? "bg-primary text-background font-bold  " : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
-      {label}
-      {!!badge && <span className="ml-1.5 rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold text-foreground">{badge}</span>}
-    </Link>
+  const tab = (to: "/" | "/kds" | "/backoffice", label: string, Icon: typeof Store, key: string, badge?: number) => (
+    <Button asChild variant="plain" className={`h-10 gap-2 rounded-none border-b-2 px-3 text-sm ${path === to ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+      <Link to={to}><Icon className="h-4 w-4" />{label}<span className="hidden text-xs text-muted-foreground sm:inline">{key}</span>{!!badge && <span className="rounded bg-accent-soft px-1.5 text-xs text-accent">{badge}</span>}</Link>
+    </Button>
   );
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
-      <header className="no-print sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-md">
-        <div className="flex flex-wrap items-center gap-2.5 px-5 py-3">
-          <div className="mr-3 flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-br from-primary to-primary text-xl  text-background">
-              </div>
-            <div className="leading-tight">
-              <div className="font-sans text-base font-bold tracking-normal text-foreground">Dr. Empanadas C.A.</div>
-              <div className="font-mono text-[10px] text-muted-foreground">RIF: J-50123456-7 · Sucursal Chacao</div>
-            </div>
+      <header className="no-print sticky top-0 z-40 bg-background">
+        <div className="flex h-16 items-center justify-between gap-4 border-b border-border px-4 sm:px-6">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground"><Store className="h-5 w-5" /></div>
+            <div><div className="text-base font-semibold">Dr. Empanadas <span className="text-muted-foreground">C.A.</span></div><div className="text-[11px] text-muted-foreground">J-50123456-7 · Chacao, Caracas</div></div>
           </div>
-          <Button variant="plain" onClick={() => pos.setModal("bcv")} className="rounded-full border border-primary/40 bg-primary/10 px-3 py-1 font-mono text-xs font-semibold text-warning hover:bg-primary/20 transition">
-            BCV: Bs. {pos.rate.toFixed(2)} / USD
-          </Button>
-          <div className="flex items-center gap-1.5 rounded-full border border-border bg-card py-1 pl-3.5 pr-1 text-xs">
-            <span className="text-muted-foreground">{pos.shift.cashier} <span className="text-muted-foreground">({pos.shift.register})</span> · <span className="font-mono text-foreground">{h}h {String(m).padStart(2, "0")}m</span></span>
-            <Button variant="plain" onClick={() => pos.setModal("shift")} className="rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-semibold text-foreground hover:bg-destructive hover:text-foreground transition">Arqueo X-Z</Button>
+          <div className="flex items-center gap-3 text-xs">
+            <span className="hidden text-muted-foreground sm:inline">{pos.shift.cashier} · {pos.shift.register} <span className="ml-2 font-mono">{h}h {String(m).padStart(2,"0")}m</span></span>
+            <Button variant="plain" title="Arqueo X-Z" onClick={() => pos.setModal("shift")} className="gap-2 rounded-md border border-border px-3 py-2 text-xs text-muted-foreground hover:bg-secondary"><LockKeyhole /> <span className="hidden sm:inline">Arqueo X-Z</span></Button>
           </div>
-          <Button variant="plain" onClick={() => pos.setModal("printer")} className="rounded-full border border-border bg-card px-3 py-1 font-mono text-xs text-muted-foreground hover:border-accent/50 transition">
-            Fiscal HKA: {pos.fiscal.port} <span className={pos.fiscal.connected ? "text-accent" : "text-destructive"}>●</span>
-          </Button>
-          <nav className="ml-auto flex items-center gap-1.5 bg-background p-1 rounded-lg border border-border">
-            {tab("/", "Terminal TPV (F1)")}
-            {tab("/kds", "Cocina KDS (F2)", pending)}
-            {tab("/backoffice", "Backoffice Gerencial (F3)")}
+        </div>
+        <div className="flex h-11 items-center justify-between gap-3 border-b border-border px-4 sm:px-6">
+          <nav className="flex h-full items-center gap-1" aria-label="Módulos">
+            {tab("/", "Terminal", ShoppingBag, "F1")}
+            {tab("/kds", "Cocina", CookingPot, "F2", pending)}
+            {tab("/backoffice", "Gerencia", ChartNoAxesCombined, "F3")}
           </nav>
+          <div className="flex items-center gap-4">
+            <Button variant="plain" onClick={() => pos.setModal("bcv")} className="gap-1 text-xs text-currency" title="Editar tasa BCV">BCV <span className="font-mono">{pos.rate.toFixed(2)}</span><span className="hidden text-muted-foreground lg:inline"> Bs./USD</span><ArrowUpRight className="h-3 w-3" /></Button>
+            <Button variant="plain" onClick={() => pos.setModal("printer")} title="Diagnóstico impresora fiscal" className="hidden gap-2 text-xs text-muted-foreground sm:flex"><Printer /><span className="hidden lg:inline">Fiscal HKA · </span>{pos.fiscal.port}<span className={`h-1.5 w-1.5 rounded-full ${pos.fiscal.connected ? "bg-accent" : "bg-destructive"}`} /></Button>
+          </div>
         </div>
       </header>
       <main className="flex-1 bg-background">{children}</main>
