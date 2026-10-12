@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import { usePos } from "@/context/PosContext";
@@ -7,6 +8,8 @@ import { TENDER_LABEL } from "@/components/pos/PaymentModal";
 export const Route = createFileRoute("/backoffice")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Backoffice Gerencial · Dr. Empanadas" },
       { name: "description", content: "KPIs, inventario, cortes Z y Libro de Ventas SENIAT de Dr. Empanadas C.A." },
       { property: "og:title", content: "Backoffice Gerencial · Dr. Empanadas" },
@@ -21,20 +24,20 @@ const TABS = ["KPI Dashboard", "Inventario & Fichas de Costo", "Auditoría de Tu
 function Backoffice() {
   const [tab, setTab] = useState<(typeof TABS)[number]>(TABS[0]);
   return (
-    <div className="p-6 bg-[#0b1a18] min-h-[calc(100vh-65px)]">
-      <div className="mb-6 flex gap-2 overflow-x-auto border-b border-[#1b3530] pb-2">
+    <div className="p-6 bg-background min-h-[calc(100vh-65px)]">
+      <div className="mb-6 flex gap-2 overflow-x-auto border-b border-border pb-2">
         {TABS.map((t) => (
-          <button
+          <Button variant="plain"
             key={t}
             onClick={() => setTab(t)}
-            className={`whitespace-nowrap rounded-xl px-4 py-2 text-xs font-semibold tracking-wide transition-all ${
+            className={`whitespace-nowrap rounded-md px-4 py-2 text-xs font-semibold tracking-normal transition-all ${
               tab === t
-                ? "bg-[#cca06a] text-[#0b1a18] font-bold shadow-sm shadow-[#cca06a]/20"
-                : "text-[#a6b9b0] hover:text-[#fbf8f1] hover:bg-[#142c27]"
+                ? "bg-primary text-background font-bold  "
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
             }`}
           >
             {t}
-          </button>
+          </Button>
         ))}
       </div>
       {tab === TABS[0] && <Kpis />}
@@ -47,17 +50,17 @@ function Backoffice() {
 
 function Panel({ title, onExport, children }: { title: string; onExport: () => void; children: ReactNode }) {
   return (
-    <section className="rounded-3xl border border-[#1b3530] bg-[#122623] shadow-xl shadow-black/20 overflow-hidden">
-      <div className="flex items-center justify-between border-b border-[#1b3530] px-6 py-4 bg-[#142b27]">
-        <h3 className="font-serif text-base font-bold text-[#fbf8f1]">{title}</h3>
-        <button
+    <section className="overflow-hidden border-y border-border">
+      <div className="flex items-center justify-between border-b border-border px-6 py-4 bg-secondary">
+        <h3 className="font-sans text-base font-bold text-foreground">{title}</h3>
+        <Button variant="plain"
           onClick={onExport}
-          className="rounded-xl border border-[#cca06a]/40 bg-[#cca06a]/15 px-3.5 py-1.5 text-xs font-bold text-[#e0ab77] hover:bg-[#cca06a]/25 transition"
+          className="rounded-md border border-primary/40 bg-primary/15 px-3.5 py-1.5 text-xs font-bold text-currency hover:bg-primary/25 transition"
         >
-          📥 Exportar a Excel (CSV)
-        </button>
+          Exportar a Excel (CSV)
+        </Button>
       </div>
-      <div className="overflow-x-auto bg-[#0e1f1c]">{children}</div>
+      <div className="overflow-x-auto bg-background">{children}</div>
     </section>
   );
 }
@@ -65,13 +68,13 @@ function Panel({ title, onExport, children }: { title: string; onExport: () => v
 function Table({ head, rows, empty }: { head: string[]; rows: ReactNode[][]; empty: string }) {
   return (
     <table className="w-full text-xs">
-      <thead className="bg-[#0c1816] text-left text-[#7e948a] border-b border-[#1b3530]">
-        <tr>{head.map((h) => <th key={h} className="whitespace-nowrap px-4 py-3 font-semibold uppercase tracking-wider text-[11px]">{h}</th>)}</tr>
+      <thead className="bg-background text-left text-muted-foreground border-b border-border">
+        <tr>{head.map((h) => <th key={h} className="whitespace-nowrap px-4 py-3 font-semibold uppercase tracking-normal text-[11px]">{h}</th>)}</tr>
       </thead>
-      <tbody className="font-mono text-[#dbe5e0]">
-        {rows.length === 0 && <tr><td colSpan={head.length} className="py-14 text-center font-sans text-[#7e948a]">{empty}</td></tr>}
+      <tbody className="font-mono text-foreground">
+        {rows.length === 0 && <tr><td colSpan={head.length} className="py-14 text-center font-sans text-muted-foreground">{empty}</td></tr>}
         {rows.map((r, i) => (
-          <tr key={i} className="border-t border-[#1b3530]/60 hover:bg-[#152e28] transition-colors">
+          <tr key={i} className="border-t border-border/60 hover:bg-secondary transition-colors">
             {r.map((c, j) => <td key={j} className="whitespace-nowrap px-4 py-3">{c}</td>)}
           </tr>
         ))}
@@ -105,10 +108,10 @@ function Kpis() {
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {cards.map(([k, v, s]) => (
-          <div key={k} className="rounded-3xl border border-[#1b3530] bg-[#122623] p-5 shadow-sm transition hover:border-[#2b544a]">
-            <div className="text-xs font-semibold uppercase tracking-wider text-[#8fa49b]">{k}</div>
-            <div className="mt-2 font-mono text-3xl font-black text-[#fbf8f1]">{v}</div>
-            <div className="mt-1 font-mono text-xs font-semibold text-[#e0ab77]">{s}</div>
+          <div key={k} className="rounded-lg border border-border bg-card p-5  transition hover:border-border">
+            <div className="text-xs font-semibold uppercase tracking-normal text-muted-foreground">{k}</div>
+            <div className="mt-2 font-mono text-3xl font-black text-foreground">{v}</div>
+            <div className="mt-1 font-mono text-xs font-semibold text-currency">{s}</div>
           </div>
         ))}
       </div>
@@ -130,8 +133,8 @@ function Shifts() {
   const { shiftHistory } = usePos();
   const head = ["Tipo", "Nº Z", "Cajero", "Caja", "Apertura", "Cierre", "Tickets", "Declarado Bs.", "Sistema Bs.", "Diferencia", "Observaciones"];
   const rows = shiftHistory.map((s) => [s.kind, s.zNumber ?? "—", s.cashier, s.register, dt(s.openedAt), dt(s.closedAt), s.tickets, fmtBs(s.declaredTotalBs), fmtBs(s.expectedTotalBs), fmtBs(s.differenceBs), s.notes]);
-  const styled = rows.map((r, i) => r.map((c, j) => j === 9 ? <span className={Math.abs(shiftHistory[i]!.differenceBs) < 0.01 ? "text-[#2ea88c]" : shiftHistory[i]!.differenceBs > 0 ? "text-[#e0ab77]" : "text-[#c85a48]"}>{c}</span> : c));
-  return <Panel title="Auditoría de Turnos y Cortes Z" onExport={() => downloadCsv("cortes-z", head, rows as string[][])}><Table head={head} rows={styled} empty="Sin cortes registrados. Usa “🔒 Arqueo X-Z” en la barra superior." /></Panel>;
+  const styled = rows.map((r, i) => r.map((c, j) => j === 9 ? <span className={Math.abs((shiftHistory[i]?.differenceBs ?? 0)) < 0.01 ? "text-accent" : (shiftHistory[i]?.differenceBs ?? 0) > 0 ? "text-currency" : "text-destructive"}>{c}</span> : c));
+  return <Panel title="Auditoría de Turnos y Cortes Z" onExport={() => downloadCsv("cortes-z", head, rows as string[][])}><Table head={head} rows={styled} empty="Sin cortes registrados. Usa “Arqueo X-Z” en la barra superior." /></Panel>;
 }
 
 function SalesBook() {
@@ -154,8 +157,8 @@ function SalesBook() {
     <Panel title="Libro de Ventas Fiscal · SENIAT Providencia 0071" onExport={() => downloadCsv("libro-ventas-seniat", head, [...rows, ["TOTALES", "", "", "", "", fmtBs(sum("baseBs") + sum("ivaBs")), fmtBs(sum("baseBs")), fmtBs(sum("ivaBs")), fmtBs(sum("igtfBs")), ""]] as string[][])}>
       <Table head={head} rows={rows} empty="Sin facturas emitidas en el período." />
       {orders.length > 0 && (
-        <div className="flex justify-end gap-6 border-t border-slate-800 px-4 py-3 font-mono text-xs text-slate-300">
-          <span>BI: {fmtBs(sum("baseBs"))}</span><span>IVA: {fmtBs(sum("ivaBs"))}</span><span className="text-amber-400">IGTF: {fmtBs(sum("igtfBs"))}</span>
+        <div className="flex justify-end gap-6 border-t border-border px-4 py-3 font-mono text-xs text-muted-foreground">
+          <span>BI: {fmtBs(sum("baseBs"))}</span><span>IVA: {fmtBs(sum("ivaBs"))}</span><span className="text-currency">IGTF: {fmtBs(sum("igtfBs"))}</span>
         </div>
       )}
     </Panel>

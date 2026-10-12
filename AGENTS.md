@@ -8,3 +8,6 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+## Presentation
+- POS screens use shared semantic tokens and the shared Button component to keep terminal, kitchen, and fiscal views visually consistent.

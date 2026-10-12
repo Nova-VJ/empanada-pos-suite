@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { usePos } from "@/context/PosContext";
 import { fmtBs, fmtUsd } from "@/lib/money";
@@ -30,50 +31,50 @@ export function ThermalTicketModal() {
   return (
     <>
       <Modal
-        title={`🧾 Ticket #${order.id}`}
+        title={`Ticket #${order.id}`}
         onClose={close}
         footer={
           <div className="flex justify-end gap-2">
-            <button className={btnGhost} onClick={() => print(["invoice", "kitchen"])}>📑 Imprimir Ambos</button>
-            <button className={btnPrimary} onClick={() => print([tab])}>🖨️ Imprimir Ticket</button>
+            <Button variant="plain" className={btnGhost} onClick={() => print(["invoice", "kitchen"])}>Imprimir Ambos</Button>
+            <Button variant="plain" className={btnPrimary} onClick={() => print([tab])}>Imprimir Ticket</Button>
           </div>
         }
       >
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-          <div className="flex gap-1.5 p-1 rounded-2xl border border-[#1b3530] bg-[#0c1816]">
-            <button
+          <div className="flex gap-1.5 p-1 rounded-lg border border-border bg-background">
+            <Button variant="plain"
               onClick={() => setTab("invoice")}
-              className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition ${
-                tab === "invoice" ? "bg-[#183831] border border-[#cca06a]/50 text-[#fbf8f1]" : "text-[#8fa49b] hover:text-[#fbf8f1]"
+              className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+                tab === "invoice" ? "bg-accent-soft border border-primary/50 text-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              🧾 Factura Fiscal SENIAT
-            </button>
-            <button
+              Factura Fiscal SENIAT
+            </Button>
+            <Button variant="plain"
               onClick={() => setTab("kitchen")}
-              className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition ${
-                tab === "kitchen" ? "bg-[#183831] border border-[#cca06a]/50 text-[#fbf8f1]" : "text-[#8fa49b] hover:text-[#fbf8f1]"
+              className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+                tab === "kitchen" ? "bg-accent-soft border border-primary/50 text-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              🍳 Comanda Freidoras
-            </button>
+              Comanda Freidoras
+            </Button>
           </div>
           <div className="flex gap-1">
             {([80, 58] as const).map((v) => (
-              <button
+              <Button variant="plain"
                 key={v}
                 onClick={() => setWidth(v)}
-                className={`rounded-xl border px-2.5 py-1 font-mono text-xs font-bold transition ${
-                  width === v ? "border-[#cca06a] bg-[#cca06a]/20 text-[#e0ab77]" : "border-[#1b3530] bg-[#0c1816] text-[#8fa49b]"
+                className={`rounded-md border px-2.5 py-1 font-mono text-xs font-bold transition ${
+                  width === v ? "border-primary bg-primary/20 text-warning" : "border-border bg-background text-muted-foreground"
                 }`}
               >
                 {v}mm
-              </button>
+              </Button>
             ))}
           </div>
         </div>
-        <div className="flex justify-center rounded-2xl bg-[#071210] p-6 shadow-inner border border-[#142825]">
-          <div className={`${w} bg-[#faf7f0] text-[#1a2926] p-4 shadow-2xl border border-[#e2d9c4] rounded-sm`}>
+        <div className="flex justify-center rounded-lg bg-overlay p-6  border border-secondary">
+          <div className={`${w} bg-paper text-ink p-4  border border-paper rounded-sm`}>
             {tab === "invoice" ? <Invoice o={order} /> : <Kitchen o={order} />}
           </div>
         </div>
@@ -91,7 +92,7 @@ export function ThermalTicketModal() {
   );
 }
 
-const Hr = () => <div className="my-1.5 border-t border-dashed border-black" />;
+const Hr = () => <div className="my-1.5 border-t border-dashed border-ink" />;
 const L = ({ a, b, bold }: { a: string; b: string; bold?: boolean }) => (
   <div className={`flex justify-between gap-2 ${bold ? "font-bold" : ""}`}><span>{a}</span><span className="text-right">{b}</span></div>
 );
@@ -156,7 +157,7 @@ function Kitchen({ o }: { o: Order }) {
   const items = o.lines.filter((l) => l.kitchen);
   return (
     <div className="font-mono text-[13px] leading-snug">
-      <div className="bg-black py-1 text-center text-lg font-black text-white">COMANDA #{o.id}</div>
+      <div className="bg-ink py-1 text-center text-lg font-black text-foreground">COMANDA #{o.id}</div>
       <div className="mt-1 flex justify-between font-bold">
         <span>{o.type === "takeout" ? "PARA LLEVAR" : o.table?.toUpperCase()}</span>
         <span>{new Date(o.createdAt).toLocaleTimeString("es-VE", { hour: "2-digit", minute: "2-digit" })}</span>

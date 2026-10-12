@@ -1,3 +1,5 @@
+import { Store, ShoppingBag, CookingPot, ChartNoAxesCombined, Printer, LockKeyhole, ArrowUpRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -43,44 +45,38 @@ export function AppShell({ children }: { children: ReactNode }) {
   const elapsed = pos.hydrated ? Math.max(0, pos.now - pos.shift.openedAt) : 0;
   const h = Math.floor(elapsed / 3600000), m = Math.floor((elapsed % 3600000) / 60000);
 
-  const tab = (to: "/" | "/kds" | "/backoffice", label: string, badge?: number) => (
-    <Link to={to} className={`relative rounded-xl px-3.5 py-2 text-xs font-semibold tracking-wide transition-all ${path === to ? "bg-[#cca06a] text-[#0b1a18] font-bold shadow-sm shadow-[#cca06a]/20" : "text-[#a6b9b0] hover:bg-[#142c27] hover:text-[#fbf8f1]"}`}>
-      {label}
-      {!!badge && <span className="ml-1.5 rounded-full bg-[#c85a48] px-1.5 py-0.5 text-[10px] font-bold text-white">{badge}</span>}
-    </Link>
+  const tab = (to: "/" | "/kds" | "/backoffice", label: string, Icon: typeof Store, key: string, badge?: number) => (
+    <Button asChild variant="plain" className={`h-10 gap-1.5 rounded-none border-b-2 px-2 text-xs sm:px-3 sm:text-sm ${path === to ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+      <Link to={to}><Icon className="h-4 w-4" />{label}<span className="hidden text-xs text-muted-foreground sm:inline">{key}</span>{!!badge && <span className="rounded bg-accent-soft px-1.5 text-xs text-accent">{badge}</span>}</Link>
+    </Button>
   );
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#0b1a18] text-[#fbf8f1]">
-      <header className="no-print sticky top-0 z-40 border-b border-[#1b3530] bg-[#0e1f1c]/95 backdrop-blur-md">
-        <div className="flex flex-wrap items-center gap-2.5 px-5 py-3">
-          <div className="mr-3 flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#dca872] to-[#b37e46] text-xl shadow-sm text-[#0b1a18]">
-              🥟
-            </div>
-            <div className="leading-tight">
-              <div className="font-serif text-base font-bold tracking-tight text-[#fbf8f1]">Dr. Empanadas C.A.</div>
-              <div className="font-mono text-[10px] text-[#8fa49b]">RIF: J-50123456-7 · Sucursal Chacao</div>
-            </div>
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
+      <header className="no-print sticky top-0 z-40 bg-background">
+        <div className="flex h-16 items-center justify-between gap-4 border-b border-border px-4 sm:px-6">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground"><Store className="h-5 w-5" /></div>
+            <div><div className="text-base font-semibold">Dr. Empanadas <span className="text-muted-foreground">C.A.</span></div><div className="text-[11px] text-muted-foreground">J-50123456-7 · Chacao, Caracas</div></div>
           </div>
-          <button onClick={() => pos.setModal("bcv")} className="rounded-full border border-[#cca06a]/40 bg-[#cca06a]/10 px-3 py-1 font-mono text-xs font-semibold text-[#e0ab77] hover:bg-[#cca06a]/20 transition">
-            BCV: Bs. {pos.rate.toFixed(2)} / USD
-          </button>
-          <div className="flex items-center gap-1.5 rounded-full border border-[#1b3530] bg-[#122623] py-1 pl-3.5 pr-1 text-xs">
-            <span className="text-[#a6b9b0]">{pos.shift.cashier} <span className="text-[#6d847b]">({pos.shift.register})</span> · <span className="font-mono text-[#dbe5e0]">{h}h {String(m).padStart(2, "0")}m</span></span>
-            <button onClick={() => pos.setModal("shift")} className="rounded-full bg-[#18332e] px-2.5 py-0.5 text-[11px] font-semibold text-[#dbe5e0] hover:bg-[#c85a48] hover:text-white transition">🔒 Arqueo X-Z</button>
+          <div className="flex items-center gap-3 text-xs">
+            <span className="hidden text-muted-foreground sm:inline">{pos.shift.cashier} · {pos.shift.register} <span className="ml-2 font-mono">{h}h {String(m).padStart(2,"0")}m</span></span>
+            <Button variant="plain" title="Arqueo X-Z" onClick={() => pos.setModal("shift")} className="gap-2 rounded-md border border-border px-3 py-2 text-xs text-muted-foreground hover:bg-secondary"><LockKeyhole /> <span className="hidden sm:inline">Arqueo X-Z</span></Button>
           </div>
-          <button onClick={() => pos.setModal("printer")} className="rounded-full border border-[#1b3530] bg-[#122623] px-3 py-1 font-mono text-xs text-[#a6b9b0] hover:border-[#2ea88c]/50 transition">
-            🖨️ Fiscal HKA: {pos.fiscal.port} <span className={pos.fiscal.connected ? "text-[#2ea88c]" : "text-[#c85a48]"}>●</span>
-          </button>
-          <nav className="ml-auto flex items-center gap-1.5 bg-[#0a1614] p-1 rounded-2xl border border-[#1b3530]">
-            {tab("/", "🛒 Terminal TPV (F1)")}
-            {tab("/kds", "🍳 Cocina KDS (F2)", pending)}
-            {tab("/backoffice", "📊 Backoffice Gerencial (F3)")}
+        </div>
+        <div className="flex h-11 items-center justify-between gap-3 border-b border-border px-4 sm:px-6">
+          <nav className="flex h-full items-center gap-1" aria-label="Módulos">
+            {tab("/", "Terminal", ShoppingBag, "F1")}
+            {tab("/kds", "Cocina", CookingPot, "F2", pending)}
+            {tab("/backoffice", "Gerencia", ChartNoAxesCombined, "F3")}
           </nav>
+          <div className="flex items-center gap-4">
+            <Button variant="plain" onClick={() => pos.setModal("bcv")} className="gap-1 text-xs text-currency" title="Editar tasa BCV"><span className="hidden sm:inline">BCV</span><span className="font-mono">{pos.rate.toFixed(2)}</span><span className="hidden text-muted-foreground lg:inline"> Bs./USD</span><ArrowUpRight className="h-3 w-3" /></Button>
+            <Button variant="plain" onClick={() => pos.setModal("printer")} title="Diagnóstico impresora fiscal" className="hidden gap-2 text-xs text-muted-foreground sm:flex"><Printer /><span className="hidden lg:inline">Fiscal HKA · </span>{pos.fiscal.port}<span className={`h-1.5 w-1.5 rounded-full ${pos.fiscal.connected ? "bg-accent" : "bg-destructive"}`} /></Button>
+          </div>
         </div>
       </header>
-      <main className="flex-1 bg-[#0b1a18]">{children}</main>
+      <main className="flex-1 bg-background">{children}</main>
 
       {pos.modal === "payment" && <PaymentModal />}
       {pos.modal === "ticket" && <ThermalTicketModal />}
@@ -102,11 +98,11 @@ function BcvModal() {
     pos.setModal(null);
   };
   return (
-    <Modal title="Tasa Oficial BCV · Ajuste Manual" width="max-w-sm" onClose={() => pos.setModal(null)} footer={<div className="flex justify-end"><button className={btnPrimary} onClick={save}>Aplicar tasa</button></div>}>
-      <label className="text-xs text-slate-400">Bs. por 1 USD
+    <Modal title="Tasa Oficial BCV · Ajuste Manual" width="max-w-sm" onClose={() => pos.setModal(null)} footer={<div className="flex justify-end"><Button variant="plain" className={btnPrimary} onClick={save}>Aplicar tasa</Button></div>}>
+      <label className="text-xs text-muted-foreground">Bs. por 1 USD
         <input autoFocus inputMode="decimal" value={v} onChange={(e) => setV(e.target.value)} onKeyDown={(e) => e.key === "Enter" && save()} className={`${inputCls} mt-1 font-mono text-xl`} />
       </label>
-      <p className="mt-2 text-xs text-slate-500">Recalcula todos los precios, totales e IGTF en Bs. de la aplicación.</p>
+      <p className="mt-2 text-xs text-muted-foreground">Recalcula todos los precios, totales e IGTF en Bs. de la aplicación.</p>
     </Modal>
   );
 }
