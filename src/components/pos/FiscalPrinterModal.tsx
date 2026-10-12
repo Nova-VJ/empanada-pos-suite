@@ -49,7 +49,7 @@ export function FiscalPrinterModal() {
 
   const Stat = ({ k, v, ok = true }: { k: string; v: string; ok?: boolean }) => (
     <div className="rounded-md border border-border bg-background p-3 ">
-      <div className="text-[10px] font-semibold uppercase tracking-normalr text-muted-foreground">{k}</div>
+      <div className="text-[10px] font-semibold uppercase tracking-normal text-muted-foreground">{k}</div>
       <div className={`font-mono text-sm font-bold mt-0.5 ${ok ? "text-accent" : "text-destructive"}`}>{v}</div>
     </div>
   );

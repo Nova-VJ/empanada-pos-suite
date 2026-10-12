@@ -114,7 +114,7 @@ export function CartPanel() {
           </div>
         </dl>
         <div className="mt-4 flex items-end justify-between border-t border-border pt-4">
-          <span className="text-xs font-bold uppercase tracking-normalr text-muted-foreground">Total a pagar</span>
+          <span className="text-xs font-bold uppercase tracking-normal text-muted-foreground">Total a pagar</span>
           <div className="text-right">
             <div className="font-mono text-2xl font-black text-foreground">{fmtBs(totals.totalBs)}</div>
             <div className="font-mono text-sm font-bold text-currency">{fmtUsd(totals.totalUsd)} USD</div>

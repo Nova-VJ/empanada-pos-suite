@@ -69,7 +69,7 @@ function Table({ head, rows, empty }: { head: string[]; rows: ReactNode[][]; emp
   return (
     <table className="w-full text-xs">
       <thead className="bg-background text-left text-muted-foreground border-b border-border">
-        <tr>{head.map((h) => <th key={h} className="whitespace-nowrap px-4 py-3 font-semibold uppercase tracking-normalr text-[11px]">{h}</th>)}</tr>
+        <tr>{head.map((h) => <th key={h} className="whitespace-nowrap px-4 py-3 font-semibold uppercase tracking-normal text-[11px]">{h}</th>)}</tr>
       </thead>
       <tbody className="font-mono text-foreground">
         {rows.length === 0 && <tr><td colSpan={head.length} className="py-14 text-center font-sans text-muted-foreground">{empty}</td></tr>}
@@ -109,7 +109,7 @@ function Kpis() {
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {cards.map(([k, v, s]) => (
           <div key={k} className="rounded-lg border border-border bg-card p-5  transition hover:border-border">
-            <div className="text-xs font-semibold uppercase tracking-normalr text-muted-foreground">{k}</div>
+            <div className="text-xs font-semibold uppercase tracking-normal text-muted-foreground">{k}</div>
             <div className="mt-2 font-mono text-3xl font-black text-foreground">{v}</div>
             <div className="mt-1 font-mono text-xs font-semibold text-warning">{s}</div>
           </div>

@@ -46,7 +46,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const h = Math.floor(elapsed / 3600000), m = Math.floor((elapsed % 3600000) / 60000);
 
   const tab = (to: "/" | "/kds" | "/backoffice", label: string, Icon: typeof Store, key: string, badge?: number) => (
-    <Button asChild variant="plain" className={`h-10 gap-2 rounded-none border-b-2 px-3 text-sm ${path === to ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+    <Button asChild variant="plain" className={`h-10 gap-1.5 rounded-none border-b-2 px-2 text-xs sm:px-3 sm:text-sm ${path === to ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
       <Link to={to}><Icon className="h-4 w-4" />{label}<span className="hidden text-xs text-muted-foreground sm:inline">{key}</span>{!!badge && <span className="rounded bg-accent-soft px-1.5 text-xs text-accent">{badge}</span>}</Link>
     </Button>
   );
@@ -71,7 +71,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             {tab("/backoffice", "Gerencia", ChartNoAxesCombined, "F3")}
           </nav>
           <div className="flex items-center gap-4">
-            <Button variant="plain" onClick={() => pos.setModal("bcv")} className="gap-1 text-xs text-currency" title="Editar tasa BCV">BCV <span className="font-mono">{pos.rate.toFixed(2)}</span><span className="hidden text-muted-foreground lg:inline"> Bs./USD</span><ArrowUpRight className="h-3 w-3" /></Button>
+            <Button variant="plain" onClick={() => pos.setModal("bcv")} className="gap-1 text-xs text-currency" title="Editar tasa BCV"><span className="hidden sm:inline">BCV</span><span className="font-mono">{pos.rate.toFixed(2)}</span><span className="hidden text-muted-foreground lg:inline"> Bs./USD</span><ArrowUpRight className="h-3 w-3" /></Button>
             <Button variant="plain" onClick={() => pos.setModal("printer")} title="Diagnóstico impresora fiscal" className="hidden gap-2 text-xs text-muted-foreground sm:flex"><Printer /><span className="hidden lg:inline">Fiscal HKA · </span>{pos.fiscal.port}<span className={`h-1.5 w-1.5 rounded-full ${pos.fiscal.connected ? "bg-accent" : "bg-destructive"}`} /></Button>
           </div>
         </div>

@@ -96,12 +96,12 @@ export function PaymentModal() {
     >
       <div className="grid grid-cols-2 gap-3.5">
         <div className="rounded-lg border border-border bg-background p-4 ">
-          <div className="text-xs font-semibold uppercase tracking-normalr text-muted-foreground">Total Orden {igtfTotal > 0 && "(+IGTF 3%)"}</div>
+          <div className="text-xs font-semibold uppercase tracking-normal text-muted-foreground">Total Orden {igtfTotal > 0 && "(+IGTF 3%)"}</div>
           <div className="font-mono text-2xl font-black text-foreground mt-0.5">{fmtBs(dueBs)}</div>
           <div className="font-mono text-xs font-bold text-warning">{fmtUsd(dueBs / rate)} USD</div>
         </div>
         <div className={`rounded-lg border p-4  transition-colors ${remaining > 0 ? "border-warning/30 bg-warning-soft/50" : "border-accent/40 bg-accent-soft"}`}>
-          <div className="text-xs font-semibold uppercase tracking-normalr text-muted-foreground">{remaining > 0 ? "Saldo Restante" : "Vuelto / Cambio"}</div>
+          <div className="text-xs font-semibold uppercase tracking-normal text-muted-foreground">{remaining > 0 ? "Saldo Restante" : "Vuelto / Cambio"}</div>
           <div className={`font-mono text-2xl font-black mt-0.5 ${remaining > 0 ? "text-warning" : "text-accent"}`}>{fmtBs(remaining > 0 ? remaining : change)}</div>
           <div className="font-mono text-xs font-semibold text-muted-foreground">{fmtUsd((remaining > 0 ? remaining : change) / rate)} USD</div>
         </div>
@@ -234,7 +234,7 @@ export function PaymentModal() {
         </div>
 
         <div className="rounded-lg border border-border bg-background p-3.5 ">
-          <div className="mb-2 text-xs font-bold uppercase tracking-normalr text-muted-foreground">Pagos registrados</div>
+          <div className="mb-2 text-xs font-bold uppercase tracking-normal text-muted-foreground">Pagos registrados</div>
           {payments.length === 0 && <p className="py-8 text-center text-xs text-muted-foreground">Sin abonos registrados</p>}
           <ul className="space-y-2">
             {payments.map((p) => (
