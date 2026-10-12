@@ -37,7 +37,7 @@ function Kds() {
 
   return (
     <div className="p-5 bg-background min-h-[calc(100vh-65px)]">
-      <div className="mb-5 flex flex-wrap items-center gap-2.5 rounded-lg border border-border bg-card p-4 ">
+      <div className="mb-5 flex flex-wrap items-center gap-2.5 border-b border-border pb-4">
         <span className="mr-2 font-sans text-sm font-bold text-foreground">Pendiente en freidora:</span>
         {flavors.size === 0 && <span className="text-xs text-muted-foreground">Freidoras al día (sin pedidos pendientes)</span>}
         {[...flavors.entries()].sort((a, b) => b[1] - a[1]).map(([k, v]) => (

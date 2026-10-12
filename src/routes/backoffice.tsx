@@ -50,12 +50,12 @@ function Backoffice() {
 
 function Panel({ title, onExport, children }: { title: string; onExport: () => void; children: ReactNode }) {
   return (
-    <section className="rounded-lg border border-border bg-card   overflow-hidden">
+    <section className="overflow-hidden border-y border-border">
       <div className="flex items-center justify-between border-b border-border px-6 py-4 bg-secondary">
         <h3 className="font-sans text-base font-bold text-foreground">{title}</h3>
         <Button variant="plain"
           onClick={onExport}
-          className="rounded-md border border-primary/40 bg-primary/15 px-3.5 py-1.5 text-xs font-bold text-warning hover:bg-primary/25 transition"
+          className="rounded-md border border-primary/40 bg-primary/15 px-3.5 py-1.5 text-xs font-bold text-currency hover:bg-primary/25 transition"
         >
           Exportar a Excel (CSV)
         </Button>
@@ -111,7 +111,7 @@ function Kpis() {
           <div key={k} className="rounded-lg border border-border bg-card p-5  transition hover:border-border">
             <div className="text-xs font-semibold uppercase tracking-normal text-muted-foreground">{k}</div>
             <div className="mt-2 font-mono text-3xl font-black text-foreground">{v}</div>
-            <div className="mt-1 font-mono text-xs font-semibold text-warning">{s}</div>
+            <div className="mt-1 font-mono text-xs font-semibold text-currency">{s}</div>
           </div>
         ))}
       </div>
@@ -133,7 +133,7 @@ function Shifts() {
   const { shiftHistory } = usePos();
   const head = ["Tipo", "Nº Z", "Cajero", "Caja", "Apertura", "Cierre", "Tickets", "Declarado Bs.", "Sistema Bs.", "Diferencia", "Observaciones"];
   const rows = shiftHistory.map((s) => [s.kind, s.zNumber ?? "—", s.cashier, s.register, dt(s.openedAt), dt(s.closedAt), s.tickets, fmtBs(s.declaredTotalBs), fmtBs(s.expectedTotalBs), fmtBs(s.differenceBs), s.notes]);
-  const styled = rows.map((r, i) => r.map((c, j) => j === 9 ? <span className={Math.abs((shiftHistory[i]?.differenceBs ?? 0)) < 0.01 ? "text-accent" : (shiftHistory[i]?.differenceBs ?? 0) > 0 ? "text-warning" : "text-destructive"}>{c}</span> : c));
+  const styled = rows.map((r, i) => r.map((c, j) => j === 9 ? <span className={Math.abs((shiftHistory[i]?.differenceBs ?? 0)) < 0.01 ? "text-accent" : (shiftHistory[i]?.differenceBs ?? 0) > 0 ? "text-currency" : "text-destructive"}>{c}</span> : c));
   return <Panel title="Auditoría de Turnos y Cortes Z" onExport={() => downloadCsv("cortes-z", head, rows as string[][])}><Table head={head} rows={styled} empty="Sin cortes registrados. Usa “Arqueo X-Z” en la barra superior." /></Panel>;
 }
 
@@ -158,7 +158,7 @@ function SalesBook() {
       <Table head={head} rows={rows} empty="Sin facturas emitidas en el período." />
       {orders.length > 0 && (
         <div className="flex justify-end gap-6 border-t border-border px-4 py-3 font-mono text-xs text-muted-foreground">
-          <span>BI: {fmtBs(sum("baseBs"))}</span><span>IVA: {fmtBs(sum("ivaBs"))}</span><span className="text-warning">IGTF: {fmtBs(sum("igtfBs"))}</span>
+          <span>BI: {fmtBs(sum("baseBs"))}</span><span>IVA: {fmtBs(sum("ivaBs"))}</span><span className="text-currency">IGTF: {fmtBs(sum("igtfBs"))}</span>
         </div>
       )}
     </Panel>

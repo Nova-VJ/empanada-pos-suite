@@ -88,3 +88,5 @@
  .print-area, .print-area * { visibility: visible !important; }
  .print-area { display: block !important; position: absolute; left: 0; top: 0; background: var(--paper); color: var(--ink); }
 }
+
+@media (max-width: 480px) { header nav { gap: 0; } header nav a { padding-inline: 6px; gap: 5px; font-size: 12px; } header > div:nth-child(2) { padding-inline: 12px; gap: 6px; } }

@@ -1,3 +1,3 @@
 # Visual refinement
-- [ ] Refine shared palette, typography, controls, and terminal layout without changing accounting or workflows.
-- [ ] Verify terminal, checkout, kitchen, and backoffice presentation.
+- [x] Refine shared palette, typography, controls, and terminal layout without changing accounting or workflows.
+- [x] Verify terminal, checkout, kitchen, and backoffice presentation.
