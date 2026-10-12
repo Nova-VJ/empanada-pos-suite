@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
 import { usePos } from "@/context/PosContext";
 import { fmtBs, fmtUsd, IGTF } from "@/lib/money";
@@ -16,116 +17,116 @@ export function CartPanel() {
   const r = (bs: number) => bs / rate;
 
   return (
-    <aside className="flex h-full flex-col rounded-3xl border border-[#1b3530] bg-[#122623] shadow-2xl shadow-black/40 overflow-hidden">
-      <div className="flex items-center justify-between border-b border-[#1b3530] px-5 py-3.5 bg-[#142b27]">
+    <aside className="flex h-full flex-col rounded-lg border border-border bg-card   overflow-hidden">
+      <div className="flex items-center justify-between border-b border-border px-5 py-3.5 bg-secondary">
         <div className="flex items-center gap-2.5">
           <span key={pos.cartPulse} className="relative animate-in zoom-in-50 duration-300">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#1b3a34] text-[#cca06a]">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-secondary text-primary">
               <ShoppingCart className="h-4 w-4" />
             </div>
-            {count > 0 && <span className="absolute -right-1.5 -top-1.5 rounded-full bg-[#cca06a] text-[#0b1a18] px-1.5 text-[10px] font-bold shadow-sm">{count}</span>}
+            {count > 0 && <span className="absolute -right-1.5 -top-1.5 rounded-full bg-primary text-background px-1.5 text-[10px] font-bold ">{count}</span>}
           </span>
-          <span className="font-serif text-base font-bold text-[#fbf8f1]">Ticket #{pos.nextOrder}</span>
+          <span className="font-sans text-base font-bold text-foreground">Ticket #{pos.nextOrder}</span>
         </div>
         {cart.length > 0 && (
-          <button onClick={pos.clearCart} className="text-xs text-[#a6b9b0] hover:text-[#c85a48] transition">Vaciar</button>
+          <Button variant="plain" onClick={pos.clearCart} className="text-xs text-muted-foreground hover:text-destructive transition">Vaciar</Button>
         )}
       </div>
 
-      <div className="p-3 bg-[#0e1f1c] border-b border-[#1b3530]">
-        <div className="grid grid-cols-2 gap-1.5 p-1 rounded-2xl border border-[#1b3530] bg-[#0a1614]">
-          {([["dine_in", "🍽️ Comer Aquí"], ["takeout", "🥡 Para Llevar"]] as const).map(([v, l]) => (
-            <button
+      <div className="p-3 bg-background border-b border-border">
+        <div className="grid grid-cols-2 gap-1.5 p-1 rounded-lg border border-border bg-background">
+          {([["dine_in", "Comer Aquí"], ["takeout", "Para Llevar"]] as const).map(([v, l]) => (
+            <Button variant="plain"
               key={v}
               onClick={() => pos.setOrderType(v)}
-              className={`rounded-xl py-2 text-xs font-semibold tracking-wide transition-all ${
+              className={`rounded-md py-2 text-xs font-semibold tracking-normal transition-all ${
                 pos.orderType === v
-                  ? "bg-[#183831] border border-[#2ea88c]/40 text-[#fbf8f1] shadow-sm"
-                  : "text-[#8ea399] hover:text-[#fbf8f1]"
+                  ? "bg-accent-soft border border-accent/40 text-foreground "
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               {l}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
 
       <div className="flex-1 space-y-2.5 overflow-y-auto p-3">
         {cart.length === 0 && (
-          <div className="flex h-full flex-col items-center justify-center py-12 text-center text-[#7e948a]">
-            <span className="text-4xl">🥟</span>
-            <p className="mt-3 text-sm font-medium text-[#a6b9b0]">La comanda está vacía</p>
-            <p className="mt-1 text-xs text-[#6d847b]">Toca cualquier empanada para sumar al pedido</p>
+          <div className="flex h-full flex-col items-center justify-center py-12 text-center text-muted-foreground">
+            <span className="text-4xl"></span>
+            <p className="mt-3 text-sm font-medium text-muted-foreground">La comanda está vacía</p>
+            <p className="mt-1 text-xs text-muted-foreground">Toca cualquier empanada para sumar al pedido</p>
           </div>
         )}
         {cart.map((l) => {
           const p = products.find((x) => x.id === l.productId);
           if (!p) return null;
           return (
-            <div key={l.lineId} className="rounded-2xl border border-[#1b3530] bg-[#0c1816] p-3 shadow-sm transition hover:border-[#274f45]">
+            <div key={l.lineId} className="rounded-lg border border-border bg-background p-3  transition hover:border-border">
               <div className="flex items-start gap-2.5">
                 <span className="text-xl">{p.emoji}</span>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-semibold text-[#fbf8f1]">{p.name}</div>
-                  {l.modifiers.length > 0 && <div className="text-[11px] font-medium text-[#e0ab77]">+ {l.modifiers.join(", ")}</div>}
-                  <div className="font-mono text-xs text-[#8fa49b] mt-0.5">{fmtBs(p.priceUsd * rate * l.qty)} · <span className="text-[#e0ab77]">{fmtUsd(p.priceUsd * l.qty)}</span></div>
+                  <div className="truncate text-sm font-semibold text-foreground">{p.name}</div>
+                  {l.modifiers.length > 0 && <div className="text-[11px] font-medium text-warning">+ {l.modifiers.join(", ")}</div>}
+                  <div className="font-mono text-xs text-muted-foreground mt-0.5">{fmtBs(p.priceUsd * rate * l.qty)} · <span className="text-warning">{fmtUsd(p.priceUsd * l.qty)}</span></div>
                 </div>
-                <div className="flex items-center gap-1 bg-[#142b27] p-1 rounded-xl border border-[#1b3530]">
-                  <button onClick={() => pos.setQty(l.lineId, l.qty - 1)} className="rounded-lg p-1 text-[#a6b9b0] hover:bg-[#1a3832] hover:text-white"><Minus className="h-3 w-3" /></button>
-                  <span className="w-5 text-center font-mono text-xs font-bold text-[#fbf8f1]">{l.qty}</span>
-                  <button onClick={() => pos.setQty(l.lineId, l.qty + 1)} className="rounded-lg p-1 text-[#a6b9b0] hover:bg-[#1a3832] hover:text-white"><Plus className="h-3 w-3" /></button>
-                  <button onClick={() => pos.removeLine(l.lineId)} className="ml-1 rounded-lg p-1 text-[#8fa49b] hover:bg-[#c85a48]/20 hover:text-[#e07a68]"><Trash2 className="h-3 w-3" /></button>
+                <div className="flex items-center gap-1 bg-secondary p-1 rounded-md border border-border">
+                  <Button variant="plain" onClick={() => pos.setQty(l.lineId, l.qty - 1)} className="rounded-lg p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"><Minus className="h-3 w-3" /></Button>
+                  <span className="w-5 text-center font-mono text-xs font-bold text-foreground">{l.qty}</span>
+                  <Button variant="plain" onClick={() => pos.setQty(l.lineId, l.qty + 1)} className="rounded-lg p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"><Plus className="h-3 w-3" /></Button>
+                  <Button variant="plain" onClick={() => pos.removeLine(l.lineId)} className="ml-1 rounded-lg p-1 text-muted-foreground hover:bg-destructive/20 hover:text-destructive"><Trash2 className="h-3 w-3" /></Button>
                 </div>
               </div>
               <input
                 value={l.note}
                 onChange={(e) => pos.setNote(l.lineId, e.target.value.slice(0, 60))}
                 placeholder="Nota cocina: Bien tostada, Sin salsa…"
-                className="mt-2.5 w-full rounded-xl border border-[#1b3530] bg-[#122623] px-2.5 py-1 text-xs text-[#e0ab77] placeholder:text-[#5a6f66] outline-none transition focus:border-[#cca06a]/50"
+                className="mt-2.5 w-full rounded-md border border-border bg-card px-2.5 py-1 text-xs text-warning placeholder:text-muted-foreground outline-none transition focus:border-primary/50"
               />
             </div>
           );
         })}
       </div>
 
-      <div className="border-t border-[#1b3530] bg-[#0e1f1c] p-4">
+      <div className="border-t border-border bg-background p-4">
         <div className="mb-3 flex gap-1.5">
           {DISCOUNTS.map((d) => (
-            <button
+            <Button variant="plain"
               key={d.label}
               onClick={() => pos.setDiscount(d.v)}
-              className={`flex-1 rounded-xl border py-1.5 text-xs font-semibold transition-all ${
+              className={`flex-1 rounded-md border py-1.5 text-xs font-semibold transition-all ${
                 pos.discount === d.v
-                  ? "border-[#cca06a] bg-[#cca06a]/20 text-[#e0ab77]"
-                  : "border-[#1b3530] bg-[#0c1816] text-[#8fa49b] hover:text-[#fbf8f1]"
+                  ? "border-primary bg-primary/20 text-warning"
+                  : "border-border bg-background text-muted-foreground hover:text-foreground"
               }`}
             >
               {d.label}
-            </button>
+            </Button>
           ))}
         </div>
         <dl className="space-y-1.5 font-mono text-xs">
           <Row label="Base Imponible (16% IVA)" bs={totals.baseBs} usd={r(totals.baseBs)} />
           <Row label="Débito Fiscal IVA (16%)" bs={totals.ivaBs} usd={r(totals.ivaBs)} />
-          <div className="flex justify-between text-[#e0ab77]/90 text-[11px]">
+          <div className="flex justify-between text-warning/90 text-[11px]">
             <dt>IGTF proyectado (3% divisas)</dt>
             <dd>máx. {fmtBs(totals.totalBs * IGTF)}</dd>
           </div>
         </dl>
-        <div className="mt-3.5 flex items-end justify-between rounded-2xl border border-[#cca06a]/30 bg-[#16332c] px-4 py-3 shadow-inner">
-          <span className="text-xs font-bold uppercase tracking-wider text-[#a6b9b0]">Total a pagar</span>
+        <div className="mt-3.5 flex items-end justify-between rounded-lg border border-primary/30 bg-accent-soft px-4 py-3 ">
+          <span className="text-xs font-bold uppercase tracking-normalr text-muted-foreground">Total a pagar</span>
           <div className="text-right">
-            <div className="font-mono text-2xl font-black text-[#fbf8f1]">{fmtBs(totals.totalBs)}</div>
-            <div className="font-mono text-sm font-bold text-[#e0ab77]">{fmtUsd(totals.totalUsd)} USD</div>
+            <div className="font-mono text-2xl font-black text-foreground">{fmtBs(totals.totalBs)}</div>
+            <div className="font-mono text-sm font-bold text-warning">{fmtUsd(totals.totalUsd)} USD</div>
           </div>
         </div>
-        <button
+        <Button variant="plain"
           disabled={cart.length === 0}
           onClick={() => pos.setModal("payment")}
-          className="mt-3 w-full rounded-2xl bg-gradient-to-r from-[#cca06a] to-[#dca872] py-4 text-base font-extrabold tracking-wide text-[#0b1a18] shadow-lg shadow-[#cca06a]/25 transition hover:from-[#dca872] hover:to-[#ebd09b] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
+          className="mt-3 w-full rounded-lg bg-gradient-to-r from-primary to-primary py-4 text-base font-extrabold tracking-normal text-background   transition hover:from-primary hover:to-primary active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
         >
-          💳 COBRAR ORDEN <span className="opacity-70">(F10)</span>
-        </button>
+          COBRAR ORDEN <span className="opacity-70">(F10)</span>
+        </Button>
       </div>
     </aside>
   );
@@ -133,9 +134,9 @@ export function CartPanel() {
 
 function Row({ label, bs, usd }: { label: string; bs: number; usd: number }) {
   return (
-    <div className="flex justify-between text-[#8fa49b]">
+    <div className="flex justify-between text-muted-foreground">
       <dt>{label}</dt>
-      <dd className="text-[#fbf8f1]">{fmtBs(bs)} <span className="text-[#e0ab77]/90">/ {fmtUsd(usd)}</span></dd>
+      <dd className="text-foreground">{fmtBs(bs)} <span className="text-warning/90">/ {fmtUsd(usd)}</span></dd>
     </div>
   );
 }

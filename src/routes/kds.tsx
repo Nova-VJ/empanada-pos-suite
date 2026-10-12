@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { usePos } from "@/context/PosContext";
@@ -7,6 +8,8 @@ import { playKitchenBell } from "@/services/sound";
 export const Route = createFileRoute("/kds")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Cocina KDS · Dr. Empanadas" },
       { name: "description", content: "Pantalla de cocina y freidoras con temporizadores en vivo." },
       { property: "og:title", content: "Cocina KDS · Dr. Empanadas" },
@@ -33,26 +36,26 @@ function Kds() {
   for (const o of pendingFryer) for (const l of o.lines) if (l.kitchen) flavors.set(l.short, (flavors.get(l.short) ?? 0) + l.qty);
 
   return (
-    <div className="p-5 bg-[#0b1a18] min-h-[calc(100vh-65px)]">
-      <div className="mb-5 flex flex-wrap items-center gap-2.5 rounded-3xl border border-[#1b3530] bg-[#122623] p-4 shadow-md">
-        <span className="mr-2 font-serif text-sm font-bold text-[#fbf8f1]">🍳 Pendiente en freidora:</span>
-        {flavors.size === 0 && <span className="text-xs text-[#7e948a]">Freidoras al día (sin pedidos pendientes)</span>}
+    <div className="p-5 bg-background min-h-[calc(100vh-65px)]">
+      <div className="mb-5 flex flex-wrap items-center gap-2.5 rounded-lg border border-border bg-card p-4 ">
+        <span className="mr-2 font-sans text-sm font-bold text-foreground">Pendiente en freidora:</span>
+        {flavors.size === 0 && <span className="text-xs text-muted-foreground">Freidoras al día (sin pedidos pendientes)</span>}
         {[...flavors.entries()].sort((a, b) => b[1] - a[1]).map(([k, v]) => (
-          <span key={k} className="rounded-xl border border-[#cca06a]/40 bg-[#cca06a]/15 px-3.5 py-1.5 font-mono text-xs font-bold text-[#e0ab77] shadow-sm">
+          <span key={k} className="rounded-md border border-primary/40 bg-primary/15 px-3.5 py-1.5 font-mono text-xs font-bold text-warning ">
             {v} {k}
           </span>
         ))}
-        <button
+        <Button variant="plain"
           onClick={() => setShowDone((s) => !s)}
-          className="ml-auto rounded-xl border border-[#1b3530] bg-[#0c1816] px-3.5 py-2 text-xs font-semibold text-[#a6b9b0] hover:border-[#cca06a]/50 hover:text-[#fbf8f1] transition"
+          className="ml-auto rounded-md border border-border bg-background px-3.5 py-2 text-xs font-semibold text-muted-foreground hover:border-primary/50 hover:text-foreground transition"
         >
           {showDone ? "← Ver activos" : "Ver despachados"}
-        </button>
+        </Button>
       </div>
       {active.length === 0 ? (
-        <div className="py-28 text-center text-[#7e948a]">
-          <div className="text-5xl">✨</div>
-          <p className="mt-3 text-base font-serif text-[#a6b9b0]">{showDone ? "Aún no hay órdenes despachadas" : "Cocina al día — esperando órdenes de caja"}</p>
+        <div className="py-28 text-center text-muted-foreground">
+          <div className="text-5xl"></div>
+          <p className="mt-3 text-base font-sans text-muted-foreground">{showDone ? "Aún no hay órdenes despachadas" : "Cocina al día — esperando órdenes de caja"}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4.5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
