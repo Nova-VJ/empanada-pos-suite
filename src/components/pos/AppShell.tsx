@@ -31,6 +31,7 @@ import { PaymentModal } from "./PaymentModal";
 import { ThermalTicketModal } from "./ThermalTicketModal";
 import { CashShiftModal } from "./CashShiftModal";
 import { FiscalPrinterModal } from "./FiscalPrinterModal";
+import { RateSelectorModal } from "./RateSelectorModal";
 
 export const SEARCH_ID = "pos-catalog-search";
 
@@ -302,14 +303,15 @@ export function AppShell({ children }: { children: ReactNode }) {
 
           {/* Right Operational & Fiscal Pills */}
           <div className="ml-auto flex flex-wrap items-center gap-2">
-            {/* BCV Rate Pill */}
+            {/* Live Multi-source Rate Pill */}
             <button
               onClick={() => pos.setModal("bcv")}
               className="inline-flex items-center gap-1.5 rounded-lg border border-primary/25 bg-primary/10 px-2.5 py-1 font-mono text-xs font-semibold text-primary hover:bg-primary/15 transition"
-              title="Ajustar Tasa Oficial BCV"
+              title="Monitor Multi-Divisas (monitordolarve, monitordedivisa, BCV, Binance)"
             >
-              <RefreshCw className="h-3 w-3" />
-              <span>BCV: Bs. {pos.rate.toFixed(2)} / $</span>
+              <RefreshCw className={`h-3 w-3 ${pos.isRefreshingRates ? "animate-spin" : ""}`} />
+              <span>{pos.ratesData.variants[pos.ratesData.activeVariantId]?.name?.replace(/\s*\(.*?\)/, "") ?? "BCV"}: Bs. {pos.rate.toFixed(2)} / $</span>
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" title="Actualización automática activa" />
             </button>
 
             {/* Cashier & Arqueo X-Z Pill */}
@@ -406,51 +408,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {pos.modal === "ticket" && <ThermalTicketModal />}
       {pos.modal === "shift" && <CashShiftModal />}
       {pos.modal === "printer" && <FiscalPrinterModal />}
-      {pos.modal === "bcv" && <BcvModal />}
+      {pos.modal === "bcv" && <RateSelectorModal />}
     </div>
-  );
-}
-
-function BcvModal() {
-  const pos = usePos();
-  const [v, setV] = useState(pos.rate.toFixed(2));
-  const save = () => {
-    const n = parseFloat(v.replace(",", "."));
-    if (!(n > 0 && n < 100000)) {
-      toast.error("Tasa inválida");
-      return;
-    }
-    pos.setRate(n);
-    toast.success(`Tasa BCV actualizada: Bs. ${n.toFixed(2)}`);
-    pos.setModal(null);
-  };
-  return (
-    <Modal
-      title="Tasa Oficial BCV · Ajuste Manual"
-      width="max-w-sm"
-      onClose={() => pos.setModal(null)}
-      footer={
-        <div className="flex justify-end">
-          <button className={btnPrimary} onClick={save}>
-            Aplicar tasa
-          </button>
-        </div>
-      }
-    >
-      <label className="text-xs font-medium text-muted-foreground">
-        Bs. por 1 USD
-        <input
-          autoFocus
-          inputMode="decimal"
-          value={v}
-          onChange={(e) => setV(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && save()}
-          className={`${inputCls} mt-1 font-mono text-xl`}
-        />
-      </label>
-      <p className="mt-2 text-xs text-muted-foreground">
-        Recalcula en tiempo real todos los precios, totales, IVA e IGTF en Bolívares de la suite.
-      </p>
-    </Modal>
   );
 }

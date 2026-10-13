@@ -99,7 +99,15 @@ export function DashboardModule() {
               month: "long",
               year: "numeric",
             })}{" "}
-            · Tasa BCV: <b>Bs. {rate.toFixed(2)} / USD</b>
+            · Tasa Activa:{" "}
+            <button
+              onClick={() => pos.setModal("bcv")}
+              className="inline-flex items-center gap-1 font-bold text-primary hover:underline"
+              title="Abrir Monitor Multi-Divisas en Vivo"
+            >
+              <span>Bs. {rate.toFixed(2)} / USD</span>
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
+            </button>
           </p>
         </div>
         <div className="flex gap-2">

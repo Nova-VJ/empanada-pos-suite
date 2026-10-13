@@ -18,6 +18,8 @@ import {
 import { breakdown, r2 } from "@/lib/money";
 import { playBeep, playCashChime, playKitchenBell } from "@/services/sound";
 import { api } from "@/services/api";
+import { fetchMultiSourceRates } from "@/services/rateService";
+import type { MultiSourceRatesData } from "@/types/rates";
 import type {
   AccountingAccount,
   BankAccount,
@@ -80,6 +82,30 @@ interface PosState {
   companySettings: CompanySettings;
 }
 
+const initialRatesData: MultiSourceRatesData = {
+  activeVariantId: "bcv",
+  activeRate: 876.8,
+  lastUpdated: Date.now(),
+  autoRefresh: true,
+  refreshIntervalMinutes: 5,
+  spreadPct: 15.02,
+  sources: {
+    monitordolarve: { name: "Monitor Dólar VE", url: "https://monitordolarve.com/", status: "online", lastCheck: Date.now() },
+    monitordedivisa: { name: "Monitor de Divisas Venezuela", url: "https://www.monitordedivisavenezuela.com/", status: "online", lastCheck: Date.now() },
+    dolarapi: { name: "DolarAPI Contingencia", url: "https://ve.dolarapi.com/v1/dolares", status: "online", lastCheck: Date.now() },
+    manual: { name: "Ajuste Local", url: "local", status: "online", lastCheck: Date.now() },
+  },
+  variants: {
+    bcv: { id: "bcv", name: "Oficial BCV (USD)", symbol: "USD", price: 876.8, source: "monitordolarve", sourceUrl: "https://monitordolarve.com/", updatedAt: "Hoy", isOfficial: true },
+    binance: { id: "binance", name: "Binance P2P (USDT)", symbol: "USDT", price: 1006.0, source: "monitordolarve", sourceUrl: "https://monitordolarve.com/", updatedAt: "Hoy" },
+    euro: { id: "euro", name: "Euro BCV Oficial", symbol: "EUR", price: 982.0, source: "monitordolarve", sourceUrl: "https://monitordolarve.com/", updatedAt: "Hoy", isOfficial: true },
+    paralelo: { id: "paralelo", name: "Paralelo Monitor", symbol: "USDT", price: 1008.49, source: "monitordedivisa", sourceUrl: "https://www.monitordedivisavenezuela.com/", updatedAt: "Hoy" },
+    zelle: { id: "zelle", name: "Zelle Mercado", symbol: "USD", price: 997.44, source: "monitordolarve", sourceUrl: "https://monitordolarve.com/", updatedAt: "Hoy" },
+    paypal: { id: "paypal", name: "PayPal Saldo", symbol: "USD", price: 953.59, source: "monitordolarve", sourceUrl: "https://monitordolarve.com/", updatedAt: "Hoy" },
+    promedio: { id: "promedio", name: "Promedio General", symbol: "USD", price: 941.4, source: "monitordolarve", sourceUrl: "https://monitordolarve.com/", updatedAt: "Hoy" },
+  },
+};
+
 const initial = (): PosState => ({
   theme: "light",
   sidebarCollapsed: false,
@@ -88,7 +114,7 @@ const initial = (): PosState => ({
   cart: [],
   orderType: "takeout",
   discount: 0,
-  rate: 36.5,
+  rate: 876.8,
   orders: mockSeededOrders,
   shift: {
     cashier: "María P.",
@@ -149,6 +175,11 @@ interface Ctx extends PosState {
   setOrderType: (t: OrderType) => void;
   setDiscount: (d: number) => void;
   setRate: (r: number) => void;
+  ratesData: MultiSourceRatesData;
+  isRefreshingRates: boolean;
+  refreshRates: () => Promise<void>;
+  setActiveRateVariant: (variantId: string) => void;
+  setManualRate: (r: number) => void;
   checkout: (payments: PaymentSplit[], changeBs: number, customer?: CustomerInfo) => Order;
   voidOrder: (id: number) => void;
   advanceKds: (id: number, s: KdsStatus) => void;
@@ -196,8 +227,65 @@ export function PosProvider({ children }: { children: ReactNode }) {
   const [ticketOrderId, setTicketOrderId] = useState<number | null>(null);
   const [cartPulse, setCartPulse] = useState(0);
   const [now, setNow] = useState(0);
+  const [ratesData, setRatesData] = useState<MultiSourceRatesData>(initialRatesData);
+  const [isRefreshingRates, setIsRefreshingRates] = useState(false);
   const stateRef = useRef(s);
   stateRef.current = s;
+
+  const refreshRates = useCallback(async () => {
+    setIsRefreshingRates(true);
+    try {
+      const data = await fetchMultiSourceRates();
+      setRatesData(data);
+      const activeVariant = data.variants[data.activeVariantId] ?? data.variants["bcv"];
+      if (activeVariant && activeVariant.price > 0) {
+        setS((prev) => ({ ...prev, rate: activeVariant.price }));
+      }
+    } catch (e) {
+      console.warn("Error refreshing rates", e);
+    } finally {
+      setIsRefreshingRates(false);
+    }
+  }, []);
+
+  const setActiveRateVariant = useCallback((variantId: string) => {
+    setRatesData((prev) => {
+      const variant = prev.variants[variantId];
+      if (variant && variant.price > 0) {
+        setS((sPrev) => ({ ...sPrev, rate: variant.price }));
+        return { ...prev, activeVariantId: variantId, activeRate: variant.price };
+      }
+      return prev;
+    });
+  }, []);
+
+  const setManualRate = useCallback((val: number) => {
+    setS((prev) => ({ ...prev, rate: val }));
+    setRatesData((prev) => ({
+      ...prev,
+      activeVariantId: "manual",
+      activeRate: val,
+      variants: {
+        ...prev.variants,
+        manual: {
+          id: "manual",
+          name: "Ajuste Manual Personalizado",
+          symbol: "USD",
+          price: val,
+          source: "manual",
+          sourceUrl: "local://manual",
+          updatedAt: new Date().toLocaleTimeString("es-VE", { hour: "2-digit", minute: "2-digit" }),
+        },
+      },
+    }));
+  }, []);
+
+  // Poll rates every 5 minutes (and on mount)
+  useEffect(() => {
+    refreshRates();
+    const interval = setInterval(refreshRates, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [refreshRates]);
 
   useEffect(() => {
     try {
@@ -444,6 +532,11 @@ export function PosProvider({ children }: { children: ReactNode }) {
     setOrderType: (orderType) => setS((x) => ({ ...x, orderType })),
     setDiscount: (discount) => setS((x) => ({ ...x, discount })),
     setRate: (rate) => setS((x) => ({ ...x, rate })),
+    ratesData,
+    isRefreshingRates,
+    refreshRates,
+    setActiveRateVariant,
+    setManualRate,
     checkout,
     voidOrder: (id) =>
       setS((x) => ({

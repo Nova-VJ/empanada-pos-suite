@@ -144,22 +144,33 @@ export function SettingsModule() {
 
       {tab === "tax" && (
         <div className="space-y-4">
-          <div className="rounded-xl border border-border bg-card p-5 shadow-xs max-w-md">
-            <h3 className="text-sm font-semibold text-foreground">Tasa Oficial BCV (Bs. / USD)</h3>
-            <p className="text-xs text-muted-foreground mt-1">
-              Actualiza instantáneamente todos los precios en bolívares de la aplicación.
-            </p>
-            <div className="mt-3 flex gap-2">
+          <div className="rounded-xl border border-border bg-card p-5 shadow-xs max-w-xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">Tasa de Cambio en Vivo (Bs. / USD)</h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Sincronización automática cada 5 min desde <b>monitordolarve.com</b>, <b>monitordedivisavenezuela.com</b> y <b>dolarapi.com</b>.
+                </p>
+              </div>
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" title="Sincronización activa" />
+            </div>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
               <input
                 value={bcvInput}
                 onChange={(e) => setBcvInput(e.target.value)}
-                className={`${inputCls} font-mono text-base font-bold`}
+                className={`${inputCls} w-36 font-mono text-base font-bold`}
               />
               <button
                 onClick={handleSaveRate}
-                className="rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shrink-0"
+                className="rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shrink-0 hover:bg-primary/90 transition"
               >
-                Actualizar BCV
+                Fijar tasa
+              </button>
+              <button
+                onClick={() => pos.setModal("bcv")}
+                className="rounded-xl border border-border bg-secondary px-4 py-2 text-xs font-semibold text-foreground shrink-0 hover:bg-secondary/80 transition"
+              >
+                Abrir Monitor Multi-Divisas
               </button>
             </div>
           </div>
