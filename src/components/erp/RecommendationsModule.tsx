@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AlertTriangle, PackageX, ShoppingBag, Star, Target, TrendingUp, Truck, Users } from "lucide-react";
+import { AlertTriangle, CheckCircle2, PackageX, ShoppingBag, Target, TrendingUp, Truck, Users } from "lucide-react";
 import { usePos } from "@/context/PosContext";
 import { fmtBs, fmtUsd } from "@/lib/money";
 
@@ -161,7 +161,7 @@ export function RecommendationsModule() {
                     <p className="text-xs font-semibold text-muted-foreground mb-1.5">Fortalezas</p>
                     {selectedScore.strengths.map((st) => (
                       <div key={st} className="flex items-center gap-1.5 text-xs text-module-inventory mb-1">
-                        <Star className="h-3.5 w-3.5 shrink-0" />
+                        <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
                         <span>{st}</span>
                       </div>
                     ))}

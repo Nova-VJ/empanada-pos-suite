@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Calculator, Leaf, Send, Sparkles, Truck } from "lucide-react";
+import { Calculator, CheckCircle2, Leaf, Send, Truck } from "lucide-react";
 import { usePos } from "@/context/PosContext";
 import { fmtBs, fmtUsd } from "@/lib/money";
 
@@ -154,7 +154,7 @@ export function AssistantsModule() {
                     onClick={() => sendMessage(s)}
                     className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-secondary/60 px-3.5 py-2 text-xs font-medium text-foreground hover:border-primary hover:bg-primary/5 transition"
                   >
-                    <Sparkles className="h-3.5 w-3.5 text-primary" />
+                    <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
                     {s}
                   </button>
                 ))}

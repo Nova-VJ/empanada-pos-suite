@@ -69,10 +69,15 @@ export function Kds() {
         </button>
       </div>
       {active.length === 0 ? (
-        <div className="py-28 text-center text-muted-foreground">
-          <div className="text-5xl">✨</div>
-          <p className="mt-3 text-base font-medium text-foreground">
+        <div className="py-24 text-center text-muted-foreground">
+          <div className="mx-auto mb-3.5 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-xs">
+            <CheckCircle2 className="h-8 w-8 stroke-[2.25]" />
+          </div>
+          <p className="text-base font-semibold text-foreground">
             {showDone ? "Aún no hay órdenes despachadas" : "Cocina al día — esperando comandas de caja"}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {showDone ? "Las órdenes despachadas se archivarán aquí" : "Las nuevas órdenes ingresadas en caja aparecerán y sonarán automáticamente"}
           </p>
         </div>
       ) : (

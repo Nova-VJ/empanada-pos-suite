@@ -61,5 +61,5 @@ export const mockProducts: Product[] = [
 
   // --- COMBOS DESAYUNO ---
   { id: "cmb-01", sku: "CMB-01", name: "Combo Tradicional: 2 Empanadas + Bebida", short: "Combo Trad.", emoji: "⚡", category: "Combos", priceUsd: 3.80, costUsd: 1.50, stockBar: 50, stockKitchen: 50, kitchen: true, modifiers: ["Con Malta", "Con Café"] },
-  { id: "cmb-02", sku: "CMB-02", name: "Combo Dúo Especial: 2 Especiales + Jugo", short: "Combo Especial", emoji: "⭐", category: "Combos", priceUsd: 4.80, costUsd: 1.90, stockBar: 30, stockKitchen: 30, kitchen: true, modifiers: ["Pabellón + Cazón", "Masa crujiente"] },
+  { id: "cmb-02", sku: "CMB-02", name: "Combo Dúo Especial: 2 Especiales + Jugo", short: "Combo Especial", emoji: "🥟", category: "Combos", priceUsd: 4.80, costUsd: 1.90, stockBar: 30, stockKitchen: 30, kitchen: true, modifiers: ["Pabellón + Cazón", "Masa crujiente"] },
 ];
