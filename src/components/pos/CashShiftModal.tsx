@@ -61,20 +61,41 @@ export function CashShiftModal() {
     <Modal title="🔒 Arqueo Ciego · Corte X / Cierre Z" onClose={() => pos.setModal(null)} width="max-w-xl">
       {!result ? (
         <>
-          <p className="mb-4 text-xs text-[#8fa49b]">Cuenta físicamente la gaveta. Los montos esperados por el sistema no se revelan hasta generar el arqueo formal.</p>
+          <p className="mb-4 text-xs text-muted-foreground">
+            Cuenta físicamente la gaveta. Los montos esperados por el sistema no se revelan hasta generar el arqueo formal.
+          </p>
           <div className="grid grid-cols-2 gap-3.5">
             {fields.map(([k, label]) => (
-              <label key={k} className="text-xs font-semibold text-[#a6b9b0]">{label}
-                <input inputMode="decimal" value={f[k]} onChange={(e) => setF({ ...f, [k]: e.target.value })} className={`${inputCls} mt-1 font-mono font-bold`} placeholder="0,00" />
+              <label key={k} className="text-xs font-semibold text-foreground">
+                {label}
+                <input
+                  inputMode="decimal"
+                  value={f[k]}
+                  onChange={(e) => setF({ ...f, [k]: e.target.value })}
+                  className={`${inputCls} mt-1 font-mono font-bold`}
+                  placeholder="0,00"
+                />
               </label>
             ))}
           </div>
-          <label className="mt-3.5 block text-xs font-semibold text-[#a6b9b0]">Observaciones del cajero
-            <textarea value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} className={`${inputCls} mt-1`} rows={2} maxLength={300} placeholder="Ej. Billetes de $20 entregados al supervisor..." />
+          <label className="mt-3.5 block text-xs font-semibold text-foreground">
+            Observaciones del cajero
+            <textarea
+              value={f.notes}
+              onChange={(e) => setF({ ...f, notes: e.target.value })}
+              className={`${inputCls} mt-1`}
+              rows={2}
+              maxLength={300}
+              placeholder="Ej. Billetes de $20 entregados al supervisor..."
+            />
           </label>
           <div className="mt-6 flex justify-end gap-2.5">
-            <button className={btnGhost} onClick={() => run("X")}>📄 Generar Corte X</button>
-            <button className={btnDanger} onClick={() => run("Z")}>🔒 Ejecutar Cierre Z Fiscal</button>
+            <button className={btnGhost} onClick={() => run("X")}>
+              📄 Generar Corte X
+            </button>
+            <button className={btnDanger} onClick={() => run("Z")}>
+              🔒 Ejecutar Cierre Z Fiscal
+            </button>
           </div>
         </>
       ) : (
@@ -86,11 +107,12 @@ export function CashShiftModal() {
 
 function AuditResult({ a, onClose }: { a: ShiftAudit; onClose: () => void }) {
   const d = a.differenceBs;
-  const status = Math.abs(d) < 0.01
-    ? { t: "✓ Cuadre Exacto", c: "border-[#2ea88c]/40 bg-[#16332c] text-[#2ea88c]" }
-    : d > 0
-    ? { t: "⚠️ Sobrante en Gaveta", c: "border-[#cca06a]/40 bg-[#293526] text-[#e0ab77]" }
-    : { t: "⚠️ Faltante en Gaveta", c: "border-[#c85a48]/40 bg-[#301f1c] text-[#e07a68]" };
+  const status =
+    Math.abs(d) < 0.01
+      ? { t: "✓ Cuadre Exacto", c: "border-module-inventory/40 bg-module-inventory-light text-module-inventory" }
+      : d > 0
+      ? { t: "⚠️ Sobrante en Gaveta", c: "border-module-cash/40 bg-module-cash-light text-module-cash" }
+      : { t: "⚠️ Faltante en Gaveta", c: "border-destructive/40 bg-destructive/10 text-destructive" };
 
   const rows: [string, number, number, boolean?][] = [
     ["Efectivo Bs.", a.declared.bs, a.expected.bs],
@@ -100,29 +122,49 @@ function AuditResult({ a, onClose }: { a: ShiftAudit; onClose: () => void }) {
   ];
   return (
     <div>
-      <div className={`rounded-2xl border p-4 text-center ${status.c}`}>
-        <div className="text-base font-bold font-serif">{status.t}</div>
+      <div className={`rounded-xl border p-4 text-center ${status.c}`}>
+        <div className="text-base font-bold">{status.t}</div>
         <div className="font-mono text-sm mt-0.5">Diferencia: {fmtBs(d)}</div>
       </div>
       <table className="mt-4 w-full font-mono text-xs">
-        <thead className="text-[#7e948a] border-b border-[#1b3530]"><tr><th className="text-left pb-2">Rubro</th><th className="text-right pb-2">Declarado</th><th className="text-right pb-2">Sistema</th></tr></thead>
-        <tbody className="text-[#dbe5e0]">
+        <thead className="text-muted-foreground border-b border-border">
+          <tr>
+            <th className="text-left pb-2">Rubro</th>
+            <th className="text-right pb-2">Declarado</th>
+            <th className="text-right pb-2">Sistema</th>
+          </tr>
+        </thead>
+        <tbody className="text-foreground">
           {rows.map(([l, dv, ev, usd]) => (
-            <tr key={l} className="border-t border-[#1b3530]/60"><td className="py-2">{l}</td><td className="text-right">{usd ? `$${dv.toFixed(2)}` : fmtBs(dv)}</td><td className="text-right">{usd ? `$${ev.toFixed(2)}` : fmtBs(ev)}</td></tr>
+            <tr key={l} className="border-t border-border/60">
+              <td className="py-2">{l}</td>
+              <td className="text-right">{usd ? `$${dv.toFixed(2)}` : fmtBs(dv)}</td>
+              <td className="text-right">{usd ? `$${ev.toFixed(2)}` : fmtBs(ev)}</td>
+            </tr>
           ))}
-          <tr className="border-t border-[#1b3530] font-bold text-[#fbf8f1]"><td className="py-2.5">TOTAL Bs.</td><td className="text-right">{fmtBs(a.declaredTotalBs)}</td><td className="text-right">{fmtBs(a.expectedTotalBs)}</td></tr>
+          <tr className="border-t border-border font-bold text-foreground">
+            <td className="py-2.5">TOTAL Bs.</td>
+            <td className="text-right">{fmtBs(a.declaredTotalBs)}</td>
+            <td className="text-right">{fmtBs(a.expectedTotalBs)}</td>
+          </tr>
         </tbody>
       </table>
-      <p className="mt-3.5 text-xs text-[#8fa49b]">{a.kind === "Z" ? `Cierre Z #${a.zNumber}` : "Corte X (parcial)"} · {a.tickets} tickets · {a.cashier} ({a.register})</p>
+      <p className="mt-3.5 text-xs text-muted-foreground">
+        {a.kind === "Z" ? `Cierre Z #${a.zNumber}` : "Corte X (parcial)"} · {a.tickets} tickets · {a.cashier} ({a.register})
+      </p>
       {a.kind === "Z" && (
-        <div className="mt-7 grid grid-cols-2 gap-8 text-center text-xs text-[#8fa49b]">
-          <div className="border-t border-[#1b3530] pt-2">Firma Cajero</div>
-          <div className="border-t border-[#1b3530] pt-2">Firma Gerente</div>
+        <div className="mt-7 grid grid-cols-2 gap-8 text-center text-xs text-muted-foreground">
+          <div className="border-t border-border pt-2">Firma Cajero</div>
+          <div className="border-t border-border pt-2">Firma Gerente</div>
         </div>
       )}
       <div className="mt-6 flex justify-end gap-2.5">
-        <button className={btnGhost} onClick={() => window.print()}>🖨️ Imprimir</button>
-        <button className={btnGhost} onClick={onClose}>Cerrar</button>
+        <button className={btnGhost} onClick={() => window.print()}>
+          🖨️ Imprimir
+        </button>
+        <button className={btnGhost} onClick={onClose}>
+          Cerrar
+        </button>
       </div>
     </div>
   );

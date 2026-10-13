@@ -1,11 +1,44 @@
 export type Category = "Empanadas" | "Pastelitos" | "Horneados" | "Bebidas" | "Salsas & Extras" | "Combos";
 
+export type ModuleId =
+  | "dashboard"
+  | "pos"
+  | "kds"
+  | "products"
+  | "inventory"
+  | "customers"
+  | "invoicing"
+  | "suppliers"
+  | "cash"
+  | "expenses"
+  | "reports"
+  | "accounting"
+  | "assistants"
+  | "recommendations"
+  | "settings";
+
 export interface CustomerInfo {
   docType: "V" | "J" | "E" | "G";
   rif: string;
   name: string;
   address?: string;
   phone?: string;
+}
+
+export interface CustomerRecord {
+  id: string;
+  docType: "V" | "J" | "E" | "G";
+  rif: string; // e.g., V-14892301 or J-00002967-9
+  name: string;
+  email: string;
+  phone: string;
+  city: string;
+  address: string;
+  isBusiness: boolean;
+  segment: "VIP" | "Regular" | "Ocasional" | "Inactivo";
+  orderCount: number;
+  totalSpentUsd: number;
+  lastPurchase: number;
 }
 
 export interface Product {
@@ -20,8 +53,160 @@ export interface Product {
   costUsd: number;
   stockBar: number;
   stockKitchen: number;
+  stockMin?: number;
   kitchen: boolean; // false = bar / drinks
   modifiers: string[];
+}
+
+export type InventoryMoveType = "compra" | "venta" | "devolucion" | "ajuste" | "recuento" | "ecommerce";
+
+export interface InventoryMovement {
+  id: string;
+  productId: string;
+  productName: string;
+  sku: string;
+  moveType: InventoryMoveType;
+  quantity: number; // positive or negative
+  unitCostUsd: number;
+  reason: string;
+  createdAt: number;
+}
+
+export interface Supplier {
+  id: string;
+  name: string;
+  rif: string;
+  email: string;
+  phone: string;
+  city: string;
+  paymentDays: number;
+  active: boolean;
+  category: string;
+  score: number;
+  dimensions: {
+    precio: number;
+    calidad: number;
+    plazo: number;
+    moq: number;
+    sostenibilidad: number;
+    cercania: number;
+    condiciones_pago: number;
+    comunicacion: number;
+  };
+  strengths: string[];
+  weaknesses: string[];
+  redFlags: string[];
+}
+
+export type POStatus = "borrador" | "enviado" | "en_camino" | "recibido" | "facturado" | "cancelado";
+
+export interface PurchaseOrder {
+  id: string;
+  orderNumber: number;
+  supplierId: string;
+  supplierName: string;
+  itemsSummary: string;
+  productId?: string;
+  qty?: number;
+  totalUsd: number;
+  status: POStatus;
+  createdAt: number;
+}
+
+export interface SupplierInvoice {
+  id: string;
+  invoiceNumber: string;
+  supplierId: string;
+  supplierName: string;
+  subtotalUsd: number;
+  taxUsd: number;
+  totalUsd: number;
+  paid: boolean;
+  createdAt: number;
+}
+
+export type CashMoveType = "apertura" | "venta" | "retiro" | "gasto" | "cierre" | "ajuste";
+
+export interface CashMovement {
+  id: string;
+  moveType: CashMoveType;
+  amountBs: number;
+  amountUsd?: number;
+  description: string;
+  createdAt: number;
+}
+
+export interface BankAccount {
+  id: string;
+  name: string;
+  code: string;
+  currency: "VES" | "USD";
+  accountNumber: string;
+  balance: number;
+}
+
+export interface BankMovement {
+  id: string;
+  bankId: string;
+  description: string;
+  amount: number;
+  currency: "VES" | "USD";
+  reconciled: boolean;
+  createdAt: number;
+}
+
+export interface ExpenseRecord {
+  id: string;
+  description: string;
+  category: string;
+  amountUsd: number; // base imponible USD
+  taxRate: number; // 0, 8, 16
+  taxAmountUsd: number;
+  totalUsd: number;
+  paymentMethod: string;
+  supplierId?: string;
+  supplierName?: string;
+  expenseDate: string;
+  createdAt: number;
+}
+
+export interface AccountingAccount {
+  id: string;
+  code: string;
+  name: string;
+  accountType: "Activo" | "Pasivo" | "Patrimonio" | "Ingreso" | "Gasto";
+  nature: "deudora" | "acreedora";
+  active: boolean;
+}
+
+export interface JournalEntryLine {
+  id: string;
+  accountCode: string;
+  accountName: string;
+  description: string;
+  debitBs: number;
+  creditBs: number;
+}
+
+export interface JournalEntry {
+  id: string;
+  entryNumber: number;
+  entryDate: string;
+  description: string;
+  status: "borrador" | "confirmado" | "bloqueado";
+  lines: JournalEntryLine[];
+}
+
+export interface CompanySettings {
+  name: string;
+  rif: string;
+  email: string;
+  phone: string;
+  city: string;
+  address: string;
+  postalCode: string;
+  valuationMethod: "pmp" | "fifo";
+  branch: string;
 }
 
 export interface CartItem {
@@ -64,6 +249,8 @@ export interface Order {
   id: number;
   invoiceNo: string;
   controlNo: string;
+  invoiceType?: "simplificada" | "completa" | "rectificativa";
+  status?: "confirmada" | "anulada" | "borrador";
   createdAt: number;
   cashier: string;
   type: OrderType;
@@ -119,4 +306,7 @@ export interface Shift {
   cashier: string;
   register: string;
   openedAt: number;
+  openingBs: number;
+  openingUsd: number;
+  isOpen: boolean;
 }

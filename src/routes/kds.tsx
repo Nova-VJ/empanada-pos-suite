@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import { Flame, CheckCircle2 } from "lucide-react";
 import { usePos } from "@/context/PosContext";
 import { KdsTicketCard } from "@/components/pos/KdsTicketCard";
 import { playKitchenBell } from "@/services/sound";
@@ -7,22 +8,23 @@ import { playKitchenBell } from "@/services/sound";
 export const Route = createFileRoute("/kds")({
   head: () => ({
     meta: [
-      { title: "Cocina KDS · Dr. Empanadas" },
+      { title: "Cocina KDS · NovaSystem × Dr. Empanadas" },
       { name: "description", content: "Pantalla de cocina y freidoras con temporizadores en vivo." },
-      { property: "og:title", content: "Cocina KDS · Dr. Empanadas" },
+      { property: "og:title", content: "Cocina KDS · NovaSystem × Dr. Empanadas" },
       { property: "og:description", content: "Estación de freidoras con estados y alertas de demora." },
     ],
   }),
   component: Kds,
 });
 
-function Kds() {
+export function Kds() {
   const pos = usePos();
   const [showDone, setShowDone] = useState(false);
-  const active = pos.orders.filter((o) => o.lines.some((l) => l.kitchen) && (showDone ? o.kdsStatus === "dispatched" : o.kdsStatus !== "dispatched")).sort((a, b) => a.createdAt - b.createdAt);
+  const active = pos.orders
+    .filter((o) => o.lines.some((l) => l.kitchen) && (showDone ? o.kdsStatus === "dispatched" : o.kdsStatus !== "dispatched"))
+    .sort((a, b) => a.createdAt - b.createdAt);
   const pendingFryer = pos.orders.filter((o) => o.kdsStatus === "fryer");
 
-  // Ring when a new ticket appears (e.g. from another tab)
   const seen = useRef(pendingFryer.length);
   useEffect(() => {
     if (pendingFryer.length > seen.current) playKitchenBell();
@@ -30,33 +32,54 @@ function Kds() {
   }, [pendingFryer.length]);
 
   const flavors = new Map<string, number>();
-  for (const o of pendingFryer) for (const l of o.lines) if (l.kitchen) flavors.set(l.short, (flavors.get(l.short) ?? 0) + l.qty);
+  for (const o of pendingFryer) {
+    for (const l of o.lines) {
+      if (l.kitchen) flavors.set(l.short, (flavors.get(l.short) ?? 0) + l.qty);
+    }
+  }
 
   return (
-    <div className="p-5 bg-[#0b1a18] min-h-[calc(100vh-65px)]">
-      <div className="mb-5 flex flex-wrap items-center gap-2.5 rounded-3xl border border-[#1b3530] bg-[#122623] p-4 shadow-md">
-        <span className="mr-2 font-serif text-sm font-bold text-[#fbf8f1]">🍳 Pendiente en freidora:</span>
-        {flavors.size === 0 && <span className="text-xs text-[#7e948a]">Freidoras al día (sin pedidos pendientes)</span>}
-        {[...flavors.entries()].sort((a, b) => b[1] - a[1]).map(([k, v]) => (
-          <span key={k} className="rounded-xl border border-[#cca06a]/40 bg-[#cca06a]/15 px-3.5 py-1.5 font-mono text-xs font-bold text-[#e0ab77] shadow-sm">
-            {v} {k}
-          </span>
-        ))}
+    <div className="p-6 bg-background min-h-[calc(100vh-56px)]">
+      <div className="mb-5 flex flex-wrap items-center gap-2.5 rounded-xl border border-border bg-card p-4 shadow-2xs">
+        <div className="flex items-center gap-2 mr-2">
+          <div className="h-8 w-8 rounded-lg bg-module-inventory-light flex items-center justify-center">
+            <Flame className="h-4 w-4 text-module-inventory" />
+          </div>
+          <span className="text-sm font-semibold text-foreground">Pendiente en freidora:</span>
+        </div>
+        {flavors.size === 0 && (
+          <span className="text-xs text-muted-foreground">Freidoras al día (sin pedidos pendientes)</span>
+        )}
+        {[...flavors.entries()]
+          .sort((a, b) => b[1] - a[1])
+          .map(([k, v]) => (
+            <span
+              key={k}
+              className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1 font-mono text-xs font-bold text-amber-700 dark:text-amber-300"
+            >
+              {v} × {k}
+            </span>
+          ))}
         <button
           onClick={() => setShowDone((s) => !s)}
-          className="ml-auto rounded-xl border border-[#1b3530] bg-[#0c1816] px-3.5 py-2 text-xs font-semibold text-[#a6b9b0] hover:border-[#cca06a]/50 hover:text-[#fbf8f1] transition"
+          className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary/70 px-3.5 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition"
         >
-          {showDone ? "← Ver activos" : "Ver despachados"}
+          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+          {showDone ? "← Ver comandas activas" : "Ver órdenes despachadas"}
         </button>
       </div>
       {active.length === 0 ? (
-        <div className="py-28 text-center text-[#7e948a]">
+        <div className="py-28 text-center text-muted-foreground">
           <div className="text-5xl">✨</div>
-          <p className="mt-3 text-base font-serif text-[#a6b9b0]">{showDone ? "Aún no hay órdenes despachadas" : "Cocina al día — esperando órdenes de caja"}</p>
+          <p className="mt-3 text-base font-medium text-foreground">
+            {showDone ? "Aún no hay órdenes despachadas" : "Cocina al día — esperando comandas de caja"}
+          </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4.5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-          {active.map((t) => <KdsTicketCard key={t.id} t={t} now={pos.now} onAdvance={(s) => pos.advanceKds(t.id, s)} />)}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+          {active.map((t) => (
+            <KdsTicketCard key={t.id} t={t} now={pos.now} onAdvance={(s) => pos.advanceKds(t.id, s)} />
+          ))}
         </div>
       )}
     </div>

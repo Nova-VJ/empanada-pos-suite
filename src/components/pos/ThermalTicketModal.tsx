@@ -24,35 +24,42 @@ export function ThermalTicketModal() {
     }, 50);
   }
 
-  const close = () => { pos.setModal(null); pos.setTicketOrderId(null); };
+  const close = () => {
+    pos.setModal(null);
+    pos.setTicketOrderId(null);
+  };
   const w = width === 80 ? "w-[302px]" : "w-[219px]";
 
   return (
     <>
       <Modal
-        title={`🧾 Ticket #${order.id}`}
+        title={`🧾 Ticket #${order.id} · Factura ${order.invoiceNo}`}
         onClose={close}
         footer={
           <div className="flex justify-end gap-2">
-            <button className={btnGhost} onClick={() => print(["invoice", "kitchen"])}>📑 Imprimir Ambos</button>
-            <button className={btnPrimary} onClick={() => print([tab])}>🖨️ Imprimir Ticket</button>
+            <button className={btnGhost} onClick={() => print(["invoice", "kitchen"])}>
+              📑 Imprimir Ambos
+            </button>
+            <button className={btnPrimary} onClick={() => print([tab])}>
+              🖨️ Imprimir Ticket
+            </button>
           </div>
         }
       >
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-          <div className="flex gap-1.5 p-1 rounded-2xl border border-[#1b3530] bg-[#0c1816]">
+          <div className="flex gap-1 p-1 rounded-xl border border-border bg-secondary">
             <button
               onClick={() => setTab("invoice")}
-              className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition ${
-                tab === "invoice" ? "bg-[#183831] border border-[#cca06a]/50 text-[#fbf8f1]" : "text-[#8fa49b] hover:text-[#fbf8f1]"
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                tab === "invoice" ? "bg-card text-primary shadow-2xs" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               🧾 Factura Fiscal SENIAT
             </button>
             <button
               onClick={() => setTab("kitchen")}
-              className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition ${
-                tab === "kitchen" ? "bg-[#183831] border border-[#cca06a]/50 text-[#fbf8f1]" : "text-[#8fa49b] hover:text-[#fbf8f1]"
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                tab === "kitchen" ? "bg-card text-primary shadow-2xs" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               🍳 Comanda Freidoras
@@ -63,8 +70,8 @@ export function ThermalTicketModal() {
               <button
                 key={v}
                 onClick={() => setWidth(v)}
-                className={`rounded-xl border px-2.5 py-1 font-mono text-xs font-bold transition ${
-                  width === v ? "border-[#cca06a] bg-[#cca06a]/20 text-[#e0ab77]" : "border-[#1b3530] bg-[#0c1816] text-[#8fa49b]"
+                className={`rounded-lg border px-2.5 py-1 font-mono text-xs font-bold transition ${
+                  width === v ? "border-primary bg-primary text-primary-foreground" : "border-border bg-secondary text-muted-foreground"
                 }`}
               >
                 {v}mm
@@ -72,8 +79,8 @@ export function ThermalTicketModal() {
             ))}
           </div>
         </div>
-        <div className="flex justify-center rounded-2xl bg-[#071210] p-6 shadow-inner border border-[#142825]">
-          <div className={`${w} bg-[#faf7f0] text-[#1a2926] p-4 shadow-2xl border border-[#e2d9c4] rounded-sm`}>
+        <div className="flex justify-center rounded-xl bg-secondary/60 p-6 border border-border">
+          <div className={`${w} bg-[#faf7f0] text-[#1a2926] p-4 shadow-xl border border-[#e2d9c4] rounded-xs`}>
             {tab === "invoice" ? <Invoice o={order} /> : <Kitchen o={order} />}
           </div>
         </div>
@@ -93,7 +100,10 @@ export function ThermalTicketModal() {
 
 const Hr = () => <div className="my-1.5 border-t border-dashed border-black" />;
 const L = ({ a, b, bold }: { a: string; b: string; bold?: boolean }) => (
-  <div className={`flex justify-between gap-2 ${bold ? "font-bold" : ""}`}><span>{a}</span><span className="text-right">{b}</span></div>
+  <div className={`flex justify-between gap-2 ${bold ? "font-bold" : ""}`}>
+    <span>{a}</span>
+    <span className="text-right">{b}</span>
+  </div>
 );
 
 function Invoice({ o }: { o: Order }) {
@@ -129,7 +139,9 @@ function Invoice({ o }: { o: Order }) {
       )}
       {o.lines.map((l, i) => (
         <div key={i}>
-          <div>{l.qty} x {l.name}</div>
+          <div>
+            {l.qty} x {l.name}
+          </div>
           <L a={`   @ ${fmtBs(l.unitUsd * o.rate)} (G)`} b={fmtBs(l.unitUsd * o.rate * l.qty)} />
         </div>
       ))}
@@ -143,7 +155,11 @@ function Invoice({ o }: { o: Order }) {
       <L a="REF USD" b={fmtUsd(o.totalBs / o.rate)} />
       <Hr />
       {o.payments.map((p) => (
-        <L key={p.id} a={TENDER_LABEL[p.type] + (p.reference ? ` ···${p.reference}` : "")} b={p.amountUsd ? fmtUsd(p.amountUsd) : fmtBs(p.amountBs)} />
+        <L
+          key={p.id}
+          a={TENDER_LABEL[p.type] + (p.reference ? ` ···${p.reference}` : "")}
+          b={p.amountUsd ? fmtUsd(p.amountUsd) : fmtBs(p.amountBs)}
+        />
       ))}
       {o.changeBs > 0 && <L a="Vuelto" b={fmtBs(o.changeBs)} />}
       <Hr />
@@ -165,9 +181,13 @@ function Kitchen({ o }: { o: Order }) {
       {items.length === 0 && <div>(sin ítems de cocina)</div>}
       {items.map((l, i) => (
         <div key={i} className="mb-1">
-          <div className="text-base font-black">[ {l.qty}X ] {l.short.toUpperCase()}</div>
-          {l.modifiers.map((m) => <div key={m}>  + {m}</div>)}
-          {l.note && <div className="font-bold">  ** {l.note.toUpperCase()} **</div>}
+          <div className="text-base font-black">
+            [ {l.qty}X ] {l.short.toUpperCase()}
+          </div>
+          {l.modifiers.map((m) => (
+            <div key={m}> + {m}</div>
+          ))}
+          {l.note && <div className="font-bold"> ** {l.note.toUpperCase()} **</div>}
         </div>
       ))}
     </div>
