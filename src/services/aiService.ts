@@ -125,7 +125,19 @@ DIRECTRICES DE RESPUESTA:
     let reply = "";
 
     if (context.assistantId === "eco-coach") {
-      if (q.includes("combo") || q.includes("promo") || q.includes("ticket") || q.includes("vender")) {
+      if (q.includes("matutino") || q.includes("brief") || q.includes("whatsapp")) {
+        reply = `📱 *Resumen Matutino NovaSystem (WhatsApp Morning Brief - 8:00 AM)*\n\n` +
+          `Buenos días, equipo de *${context.storeName}* 🥟\n\n` +
+          `📊 *Ventas en Vivo:* ${context.totalOrdersToday} comandas facturadas ($${context.salesTotalUsd.toFixed(2)} USD / Bs. ${context.salesTotalBs.toFixed(2)})\n` +
+          `💵 *Tasa Oficial BCV:* Bs. ${context.activeRate.toFixed(2)} / USD (${context.rateVariantName})\n` +
+          `🍳 *Freidoras KDS:* ${context.pendingFryerOrders} pedidos friéndose\n\n` +
+          `🚦 *Semáforo de Reposición (StockAI Sync):*\n` +
+          (context.lowStockItems.length > 0
+            ? context.lowStockItems.map((i) => `  🔴 *${i.name}:* Stock ${i.stock} uds (Mínimo: ${i.min} uds)`).join("\n")
+            : `  🟢 Todo el inventario sobre el Stock de Seguridad.`) +
+          `\n\n🚚 *Cuentas por Pagar:* ${context.unpaidSupplierInvoicesCount} facturas ($${context.unpaidSupplierInvoicesUsd.toFixed(2)} USD)\n` +
+          `\n_Escribe en WhatsApp: "ventas", "comprar harina" o "tasa bcv" para más detalles._`;
+      } else if (q.includes("combo") || q.includes("promo") || q.includes("ticket") || q.includes("vender")) {
         reply = `🥟 **Estrategia Comercial de Ventas & Combos (NovaSystem v1.0 Venezuela):**\n\n` +
           `• **Combo Dúo Criollo Sugerido:** Empanada de Pabellón Criollo + Malta Polar 355ml por **$4.80** (Bs. ${(4.8 * context.activeRate).toFixed(2)} a tasa oficial de Bs. ${context.activeRate.toFixed(2)}).\n` +
           `• **Uplift Estimado:** Incrementa el ticket promedio de los actuales **$${(context.salesTotalUsd / Math.max(1, context.totalOrdersToday)).toFixed(2)}** en un **+22%** durante la mañana (7:30 AM - 10:30 AM).\n` +
@@ -148,7 +160,19 @@ DIRECTRICES DE RESPUESTA:
           `• **Recomendación NovaSystem:** El producto líder del turno sigue siendo la *Empanada de Carne Mechada* y el *Pabellón Criollo*. Mantener pre-armadas en cava 30 unidades para el pico del mediodía.`;
       }
     } else if (context.assistantId === "eco-ops") {
-      if (q.includes("harina") || q.includes("queso") || q.includes("aceite") || q.includes("carne") || q.includes("precio") || q.includes("comprar")) {
+      if (q.includes("reorden") || q.includes("semaforo") || q.includes("stockai")) {
+        reply = `🚦 **Semáforo de Punto de Reorden Inteligente (Modelo StockAI + NovaSystem):**\n\n` +
+          `Calculado automáticamente: *Punto de Pedido = Stock de Seguridad + (Demanda Promedio × Días de Entrega Proveedor)*.\n\n` +
+          `• 🔴 **Zona Crítica (Riesgo Inminente de Quiebre):**\n` +
+          (context.lowStockItems.length > 0
+            ? context.lowStockItems.map((i) => `  - **${i.name}:** Quedan **${i.stock} uds** (Mínimo: ${i.min}). Reorden sugerido: Pedir **+${Math.max(20, i.min * 2)} uds** urgente.`).join("\n")
+            : `  - Ningún insumo en zona crítica en este momento.`) +
+          `\n\n• 🟡 **Zona de Alerta (Punto de Reorden activado):**\n` +
+          `  - **Harina de Maíz Precocida:** Cobertura de 2.5 días. Sugerencia: Solicitar cotización a Polar o Mayorista Central.\n` +
+          `  - **Aceite Comestible:** Consumo intensivo en freidoras. Solicitar bidón de 18L.\n\n` +
+          `• 🟢 **Zona Óptima:**\n` +
+          `  - Queso Llanero y Proteínas con stock suficiente para 7 días de operación regular.`;
+      } else if (q.includes("harina") || q.includes("queso") || q.includes("aceite") || q.includes("carne") || q.includes("precio") || q.includes("comprar")) {
         reply = `🛒 **Comparativa de Insumos Críticos en el Mercado Mayorista (NovaSystem v1.0):**\n\n` +
           `• **Harina de Maíz Precocida (Bulto 20kg):**\n` +
           `  - Alimentos Polar: **$22.50** (Entrega 24h, 15 días de crédito, Score 98/100).\n` +

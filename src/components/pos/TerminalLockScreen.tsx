@@ -115,9 +115,9 @@ export function TerminalLockScreen({ onUnlock }: TerminalLockScreenProps) {
       <div className="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
 
       <div className="relative w-full max-w-sm rounded-3xl border border-slate-800 bg-slate-900/90 p-7 shadow-2xl backdrop-blur-xl flex flex-col items-center text-center">
-        {/* Lock icon header */}
-        <div className="h-14 w-14 rounded-2xl bg-gradient-to-tr from-primary/30 to-primary/10 border border-primary/40 flex items-center justify-center mb-3 shadow-inner">
-          <Lock className="h-7 w-7 text-primary animate-pulse" />
+        {/* Logo header */}
+        <div className="h-16 w-16 rounded-2xl overflow-hidden border border-slate-700/80 shadow-lg mb-3">
+          <img src="/logo.jpg" alt="NovaSystem Logo" className="h-full w-full object-cover" />
         </div>
 
         <h2 className="text-xl font-bold tracking-tight text-white">Terminal Protegido</h2>

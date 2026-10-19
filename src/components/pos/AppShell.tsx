@@ -249,12 +249,13 @@ export function AppShell({ children }: { children: ReactNode }) {
           collapsed ? "w-16" : "w-60"
         }`}
       >
-        <div className="p-3.5 border-b border-sidebar-border flex items-center gap-3">
+        <div className="p-3 border-b border-sidebar-border flex items-center gap-3">
           <button
             onClick={() => selectModule("dashboard")}
-            className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center shadow-sm shrink-0 text-primary-foreground font-bold text-sm"
+            className="h-10 w-10 rounded-xl overflow-hidden border border-border shadow-sm shrink-0 bg-card hover:scale-105 transition"
+            title="Ir al Dashboard"
           >
-            N
+            <img src="/logo.jpg" alt="NovaSystem Logo" className="h-full w-full object-cover" />
           </button>
           {!collapsed && (
             <div className="min-w-0 flex-1 leading-tight">
@@ -305,11 +306,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="relative w-72 max-w-[80vw] bg-sidebar border-r border-sidebar-border h-full flex flex-col z-10 shadow-2xl animate-in slide-in-from-left duration-200">
             <div className="p-3.5 border-b border-sidebar-border flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-xs">
-                  N
+                <div className="h-9 w-9 rounded-xl overflow-hidden border border-border shadow-xs shrink-0">
+                  <img src="/logo.jpg" alt="NovaSystem Logo" className="h-full w-full object-cover" />
                 </div>
                 <div className="leading-tight">
-                  <div className="text-sm font-bold text-foreground">NovaSystem 🥟</div>
+                  <div className="text-sm font-bold text-foreground">NovaSystem</div>
                   <div className="text-[10px] text-muted-foreground truncate max-w-[140px]">{pos.companySettings.name}</div>
                 </div>
               </div>
