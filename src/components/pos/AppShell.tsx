@@ -341,9 +341,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Sticky Top Header */}
-        <header className="no-print h-14 border-b border-border flex items-center justify-between px-3 sm:px-4 bg-card/85 backdrop-blur-md sticky top-0 z-30 gap-2">
+        <header className="no-print h-14 border-b border-border flex items-center justify-between px-2 sm:px-3.5 bg-card/85 backdrop-blur-md sticky top-0 z-30 gap-1.5 sm:gap-2 overflow-x-clip">
           {/* Left section: Mobile Menu / Collapse Button + Title */}
-          <div className="flex items-center gap-2 min-w-0 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 shrink-0">
             {/* Mobile Hamburger Drawer Button */}
             <button
               onClick={() => setMobileNavOpen(true)}
@@ -364,7 +364,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
             <div className="h-4 w-px bg-border shrink-0 hidden sm:block" />
 
-            <h2 className="text-xs sm:text-sm font-bold text-foreground truncate max-w-[140px] sm:max-w-[200px] lg:max-w-none">
+            <h2 className="text-xs sm:text-sm font-bold text-foreground truncate max-w-[110px] sm:max-w-[160px] md:max-w-[190px]">
               {MODULE_TITLES[currentModule]}
             </h2>
           </div>
@@ -383,11 +383,8 @@ export function AppShell({ children }: { children: ReactNode }) {
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
             </button>
 
-            {/* Cashier Shift Pill (compact on md, full on xl) */}
-            <div className="hidden md:flex items-center gap-1.5 rounded-lg border border-border bg-secondary/70 py-1 px-2 text-xs shrink-0">
-              <span className="hidden xl:inline text-foreground font-medium">
-                {pos.shift.cashier}
-              </span>
+            {/* Cashier Shift Pill (compact and clean) */}
+            <div className="hidden sm:flex items-center gap-1.5 rounded-lg border border-border bg-secondary/70 py-1 px-2 text-xs shrink-0">
               <span className="font-mono text-muted-foreground text-[11px]">
                 {h}h {String(m).padStart(2, "0")}m
               </span>
@@ -400,7 +397,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </button>
             </div>
 
-            {/* Quick Open Cash Drawer Button */}
+            {/* Quick Open Cash Drawer Button (ultra-wide only) */}
             <button
               onClick={() => {
                 toast.success("🗄️ Gaveta de dinero abierta (Pulso ESC/POS enviado a impresora)");
@@ -411,17 +408,17 @@ export function AppShell({ children }: { children: ReactNode }) {
               <span>🗄️ Gaveta</span>
             </button>
 
-            {/* Support / Technician Pill */}
+            {/* Support / Technician Pill (ultra-wide only) */}
             <button
               onClick={() => pos.setModal("support")}
-              className="hidden lg:inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 transition shrink-0"
+              className="hidden 2xl:inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 transition shrink-0"
               title="Menú Oculto de Soporte Técnico, TeamViewer y Actualizar Biblioteca Móvil"
             >
               <Wrench className="h-3 w-3" />
-              <span className="hidden xl:inline">Soporte VIP</span>
+              <span>Soporte VIP</span>
             </button>
 
-            {/* Fiscal Printer Status Pill */}
+            {/* Fiscal Printer Status Pill (ultra-wide only) */}
             <button
               onClick={() => pos.setModal("printer")}
               className="hidden 2xl:inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary/70 px-2.5 py-1 font-mono text-xs text-muted-foreground hover:text-foreground hover:border-primary/40 transition shrink-0"
@@ -432,8 +429,8 @@ export function AppShell({ children }: { children: ReactNode }) {
               <span className={pos.fiscal.connected ? "text-emerald-500" : "text-rose-500"}>●</span>
             </button>
 
-            {/* Quick Mode Switcher */}
-            <div className="hidden xl:flex items-center gap-0.5 rounded-lg border border-border bg-secondary/60 p-0.5 shrink-0">
+            {/* Quick Mode Switcher (ultra-wide only, desktop already has left sidebar) */}
+            <div className="hidden 2xl:flex items-center gap-0.5 rounded-lg border border-border bg-secondary/60 p-0.5 shrink-0">
               <button
                 onClick={() => selectModule("pos")}
                 className={`rounded-md px-2 py-1 text-xs font-medium transition ${
@@ -472,7 +469,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
 
             {/* ALWAYS PINNED ESSENTIAL CONTROLS (Theme, Lock Screen, Profile Login) */}
-            <div className="flex items-center gap-1.5 shrink-0 pl-1.5 sm:pl-2 border-l border-border/60">
+            <div className="flex items-center gap-1.5 shrink-0 pl-1.5 sm:pl-2 border-l border-border/60 mr-1 sm:mr-1.5">
               {/* Theme Toggle (Light / Dark) */}
               <button
                 onClick={pos.toggleTheme}

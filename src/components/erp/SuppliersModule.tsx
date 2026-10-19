@@ -33,6 +33,10 @@ export interface SupplyAlternative {
   verified: boolean;
   isCurrent?: boolean;
   savingsPct?: number;
+  channelType?: "official_web" | "direct_pbx" | "social_media";
+  officialUrl?: string;
+  socialHandle?: string;
+  sourceNote?: string;
 }
 
 export interface MarketSupplyItem {
@@ -52,9 +56,42 @@ export const MARKET_SUPPLIES: MarketSupplyItem[] = [
     currentSupplier: "Alimentos Polar Comercial C.A.",
     currentPriceUsd: 22.5,
     alternatives: [
-      { supplier: "Alimentos Polar Comercial C.A.", priceUsd: 22.5, rating: 98, deliveryHours: 24, creditDays: 15, verified: true, isCurrent: true },
-      { supplier: "Distribuidora Mayorista Central C.A.", priceUsd: 20.8, rating: 92, deliveryHours: 48, creditDays: 7, verified: true, savingsPct: 7.5 },
-      { supplier: "Inversiones Hermanos Gómez C.A.", priceUsd: 19.9, rating: 85, deliveryHours: 72, creditDays: 0, verified: false, savingsPct: 11.5 },
+      {
+        supplier: "Alimentos Polar Comercial C.A.",
+        priceUsd: 22.5,
+        rating: 98,
+        deliveryHours: 24,
+        creditDays: 15,
+        verified: true,
+        isCurrent: true,
+        channelType: "official_web",
+        officialUrl: "https://empresaspolar.com",
+        sourceNote: "Web oficial / Portal Clientes Polar (PBX 0212-2023111)",
+      },
+      {
+        supplier: "Distribuidora Mayorista Central C.A.",
+        priceUsd: 20.8,
+        rating: 92,
+        deliveryHours: 48,
+        creditDays: 7,
+        verified: true,
+        savingsPct: 7.5,
+        channelType: "direct_pbx",
+        officialUrl: "https://inmerca.gob.ve",
+        sourceNote: "Mercado Mayorista de Coche · Galpón 3 (Canal Oficial Inmerca)",
+      },
+      {
+        supplier: "Inversiones Hermanos Gómez C.A.",
+        priceUsd: 19.9,
+        rating: 85,
+        deliveryHours: 72,
+        creditDays: 0,
+        verified: false,
+        savingsPct: 11.5,
+        channelType: "social_media",
+        socialHandle: "@distribuidoragomez_vzla",
+        sourceNote: "Lista de difusión por WhatsApp / IG (No verificado de fuentes oficiales)",
+      },
     ],
   },
   {
@@ -64,9 +101,40 @@ export const MARKET_SUPPLIES: MarketSupplyItem[] = [
     currentSupplier: "Lácteos y Quesera Llanera Guárico C.A.",
     currentPriceUsd: 4.8,
     alternatives: [
-      { supplier: "Lácteos y Quesera Llanera Guárico C.A.", priceUsd: 4.8, rating: 88, deliveryHours: 48, creditDays: 7, verified: true, isCurrent: true },
-      { supplier: "Agropecuaria El Sombrero C.A.", priceUsd: 4.1, rating: 94, deliveryHours: 24, creditDays: 10, verified: true, savingsPct: 14.5 },
-      { supplier: "Distribuidora Lácteos Aragua C.A.", priceUsd: 4.35, rating: 90, deliveryHours: 36, creditDays: 15, verified: true, savingsPct: 9.3 },
+      {
+        supplier: "Lácteos y Quesera Llanera Guárico C.A.",
+        priceUsd: 4.8,
+        rating: 88,
+        deliveryHours: 48,
+        creditDays: 7,
+        verified: true,
+        isCurrent: true,
+        channelType: "official_web",
+        sourceNote: "Asociación de Ganaderos Guárico (Registro SICA / INSAI oficial)",
+      },
+      {
+        supplier: "Agropecuaria El Sombrero C.A.",
+        priceUsd: 4.1,
+        rating: 94,
+        deliveryHours: 24,
+        creditDays: 10,
+        verified: true,
+        savingsPct: 14.5,
+        channelType: "direct_pbx",
+        sourceNote: "Despacho directo de finca (Guárico) con guía SICA verificada",
+      },
+      {
+        supplier: "Distribuidora Lácteos Aragua C.A.",
+        priceUsd: 4.35,
+        rating: 90,
+        deliveryHours: 36,
+        creditDays: 15,
+        verified: true,
+        savingsPct: 9.3,
+        channelType: "social_media",
+        socialHandle: "@lacteos_aragua_mayor",
+        sourceNote: "Catálogo comercial de redes sociales (Precios referenciales no auditados)",
+      },
     ],
   },
   {
@@ -76,9 +144,42 @@ export const MARKET_SUPPLIES: MarketSupplyItem[] = [
     currentSupplier: "Alimentos Polar Comercial C.A.",
     currentPriceUsd: 32.0,
     alternatives: [
-      { supplier: "Alimentos Polar Comercial C.A.", priceUsd: 32.0, rating: 95, deliveryHours: 24, creditDays: 15, verified: true, isCurrent: true },
-      { supplier: "Oleaginosas Industriales C.A. (Portuguesa)", priceUsd: 27.5, rating: 93, deliveryHours: 48, creditDays: 21, verified: true, savingsPct: 14.0 },
-      { supplier: "Comercializadora San Martín", priceUsd: 28.9, rating: 89, deliveryHours: 48, creditDays: 15, verified: true, savingsPct: 9.6 },
+      {
+        supplier: "Alimentos Polar Comercial C.A.",
+        priceUsd: 32.0,
+        rating: 95,
+        deliveryHours: 24,
+        creditDays: 15,
+        verified: true,
+        isCurrent: true,
+        channelType: "official_web",
+        officialUrl: "https://empresaspolar.com",
+        sourceNote: "Canal corporativo Alimentos Polar (Marca Mazeite / Diana)",
+      },
+      {
+        supplier: "Oleaginosas Industriales C.A. (Portuguesa)",
+        priceUsd: 27.5,
+        rating: 93,
+        deliveryHours: 48,
+        creditDays: 21,
+        verified: true,
+        savingsPct: 14.0,
+        channelType: "official_web",
+        officialUrl: "https://asoportuguesa.org",
+        sourceNote: "Canal institucional Asoportuguesa Acarigua (Oficial)",
+      },
+      {
+        supplier: "Comercializadora San Martín",
+        priceUsd: 28.9,
+        rating: 89,
+        deliveryHours: 48,
+        creditDays: 15,
+        verified: true,
+        savingsPct: 9.6,
+        channelType: "social_media",
+        socialHandle: "@sanmartin_mayorista",
+        sourceNote: "Redes sociales / WhatsApp (Sujeto a confirmación con preventista)",
+      },
     ],
   },
   {
@@ -88,9 +189,40 @@ export const MARKET_SUPPLIES: MarketSupplyItem[] = [
     currentSupplier: "Carnes y Frigorífico San Antonio C.A.",
     currentPriceUsd: 6.9,
     alternatives: [
-      { supplier: "Carnes y Frigorífico San Antonio C.A.", priceUsd: 6.9, rating: 91, deliveryHours: 24, creditDays: 7, verified: true, isCurrent: true },
-      { supplier: "Frigorífico Industrial Centro-Occidente", priceUsd: 6.1, rating: 96, deliveryHours: 24, creditDays: 14, verified: true, savingsPct: 11.5 },
-      { supplier: "Distribuidora Cárnica Barinas C.A.", priceUsd: 5.95, rating: 87, deliveryHours: 48, creditDays: 7, verified: true, savingsPct: 13.7 },
+      {
+        supplier: "Carnes y Frigorífico San Antonio C.A.",
+        priceUsd: 6.9,
+        rating: 91,
+        deliveryHours: 24,
+        creditDays: 7,
+        verified: true,
+        isCurrent: true,
+        channelType: "direct_pbx",
+        sourceNote: "Frigorífico industrial con guía sanitaria INSAI oficial",
+      },
+      {
+        supplier: "Frigorífico Industrial Centro-Occidente",
+        priceUsd: 6.1,
+        rating: 96,
+        deliveryHours: 24,
+        creditDays: 14,
+        verified: true,
+        savingsPct: 11.5,
+        channelType: "official_web",
+        sourceNote: "Matadero Frigorífico registrado ante INSAI y Contraloría Sanitaria",
+      },
+      {
+        supplier: "Distribuidora Cárnica Barinas C.A.",
+        priceUsd: 5.95,
+        rating: 87,
+        deliveryHours: 48,
+        creditDays: 7,
+        verified: true,
+        savingsPct: 13.7,
+        channelType: "social_media",
+        socialHandle: "@carnes_barinas_dist",
+        sourceNote: "Lista por mensajería / redes (Precios referenciales)",
+      },
     ],
   },
   {
@@ -100,8 +232,29 @@ export const MARKET_SUPPLIES: MarketSupplyItem[] = [
     currentSupplier: "Pescadería Mar Caribe C.A.",
     currentPriceUsd: 5.8,
     alternatives: [
-      { supplier: "Pescadería Mar Caribe C.A.", priceUsd: 5.8, rating: 89, deliveryHours: 24, creditDays: 0, verified: true, isCurrent: true },
-      { supplier: "Cooperativa Pesquera Sucre & Coche", priceUsd: 4.9, rating: 95, deliveryHours: 36, creditDays: 7, verified: true, savingsPct: 15.5 },
+      {
+        supplier: "Pescadería Mar Caribe C.A.",
+        priceUsd: 5.8,
+        rating: 89,
+        deliveryHours: 24,
+        creditDays: 0,
+        verified: true,
+        isCurrent: true,
+        channelType: "direct_pbx",
+        sourceNote: "Distribuidor mayorista La Guaira / Coche",
+      },
+      {
+        supplier: "Cooperativa Pesquera Sucre & Coche",
+        priceUsd: 4.9,
+        rating: 95,
+        deliveryHours: 36,
+        creditDays: 7,
+        verified: true,
+        savingsPct: 15.5,
+        channelType: "official_web",
+        officialUrl: "https://inmerca.gob.ve",
+        sourceNote: "Muelle pesquero / INMERCA Coche C.A. (Canal Oficial)",
+      },
     ],
   },
   {
@@ -111,8 +264,29 @@ export const MARKET_SUPPLIES: MarketSupplyItem[] = [
     currentSupplier: "Empaques y Plásticos Caracas C.A.",
     currentPriceUsd: 18.0,
     alternatives: [
-      { supplier: "Empaques y Plásticos Caracas C.A.", priceUsd: 18.0, rating: 90, deliveryHours: 48, creditDays: 15, verified: true, isCurrent: true },
-      { supplier: "EcoPack Venezuela S.A.", priceUsd: 14.5, rating: 97, deliveryHours: 24, creditDays: 30, verified: true, savingsPct: 19.4 },
+      {
+        supplier: "Empaques y Plásticos Caracas C.A.",
+        priceUsd: 18.0,
+        rating: 90,
+        deliveryHours: 48,
+        creditDays: 15,
+        verified: true,
+        isCurrent: true,
+        channelType: "direct_pbx",
+        sourceNote: "Distribuidor de bolsas y envases termoformados en Boleíta",
+      },
+      {
+        supplier: "EcoPack Venezuela S.A.",
+        priceUsd: 14.5,
+        rating: 97,
+        deliveryHours: 24,
+        creditDays: 30,
+        verified: true,
+        savingsPct: 19.4,
+        channelType: "official_web",
+        officialUrl: "https://ecopackve.com",
+        sourceNote: "Web oficial EcoPack Venezuela · Distribución Guatire",
+      },
     ],
   },
 ];
@@ -276,6 +450,7 @@ export function SuppliersModule() {
   const [maxDeliveryHours, setMaxDeliveryHours] = useState<number>(72);
   const [onlyCredit, setOnlyCredit] = useState<boolean>(false);
   const [onlyVerified, setOnlyVerified] = useState<boolean>(false);
+  const [channelFilter, setChannelFilter] = useState<"all" | "official" | "social">("all");
 
   const filteredSupplies = MARKET_SUPPLIES.filter(
     (s) =>
@@ -289,6 +464,8 @@ export function SuppliersModule() {
         if (alt.deliveryHours > maxDeliveryHours) return false;
         if (onlyCredit && alt.creditDays <= 0) return false;
         if (onlyVerified && !alt.verified) return false;
+        if (channelFilter === "official" && alt.channelType === "social_media") return false;
+        if (channelFilter === "social" && alt.channelType !== "social_media") return false;
         return true;
       })
       .sort((a, b) => {
@@ -490,6 +667,22 @@ export function SuppliersModule() {
             </div>
           </div>
 
+          {/* Banner de Transparencia de Fuentes Oficiales vs Redes Sociales */}
+          <div className="rounded-xl border border-sky-500/30 bg-sky-500/10 p-3.5 text-xs text-foreground flex items-start gap-3">
+            <div className="text-xl shrink-0">🏛️</div>
+            <div className="space-y-1">
+              <div className="font-bold flex items-center gap-2">
+                <span>Transparencia de Datos & Auditoría de Fuentes (Venezuela)</span>
+                <span className="rounded bg-sky-500/20 text-sky-700 dark:text-sky-300 px-2 py-0.2 text-[10px] font-semibold">
+                  Canales Oficiales vs Redes
+                </span>
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Priorizamos <strong>webs institucionales y canales oficiales</strong> de mayoristas (Alimentos Polar, INMERCA Mercado de Coche, Asoportuguesa, EcoPack) con RIF comprobado ante el SENIAT. Los datos obtenidos mediante <strong>redes sociales o listas de difusión de WhatsApp</strong> se señalan claramente con la etiqueta <span className="text-amber-600 dark:text-amber-400 font-semibold">⚠️ No verificado de fuentes oficiales</span> como estimación referencial.
+              </p>
+            </div>
+          </div>
+
           {/* Parámetros Elegibles por el Dueño */}
           <div className="rounded-xl border border-border bg-card p-3.5 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
             <div className="flex flex-wrap items-center gap-3">
@@ -524,6 +717,20 @@ export function SuppliersModule() {
                   <option value={24}>Express 24 Horas</option>
                   <option value={48}>Hasta 48 Horas</option>
                   <option value={72}>Hasta 72 Horas (Todas)</option>
+                </select>
+              </div>
+
+              {/* Origen del Canal / Fuente */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-muted-foreground">Origen:</span>
+                <select
+                  value={channelFilter}
+                  onChange={(e) => setChannelFilter(e.target.value as typeof channelFilter)}
+                  className="rounded-lg border border-input bg-background px-2.5 py-1 text-xs font-medium text-foreground outline-none focus:border-primary"
+                >
+                  <option value="all">Todas las Fuentes</option>
+                  <option value="official">🏛️ Solo Webs / Canales Oficiales</option>
+                  <option value="social">📱 Redes Sociales (No Verificado)</option>
                 </select>
               </div>
             </div>
@@ -585,8 +792,8 @@ export function SuppliersModule() {
                           : "bg-card border-border"
                       }`}
                     >
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5 font-semibold text-foreground truncate">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 font-semibold text-foreground truncate flex-wrap">
                           <span>{alt.supplier}</span>
                           {alt.isCurrent && (
                             <span className="rounded bg-secondary px-1.5 py-0.2 text-[9px] font-bold text-muted-foreground">
@@ -598,7 +805,42 @@ export function SuppliersModule() {
                               Ahorro {alt.savingsPct}%
                             </span>
                           )}
+                          {alt.channelType === "official_web" && (
+                            <span className="rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 font-bold px-1.5 py-0.2 text-[9px] flex items-center gap-0.5">
+                              🌐 Web Oficial
+                            </span>
+                          )}
+                          {alt.channelType === "direct_pbx" && (
+                            <span className="rounded bg-sky-500/15 text-sky-700 dark:text-sky-400 font-bold px-1.5 py-0.2 text-[9px] flex items-center gap-0.5">
+                              🏛️ Canal Oficial / Sede
+                            </span>
+                          )}
+                          {alt.channelType === "social_media" && (
+                            <span className="rounded bg-amber-500/15 text-amber-700 dark:text-amber-300 font-semibold px-1.5 py-0.2 text-[9px] flex items-center gap-0.5" title="No verificado de fuentes oficiales">
+                              ⚠️ Redes Sociales (No Verificado Oficialmente)
+                            </span>
+                          )}
                         </div>
+
+                        {alt.sourceNote && (
+                          <div className="text-[10px] text-muted-foreground/90 mt-0.5 flex items-center gap-1.5 flex-wrap">
+                            <span>📌 {alt.sourceNote}</span>
+                            {alt.socialHandle && (
+                              <span className="font-mono text-primary font-semibold">📱 {alt.socialHandle}</span>
+                            )}
+                            {alt.officialUrl && (
+                              <a
+                                href={alt.officialUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-primary underline hover:text-primary/80 font-medium"
+                              >
+                                Visitar web oficial ↗
+                              </a>
+                            )}
+                          </div>
+                        )}
+
                         <div className="font-mono text-[11px] text-muted-foreground mt-0.5">
                           Entrega: {alt.deliveryHours}h · Crédito: {alt.creditDays} días · Score: {alt.rating}/100
                         </div>
