@@ -11,6 +11,7 @@ const TENDERS: { id: TenderType; label: string }[] = [
   { id: "pago_movil", label: "📱 Pago Móvil" },
   { id: "pos_card", label: "💳 Punto de Venta" },
   { id: "bs_cash", label: "💵 Efectivo Bs." },
+  { id: "credito", label: "📓 Crédito / Fiado" },
 ];
 const BANKS = ["BDV (0102)", "Banesco (0134)", "Mercantil (0105)", "Bancamiga (0172)"];
 export const TENDER_LABEL: Record<TenderType, string> = {
@@ -18,11 +19,13 @@ export const TENDER_LABEL: Record<TenderType, string> = {
   pago_movil: "Pago Móvil",
   pos_card: "Punto de Venta",
   bs_cash: "Efectivo Bs.",
+  credito: "Crédito / Por Cobrar",
 };
 
 export function PaymentModal() {
   const pos = usePos();
   const { totals, rate, customers } = pos;
+  const isFiscal = pos.companySettings.operationMode === "fiscal_seniat";
   const [tender, setTender] = useState<TenderType>("usd_cash");
   const [payments, setPayments] = useState<PaymentSplit[]>([]);
   const [amount, setAmount] = useState("");
@@ -31,7 +34,7 @@ export function PaymentModal() {
   const [ref, setRef] = useState("");
   const [lot, setLot] = useState("");
 
-  // Customer fiscal information
+  // Customer fiscal / debtor information
   const [hasCustomClient, setHasCustomClient] = useState(false);
   const [selectedCrmId, setSelectedCrmId] = useState<string>("");
   const [docType, setDocType] = useState<"V" | "J" | "E" | "G">("V");
@@ -44,8 +47,8 @@ export function PaymentModal() {
   const remaining = r2(dueBs - paidBs);
   const change = remaining < 0 ? -remaining : 0;
 
-  // Remaining expressed in the selected tender (USD must also cover its own IGTF)
-  const suggestUsd = remaining > 0 ? r2(remaining / rate / 1.03) : 0;
+  // Remaining expressed in the selected tender (USD must also cover its own IGTF; Credit in USD does not charge IGTF upfront)
+  const suggestUsd = remaining > 0 ? (tender === "credito" ? r2(remaining / rate) : r2(remaining / rate / 1.03)) : 0;
   const amt = parseFloat(amount.replace(",", ".")) || 0;
   const previewIgtf = tender === "usd_cash" ? igtfFor(amt, rate) : 0;
 
@@ -78,11 +81,17 @@ export function PaymentModal() {
       toast.error("Teléfono inválido (0414-1234567)");
       return;
     }
+    if (tender === "credito" && !clientName.trim() && !selectedCrmId) {
+      setHasCustomClient(true);
+      toast.error("Selecciona o escribe el nombre del cliente para anotar la cuenta por cobrar (Deudores)");
+      return;
+    }
+    const isUsdInput = tender === "usd_cash" || tender === "credito";
     const p: PaymentSplit = {
       id: crypto.randomUUID(),
       type: tender,
-      amountBs: tender === "usd_cash" ? r2(amt * rate) : r2(amt),
-      amountUsd: tender === "usd_cash" ? amt : undefined,
+      amountBs: isUsdInput ? r2(amt * rate) : r2(amt),
+      amountUsd: isUsdInput ? amt : undefined,
       igtfBs: previewIgtf,
       bank: tender === "pago_movil" ? bank : undefined,
       phone: tender === "pago_movil" ? phone : undefined,
@@ -96,31 +105,42 @@ export function PaymentModal() {
   }
 
   function confirm() {
+    const hasCredit = payments.some((p) => p.type === "credito");
+    if (hasCredit && !clientName.trim()) {
+      setHasCustomClient(true);
+      toast.error("Para ventas a crédito debes indicar el cliente en Datos del Cliente");
+      return;
+    }
+
     const customer: CustomerInfo | undefined =
-      hasCustomClient && rifNum
+      (hasCustomClient || hasCredit) && (rifNum || clientName.trim())
         ? {
             docType,
-            rif: `${docType}-${rifNum.trim()}`,
+            rif: `${docType}-${(rifNum.trim() || String(Math.floor(10000000 + Math.random() * 89999999)))}`,
             name: clientName.trim() || "Cliente Registrado",
           }
         : undefined;
 
     const order = pos.checkout(payments, change, customer);
-    toast.success(`Orden #${order.id} cobrada y enviada a cocina`);
+    toast.success(
+      hasCredit
+        ? `Orden #${order.id} registrada en Cuentas por Cobrar (${customer?.name})`
+        : `Orden #${order.id} cobrada y enviada a cocina`
+    );
     pos.setTicketOrderId(order.id);
     pos.setModal("ticket");
   }
 
   return (
     <Modal
-      title="💳 Pago Mixto & Checkout Fiscal SENIAT"
+      title={isFiscal ? "💳 Pago Mixto & Facturación Fiscal SENIAT" : "💳 Pago Mixto & Nota de Control Interno (Sin IVA)"}
       width="max-w-4xl"
       onClose={() => pos.setModal(null)}
       footer={
         <div className="flex items-center justify-between gap-3">
           <span className="text-xs text-muted-foreground">El cobro se habilita cuando el saldo restante sea ≤ Bs. 0,00</span>
           <button disabled={remaining > 0.009 || payments.length === 0} onClick={confirm} className={`${btnPrimary} px-7 py-2.5 text-sm`}>
-            ✓ Confirmar y Emitir Factura
+            {isFiscal ? "✓ Confirmar y Emitir Factura SENIAT" : "✓ Confirmar y Emitir Nota de Control"}
           </button>
         </div>
       }
@@ -218,13 +238,18 @@ export function PaymentModal() {
 
       <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-[1fr_290px]">
         <div>
-          <div className="grid grid-cols-4 gap-1.5 p-1 rounded-xl border border-border bg-secondary">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5 p-1 rounded-xl border border-border bg-secondary">
             {TENDERS.map((t) => (
               <button
                 key={t.id}
                 onClick={() => {
                   setTender(t.id);
-                  setAmount("");
+                  if (t.id === "credito") {
+                    setHasCustomClient(true);
+                    setAmount(String(r2(remaining / rate)));
+                  } else {
+                    setAmount("");
+                  }
                 }}
                 className={`rounded-lg px-2 py-2 text-xs font-semibold transition-all ${
                   tender === t.id
@@ -239,7 +264,7 @@ export function PaymentModal() {
 
           <div className="mt-3 space-y-3 rounded-xl border border-border bg-secondary/20 p-4">
             <label className="block text-xs font-medium text-muted-foreground">
-              Monto a abonar en {tender === "usd_cash" ? "USD ($)" : "Bolívares (Bs.)"}
+              Monto a abonar en {tender === "usd_cash" || tender === "credito" ? "USD ($)" : "Bolívares (Bs.)"}
               <div className="mt-1.5 flex gap-2">
                 <input
                   autoFocus
@@ -252,12 +277,24 @@ export function PaymentModal() {
                 />
                 <button
                   className={btnGhost}
-                  onClick={() => setAmount(String(tender === "usd_cash" ? suggestUsd : Math.max(0, remaining)))}
+                  onClick={() => setAmount(String(tender === "usd_cash" || tender === "credito" ? suggestUsd : Math.max(0, remaining)))}
                 >
                   Restante
                 </button>
               </div>
             </label>
+
+            {tender === "credito" && (
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-300 space-y-1.5">
+                <div className="font-bold flex items-center justify-between">
+                  <span>📓 Anotar en Cuenta por Cobrar (Deudores)</span>
+                  <span className="font-mono">{fmtUsd(amt)} = {fmtBs(amt * rate)}</span>
+                </div>
+                <p className="text-[11px] opacity-90">
+                  La deuda queda indexada en dólares ($ USD) a nombre del cliente seleccionado arriba. Cuando el cliente abone, se calculará a la tasa del día.
+                </p>
+              </div>
+            )}
 
             {tender === "usd_cash" && (
               <>
@@ -339,7 +376,7 @@ export function PaymentModal() {
               onClick={add}
               className="w-full rounded-lg border border-module-inventory/30 bg-module-inventory-light py-2.5 text-xs font-bold text-module-inventory hover:opacity-90 transition"
             >
-              + Registrar Pago Parcial
+              {tender === "credito" ? "+ Anotar Monto a Crédito (Fiado)" : "+ Registrar Pago Parcial"}
             </button>
           </div>
         </div>

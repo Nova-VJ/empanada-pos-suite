@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Banknote, Building2, CheckCircle2, Lock, Plus } from "lucide-react";
+import { Banknote, Building2, CheckCircle2, Lock, Mail, Plus, Send } from "lucide-react";
 import { toast } from "sonner";
 import { usePos } from "@/context/PosContext";
 import { fmtBs, fmtUsd } from "@/lib/money";
@@ -22,6 +22,8 @@ export function CashModule() {
   const [tab, setTab] = useState<"cash" | "audits" | "banks">("cash");
   const [selectedBank, setSelectedBank] = useState<string>(bankAccounts[0]?.id ?? "bank-banesco");
   const [moveModal, setMoveModal] = useState(false);
+  const [emailModal, setEmailModal] = useState(false);
+  const [emailDest, setEmailDest] = useState(pos.companySettings.reportEmail || pos.companySettings.email);
 
   const [moveForm, setMoveForm] = useState({
     moveType: "retiro" as CashMoveType,
@@ -48,6 +50,16 @@ export function CashModule() {
     setMoveForm({ moveType: "retiro", amountBs: "", description: "" });
   }
 
+  function handleSendCurrentReportEmail() {
+    if (!emailDest.trim()) {
+      toast.error("Ingresa un correo electrónico válido");
+      return;
+    }
+    pos.updateCompanySettings({ reportEmail: emailDest.trim() });
+    toast.success(`Reporte de Caja enviado por correo a ${emailDest.trim()}`);
+    setEmailModal(false);
+  }
+
   const activeBankMoves = bankMovements.filter((bm) => bm.bankId === selectedBank);
 
   return (
@@ -56,10 +68,17 @@ export function CashModule() {
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Caja, Bancos y Arqueos X-Z</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Control de gaveta multimoneda (Bs. / USD), movimientos de turno, Cortes Z y conciliación bancaria nacional
+            Control de gaveta multimoneda (Bs. / USD), movimientos de turno, Cortes Z, envío por correo y conciliación bancaria
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setEmailModal(true)}
+            className="inline-flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-4 py-2 text-xs font-semibold text-primary hover:bg-primary/15 transition"
+          >
+            <Mail className="h-4 w-4" />
+            Enviar Reporte por Correo
+          </button>
           <button
             onClick={() => setMoveModal(true)}
             className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-secondary transition"
@@ -369,6 +388,47 @@ export function CashModule() {
                 placeholder="Ej. Compra de hielo / Retiro supervisor..."
               />
             </label>
+          </div>
+        </Modal>
+      )}
+
+      {emailModal && (
+        <Modal
+          title="📧 Enviar Reporte de Caja por Correo"
+          onClose={() => setEmailModal(false)}
+          width="max-w-md"
+          footer={
+            <div className="flex justify-end gap-2">
+              <button className={btnGhost} onClick={() => setEmailModal(false)}>
+                Cancelar
+              </button>
+              <button className={btnPrimary} onClick={handleSendCurrentReportEmail}>
+                <Send className="h-3.5 w-3.5 inline mr-1" />
+                Enviar Reporte Ahora
+              </button>
+            </div>
+          }
+        >
+          <div className="space-y-3 text-xs">
+            <p className="text-muted-foreground">
+              Se enviará un resumen consolidado con el fondo de caja, ventas del turno en USD/Bs., pagos móviles, puntos de venta y saldo disponible.
+            </p>
+            <label className="block font-semibold text-foreground">
+              Correo Electrónico de Gerencia / Dueño
+              <input
+                type="email"
+                value={emailDest}
+                onChange={(e) => setEmailDest(e.target.value)}
+                className={`${inputCls} mt-1 font-mono`}
+                placeholder="gerencia@drempanadas.com.ve"
+              />
+            </label>
+            <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-[11px] text-muted-foreground space-y-1">
+              <div className="font-semibold text-foreground">Vista previa del reporte:</div>
+              <div>• Total consolidado turno: {fmtBs(expectedTotalBs)} ({fmtUsd(expectedTotalBs / rate)})</div>
+              <div>• Efectivo USD en gaveta: {fmtUsd(shift.openingUsd + expected.usd)}</div>
+              <div>• Pago Móvil: {fmtBs(expected.pagoMovil)} · Puntos: {fmtBs(expected.pos)}</div>
+            </div>
           </div>
         </Modal>
       )}

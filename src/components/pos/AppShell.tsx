@@ -22,6 +22,7 @@ import {
   Printer,
   Lock,
   RefreshCw,
+  Wrench,
 } from "lucide-react";
 import { toast } from "sonner";
 import { usePos } from "@/context/PosContext";
@@ -32,6 +33,7 @@ import { ThermalTicketModal } from "./ThermalTicketModal";
 import { CashShiftModal } from "./CashShiftModal";
 import { FiscalPrinterModal } from "./FiscalPrinterModal";
 import { RateSelectorModal } from "./RateSelectorModal";
+import { SupportMenuModal } from "./SupportMenuModal";
 
 export const SEARCH_ID = "pos-catalog-search";
 
@@ -331,6 +333,16 @@ export function AppShell({ children }: { children: ReactNode }) {
               </button>
             </div>
 
+            {/* Support / Technician Pill (TeamViewer & Resincronización) */}
+            <button
+              onClick={() => pos.setModal("support")}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 transition"
+              title="Menú Oculto de Soporte Técnico, TeamViewer y Actualizar Biblioteca Móvil"
+            >
+              <Wrench className="h-3 w-3" />
+              <span className="hidden sm:inline">Soporte VIP</span>
+            </button>
+
             {/* Fiscal Printer Status Pill */}
             <button
               onClick={() => pos.setModal("printer")}
@@ -409,6 +421,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {pos.modal === "shift" && <CashShiftModal />}
       {pos.modal === "printer" && <FiscalPrinterModal />}
       {pos.modal === "bcv" && <RateSelectorModal />}
+      {pos.modal === "support" && <SupportMenuModal />}
     </div>
   );
 }

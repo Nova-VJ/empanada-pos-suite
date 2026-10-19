@@ -33,6 +33,12 @@ export const mockCustomers: CustomerRecord[] = [
     orderCount: 18,
     totalSpentUsd: 642.5,
     lastPurchase: now - 1 * DAY,
+    debtUsd: 84.0,
+    creditLimitUsd: 300.0,
+    creditMovements: [
+      { id: "cm-1", date: now - 4 * DAY, type: "cargo", amountUsd: 124.0, note: "Pedido corporativo 4 Cajas Oficina (Ticket #1032)", orderId: 1032 },
+      { id: "cm-2", date: now - 2 * DAY, type: "abono", amountUsd: 40.0, method: "Pago Móvil Banesco", note: "Abono parcial administración" },
+    ],
   },
   {
     id: "cust-2",
@@ -48,6 +54,9 @@ export const mockCustomers: CustomerRecord[] = [
     orderCount: 14,
     totalSpentUsd: 495.0,
     lastPurchase: now - 2 * DAY,
+    debtUsd: 0,
+    creditLimitUsd: 250.0,
+    creditMovements: [],
   },
   {
     id: "cust-3",
@@ -63,6 +72,11 @@ export const mockCustomers: CustomerRecord[] = [
     orderCount: 22,
     totalSpentUsd: 268.4,
     lastPurchase: now - 5 * HOUR,
+    debtUsd: 18.5,
+    creditLimitUsd: 60.0,
+    creditMovements: [
+      { id: "cm-3", date: now - 1 * DAY, type: "cargo", amountUsd: 18.5, note: "Desayuno familiar fiado (Ticket #1038)", orderId: 1038 },
+    ],
   },
   {
     id: "cust-4",
@@ -78,6 +92,12 @@ export const mockCustomers: CustomerRecord[] = [
     orderCount: 9,
     totalSpentUsd: 112.5,
     lastPurchase: now - 3 * DAY,
+    debtUsd: 11.2,
+    creditLimitUsd: 40.0,
+    creditMovements: [
+      { id: "cm-4", date: now - 3 * DAY, type: "cargo", amountUsd: 16.2, note: "Combo Dúo + Maltas a crédito", orderId: 1035 },
+      { id: "cm-5", date: now - 1 * DAY, type: "abono", amountUsd: 5.0, method: "Efectivo USD", note: "Abonó billete de $5 en barra" },
+    ],
   },
   {
     id: "cust-5",
@@ -93,6 +113,11 @@ export const mockCustomers: CustomerRecord[] = [
     orderCount: 7,
     totalSpentUsd: 215.0,
     lastPurchase: now - 6 * DAY,
+    debtUsd: 42.0,
+    creditLimitUsd: 150.0,
+    creditMovements: [
+      { id: "cm-6", date: now - 5 * DAY, type: "cargo", amountUsd: 42.0, note: "Refrigerio junta directiva (2 Cajas 10 Emp.)", orderId: 1031 },
+    ],
   },
   {
     id: "cust-6",
@@ -108,6 +133,9 @@ export const mockCustomers: CustomerRecord[] = [
     orderCount: 3,
     totalSpentUsd: 34.2,
     lastPurchase: now - 15 * DAY,
+    debtUsd: 0,
+    creditLimitUsd: 25.0,
+    creditMovements: [],
   },
   {
     id: "cust-7",
@@ -123,6 +151,9 @@ export const mockCustomers: CustomerRecord[] = [
     orderCount: 1,
     totalSpentUsd: 14.5,
     lastPurchase: now - 65 * DAY,
+    debtUsd: 0,
+    creditLimitUsd: 20.0,
+    creditMovements: [],
   },
 ];
 
@@ -596,6 +627,11 @@ export const defaultCompanySettings: CompanySettings = {
   postalCode: "1060",
   valuationMethod: "pmp",
   branch: "Sucursal Chacao",
+  operationMode: "control_interno",
+  reportEmail: "juanmanuel.gerencia@drempanadas.com.ve",
+  autoEmailCashReport: true,
+  teamViewerId: "1 492 810 334",
+  printerWidth: "58mm",
 };
 
 export const mockSeededOrders: Order[] = [

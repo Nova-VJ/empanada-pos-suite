@@ -122,6 +122,31 @@ export function CartPanel() {
       </div>
 
       <div className="border-t border-border bg-secondary/30 p-3.5">
+        <div className="mb-2 flex items-center justify-between rounded-lg border border-border bg-card p-1 text-[11px]">
+          <button
+            type="button"
+            onClick={() => pos.updateCompanySettings({ operationMode: "control_interno" })}
+            className={`flex-1 rounded-md py-1 font-semibold transition ${
+              pos.companySettings.operationMode !== "fiscal_seniat"
+                ? "bg-violet-600 text-white shadow-2xs"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            📋 Control Interno (Sin IVA)
+          </button>
+          <button
+            type="button"
+            onClick={() => pos.updateCompanySettings({ operationMode: "fiscal_seniat" })}
+            className={`flex-1 rounded-md py-1 font-semibold transition ${
+              pos.companySettings.operationMode === "fiscal_seniat"
+                ? "bg-primary text-primary-foreground shadow-2xs"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            🧾 Factura Fiscal (16% IVA)
+          </button>
+        </div>
+
         <div className="mb-2.5 flex gap-1.5">
           {DISCOUNTS.map((d) => (
             <button
@@ -138,12 +163,24 @@ export function CartPanel() {
           ))}
         </div>
         <dl className="space-y-1 font-mono text-xs">
-          <Row label="Base Imponible (16% IVA)" bs={totals.baseBs} usd={r(totals.baseBs)} />
-          <Row label="Débito Fiscal IVA (16%)" bs={totals.ivaBs} usd={r(totals.ivaBs)} />
-          <div className="flex justify-between text-module-cash text-[11px]">
-            <dt>IGTF proyectado (3% divisas)</dt>
-            <dd>máx. {fmtBs(totals.totalBs * IGTF)}</dd>
-          </div>
+          {pos.companySettings.operationMode === "fiscal_seniat" ? (
+            <>
+              <Row label="Base Imponible (16% IVA)" bs={totals.baseBs} usd={r(totals.baseBs)} />
+              <Row label="Débito Fiscal IVA (16%)" bs={totals.ivaBs} usd={r(totals.ivaBs)} />
+              <div className="flex justify-between text-module-cash text-[11px]">
+                <dt>IGTF proyectado (3% divisas)</dt>
+                <dd>máx. {fmtBs(totals.totalBs * IGTF)}</dd>
+              </div>
+            </>
+          ) : (
+            <>
+              <Row label="Subtotal Nota de Control" bs={totals.baseBs} usd={r(totals.baseBs)} />
+              <div className="flex justify-between text-violet-600 dark:text-violet-400 text-[11px] font-sans font-medium">
+                <dt>Modo Control Interno (Estilo Fina)</dt>
+                <dd className="font-mono">Exento / Sin IVA (0%)</dd>
+              </div>
+            </>
+          )}
         </dl>
         <div className="mt-2.5 flex items-end justify-between rounded-xl border border-primary/20 bg-module-sales-light px-3.5 py-2.5">
           <span className="text-xs font-semibold uppercase tracking-wider text-module-sales">Total a pagar</span>

@@ -50,7 +50,7 @@ import type {
   SupplierInvoice,
 } from "@/types/pos";
 
-type ModalName = null | "payment" | "ticket" | "shift" | "printer" | "bcv";
+type ModalName = null | "payment" | "ticket" | "shift" | "printer" | "bcv" | "support";
 
 interface PosState {
   theme: "light" | "dark";
@@ -80,6 +80,7 @@ interface PosState {
   accountingAccounts: AccountingAccount[];
   journalEntries: JournalEntry[];
   companySettings: CompanySettings;
+  lastMobileSync?: number;
 }
 
 const initialRatesData: MultiSourceRatesData = {
@@ -150,6 +151,7 @@ const initial = (): PosState => ({
   accountingAccounts: mockAccountingAccounts,
   journalEntries: mockJournalEntries,
   companySettings: defaultCompanySettings,
+  lastMobileSync: Date.now() - 12 * 60000,
 });
 
 const KEY = "novasystem-drempanadas-v2";
@@ -194,6 +196,8 @@ interface Ctx extends PosState {
   createCustomer: (c: Omit<CustomerRecord, "id" | "orderCount" | "totalSpentUsd" | "lastPurchase" | "segment">) => void;
   updateCustomer: (id: string, c: Partial<CustomerRecord>) => void;
   deleteCustomer: (id: string) => void;
+  registerCustomerDebtPayment: (customerId: string, amountUsd: number, method: string, note: string) => void;
+  syncMobileLibrary: () => Promise<void>;
   createSupplier: (s: Omit<Supplier, "id" | "score" | "dimensions" | "strengths" | "weaknesses" | "redFlags">) => void;
   updateSupplier: (id: string, s: Partial<Supplier>) => void;
   createPurchaseOrder: (po: { supplierId: string; itemsSummary: string; productId?: string; qty?: number; totalUsd: number }) => void;
@@ -315,8 +319,9 @@ export function PosProvider({ children }: { children: ReactNode }) {
     }
   }, [s.theme]);
 
+  const isFiscalMode = s.companySettings.operationMode === "fiscal_seniat";
   const grossUsd = s.cart.reduce((sum, l) => sum + (s.products.find((p) => p.id === l.productId)?.priceUsd ?? 0) * l.qty, 0);
-  const totals = breakdown(grossUsd, s.discount, s.rate);
+  const totals = breakdown(grossUsd, s.discount, s.rate, isFiscalMode);
 
   const addToCart = useCallback((p: Product, modifier?: string) => {
     playBeep();
@@ -335,6 +340,7 @@ export function PosProvider({ children }: { children: ReactNode }) {
 
   const checkout = useCallback((payments: PaymentSplit[], changeBs: number, customer?: CustomerInfo) => {
     const st = stateRef.current;
+    const isFiscal = st.companySettings.operationMode === "fiscal_seniat";
     const lines = st.cart.map((l) => {
       const p = st.products.find((x) => x.id === l.productId)!;
       return {
@@ -349,7 +355,7 @@ export function PosProvider({ children }: { children: ReactNode }) {
       };
     });
     const gross = lines.reduce((a, l) => a + l.unitUsd * l.qty, 0);
-    const b = breakdown(gross, st.discount, st.rate);
+    const b = breakdown(gross, st.discount, st.rate, isFiscal);
     const igtfBs = r2(payments.reduce((a, p) => a + p.igtfBs, 0));
     const inv = st.fiscal.lastInvoice + 1;
     const invoiceNo = String(inv).padStart(8, "0");
@@ -357,7 +363,8 @@ export function PosProvider({ children }: { children: ReactNode }) {
       id: st.nextOrder,
       invoiceNo,
       controlNo: `00-${String(inv + 50000).padStart(8, "0")}`,
-      invoiceType: customer ? "completa" : "simplificada",
+      invoiceType: !isFiscal ? "control_interno" : customer ? "completa" : "simplificada",
+      operationMode: st.companySettings.operationMode ?? "control_interno",
       status: "confirmada",
       createdAt: Date.now(),
       cashier: st.shift.cashier,
@@ -389,18 +396,26 @@ export function PosProvider({ children }: { children: ReactNode }) {
         moveType: "venta",
         quantity: -l.qty,
         unitCostUsd: p?.costUsd ?? 0,
-        reason: `Venta TPV Ticket #${order.id} (Fact. ${invoiceNo})`,
+        reason: `Venta TPV Ticket #${order.id} (Doc. ${invoiceNo})`,
         createdAt: Date.now(),
       };
     });
 
-    // Automatic cash movement
+    // Credit / Fiado calculation
+    const creditBs = payments.filter((p) => p.type === "credito").reduce((a, p) => a + p.amountBs, 0);
+    const creditUsd = r2(creditBs / st.rate);
+    const paidBs = Math.max(0, r2(order.totalBs - creditBs));
+
+    // Automatic cash movement (only for cash/paid portion if not 100% credit)
     const newCashMove: CashMovement = {
       id: crypto.randomUUID(),
       moveType: "venta",
-      amountBs: order.totalBs,
-      amountUsd: order.totalUsd,
-      description: `Cobro Ticket #${order.id} (${customer?.name ?? "Consumidor Final"})`,
+      amountBs: paidBs > 0 ? paidBs : order.totalBs,
+      amountUsd: paidBs > 0 ? r2(paidBs / st.rate) : order.totalUsd,
+      description:
+        creditUsd > 0
+          ? `Venta a Crédito Ticket #${order.id} (${customer?.name ?? "Cliente Deudor"} — Pendiente $${creditUsd.toFixed(2)})`
+          : `Cobro Ticket #${order.id} (${customer?.name ?? "Consumidor Final"})`,
       createdAt: Date.now(),
     };
 
@@ -410,7 +425,7 @@ export function PosProvider({ children }: { children: ReactNode }) {
       id: crypto.randomUUID(),
       entryNumber: nextEntryNum,
       entryDate: new Date().toISOString().split("T")[0]!,
-      description: `Venta TPV Factura #${invoiceNo} — ${customer?.name ?? "Consumidor Final"}`,
+      description: `Venta TPV Doc #${invoiceNo} — ${customer?.name ?? "Consumidor Final"}`,
       status: "confirmado",
       lines: [
         {
@@ -419,7 +434,7 @@ export function PosProvider({ children }: { children: ReactNode }) {
           accountName: payments.some((p) => p.type === "pago_movil" || p.type === "pos_card")
             ? "Bancos Nacionales (Banesco / BDV / Mercantil)"
             : "Caja General Bolívares (VES)",
-          description: `Cobro Factura #${invoiceNo}`,
+          description: `Cobro Doc #${invoiceNo}`,
           debitBs: order.totalBs,
           creditBs: 0,
         },
@@ -427,18 +442,22 @@ export function PosProvider({ children }: { children: ReactNode }) {
           id: crypto.randomUUID(),
           accountCode: "4101",
           accountName: "Ingresos por Ventas de Empanadas y Bebidas",
-          description: "Base Imponible 16%",
+          description: isFiscal ? "Base Imponible 16%" : "Ingreso Control Interno (Sin IVA)",
           debitBs: 0,
           creditBs: order.baseBs,
         },
-        {
-          id: crypto.randomUUID(),
-          accountCode: "2104",
-          accountName: "Débito Fiscal IVA por Pagar SENIAT (16%)",
-          description: "IVA 16%",
-          debitBs: 0,
-          creditBs: order.ivaBs,
-        },
+        ...(order.ivaBs > 0
+          ? [
+              {
+                id: crypto.randomUUID(),
+                accountCode: "2104",
+                accountName: "Débito Fiscal IVA por Pagar SENIAT (16%)",
+                description: "IVA 16%",
+                debitBs: 0,
+                creditBs: order.ivaBs,
+              },
+            ]
+          : []),
         ...(order.igtfBs > 0
           ? [
               {
@@ -454,34 +473,97 @@ export function PosProvider({ children }: { children: ReactNode }) {
       ],
     };
 
-    setS((x) => ({
-      ...x,
-      orders: [order, ...x.orders],
-      cart: [],
-      discount: 0,
-      nextOrder: x.nextOrder + 1,
-      fiscal: { ...x.fiscal, lastInvoice: inv },
-      inventoryMovements: [...newMovements, ...x.inventoryMovements],
-      cashMovements: [newCashMove, ...x.cashMovements],
-      journalEntries: [newJournal, ...x.journalEntries],
-      customers: customer
-        ? x.customers.map((c) =>
-            c.rif.toLowerCase() === customer.rif.toLowerCase()
-              ? {
-                  ...c,
-                  orderCount: c.orderCount + 1,
-                  totalSpentUsd: r2(c.totalSpentUsd + order.totalUsd),
-                  lastPurchase: Date.now(),
-                  segment: c.totalSpentUsd + order.totalUsd > 250 ? "VIP" : "Regular",
-                }
-              : c
-          )
-        : x.customers,
-      products: x.products.map((p) => {
-        const q = lines.filter((l) => l.productId === p.id).reduce((a, l) => a + l.qty, 0);
-        return q ? { ...p, stockBar: Math.max(0, p.stockBar - q) } : p;
-      }),
-    }));
+    setS((x) => {
+      let updatedCustomers = x.customers;
+      if (customer) {
+        const fullRif = `${customer.docType}-${customer.rif}`.replace(/^[VJEG]-[VJEG]-/i, `${customer.docType}-`);
+        const exists = x.customers.some(
+          (c) => c.rif.toLowerCase() === customer.rif.toLowerCase() || c.rif.toLowerCase() === fullRif.toLowerCase()
+        );
+        if (exists) {
+          updatedCustomers = x.customers.map((c) => {
+            if (c.rif.toLowerCase() === customer.rif.toLowerCase() || c.rif.toLowerCase() === fullRif.toLowerCase()) {
+              const newMove =
+                creditUsd > 0
+                  ? [
+                      {
+                        id: crypto.randomUUID(),
+                        date: Date.now(),
+                        type: "cargo" as const,
+                        amountUsd: creditUsd,
+                        note: `Venta a crédito Ticket #${order.id}`,
+                        orderId: order.id,
+                      },
+                      ...(c.creditMovements ?? []),
+                    ]
+                  : c.creditMovements ?? [];
+              return {
+                ...c,
+                orderCount: c.orderCount + 1,
+                totalSpentUsd: r2(c.totalSpentUsd + order.totalUsd),
+                lastPurchase: Date.now(),
+                segment: c.totalSpentUsd + order.totalUsd > 250 ? "VIP" : "Regular",
+                debtUsd: r2((c.debtUsd ?? 0) + creditUsd),
+                creditMovements: newMove,
+              };
+            }
+            return c;
+          });
+        } else {
+          // Automatically register new customer if they bought on credit or with RIF
+          updatedCustomers = [
+            {
+              id: crypto.randomUUID(),
+              docType: customer.docType,
+              rif: customer.rif.includes("-") ? customer.rif : `${customer.docType}-${customer.rif}`,
+              name: customer.name,
+              email: "",
+              phone: customer.phone ?? "",
+              city: "Caracas",
+              address: customer.address ?? "Cliente registrado en caja",
+              isBusiness: customer.docType === "J" || customer.docType === "G",
+              segment: "Regular",
+              orderCount: 1,
+              totalSpentUsd: order.totalUsd,
+              lastPurchase: Date.now(),
+              debtUsd: creditUsd,
+              creditLimitUsd: 100,
+              creditMovements:
+                creditUsd > 0
+                  ? [
+                      {
+                        id: crypto.randomUUID(),
+                        date: Date.now(),
+                        type: "cargo",
+                        amountUsd: creditUsd,
+                        note: `Venta a crédito Ticket #${order.id}`,
+                        orderId: order.id,
+                      },
+                    ]
+                  : [],
+            },
+            ...x.customers,
+          ];
+        }
+      }
+
+      return {
+        ...x,
+        orders: [order, ...x.orders],
+        cart: [],
+        discount: 0,
+        nextOrder: x.nextOrder + 1,
+        fiscal: { ...x.fiscal, lastInvoice: inv },
+        inventoryMovements: [...newMovements, ...x.inventoryMovements],
+        cashMovements: [newCashMove, ...x.cashMovements],
+        journalEntries: [newJournal, ...x.journalEntries],
+        customers: updatedCustomers,
+        products: x.products.map((p) => {
+          const q = lines.filter((l) => l.productId === p.id).reduce((a, l) => a + l.qty, 0);
+          return q ? { ...p, stockBar: Math.max(0, p.stockBar - q) } : p;
+        }),
+      };
+    });
     void api.createOrder(order);
     playCashChime();
     if (order.kdsStatus === "fryer") setTimeout(playKitchenBell, 450);
@@ -505,6 +587,14 @@ export function PosProvider({ children }: { children: ReactNode }) {
     void api.closeShift(audit);
     return audit;
   }, []);
+
+  const syncMobileLibrary = useCallback(async () => {
+    await refreshRates();
+    setS((x) => ({
+      ...x,
+      lastMobileSync: Date.now(),
+    }));
+  }, [refreshRates]);
 
   const value: Ctx = {
     ...s,
@@ -601,6 +691,9 @@ export function PosProvider({ children }: { children: ReactNode }) {
             totalSpentUsd: 0,
             lastPurchase: Date.now(),
             segment: "Ocasional",
+            debtUsd: c.debtUsd ?? 0,
+            creditLimitUsd: c.creditLimitUsd ?? 100,
+            creditMovements: c.creditMovements ?? [],
           },
           ...x.customers,
         ],
@@ -615,6 +708,45 @@ export function PosProvider({ children }: { children: ReactNode }) {
         ...x,
         customers: x.customers.filter((item) => item.id !== id),
       })),
+    registerCustomerDebtPayment: (customerId, amountUsd, method, note) =>
+      setS((x) => {
+        const cust = x.customers.find((c) => c.id === customerId);
+        if (!cust) return x;
+        const cleanUsd = r2(Math.min(amountUsd, cust.debtUsd ?? amountUsd));
+        const amountBs = r2(cleanUsd * x.rate);
+        const cashMove: CashMovement = {
+          id: crypto.randomUUID(),
+          moveType: "ajuste",
+          amountBs,
+          amountUsd: cleanUsd,
+          description: `Abono de cuenta por cobrar: ${cust.name} (${method})`,
+          createdAt: Date.now(),
+        };
+        return {
+          ...x,
+          cashMovements: [cashMove, ...x.cashMovements],
+          customers: x.customers.map((c) =>
+            c.id === customerId
+              ? {
+                  ...c,
+                  debtUsd: Math.max(0, r2((c.debtUsd ?? 0) - cleanUsd)),
+                  creditMovements: [
+                    {
+                      id: crypto.randomUUID(),
+                      date: Date.now(),
+                      type: "abono",
+                      amountUsd: cleanUsd,
+                      method,
+                      note: note || `Abono recibido vía ${method}`,
+                    },
+                    ...(c.creditMovements ?? []),
+                  ],
+                }
+              : c
+          ),
+        };
+      }),
+    syncMobileLibrary,
     createSupplier: (sup) =>
       setS((x) => ({
         ...x,

@@ -6,10 +6,13 @@ export const fmtBs = (n: number) => `Bs. ${bsFmt.format(n)}`;
 export const fmtUsd = (n: number) => `$${n.toFixed(2)}`;
 export const r2 = (n: number) => Math.round(n * 100) / 100;
 
-/** Prices are IVA-inclusive. Returns breakdown in Bs. */
-export function breakdown(grossUsd: number, discountPct: number, rate: number) {
+/** Prices are IVA-inclusive when includeIva=true. In Control Interno mode (includeIva=false), no IVA is extracted. */
+export function breakdown(grossUsd: number, discountPct: number, rate: number, includeIva = true) {
   const totalUsd = r2(grossUsd * (1 - discountPct / 100));
   const totalBs = r2(totalUsd * rate);
+  if (!includeIva) {
+    return { totalUsd, totalBs, baseBs: totalBs, ivaBs: 0 };
+  }
   const baseBs = r2(totalBs / (1 + IVA));
   const ivaBs = r2(totalBs - baseBs);
   return { totalUsd, totalBs, baseBs, ivaBs };

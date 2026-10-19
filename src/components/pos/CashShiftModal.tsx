@@ -1,9 +1,10 @@
 import { useState } from "react";
+import { Mail, CheckCircle2, Send } from "lucide-react";
 import { toast } from "sonner";
 import { usePos } from "@/context/PosContext";
-import { fmtBs, r2 } from "@/lib/money";
+import { fmtBs, fmtUsd, r2 } from "@/lib/money";
 import type { Order, ShiftAudit } from "@/types/pos";
-import { Modal, btnDanger, btnGhost, inputCls } from "./Modal";
+import { Modal, btnDanger, btnGhost, btnPrimary, inputCls } from "./Modal";
 
 export function expectedFrom(orders: Order[]) {
   const e = { bs: 0, usd: 0, pos: 0, pagoMovil: 0 };
@@ -21,9 +22,37 @@ export function expectedFrom(orders: Order[]) {
   return { bs: r2(e.bs), usd: r2(e.usd), pos: r2(e.pos), pagoMovil: r2(e.pagoMovil) };
 }
 
+export function buildCashReportSummary(a: ShiftAudit, rate: number, companyName: string) {
+  const dateStr = new Date(a.closedAt).toLocaleString("es-VE");
+  const title = a.kind === "Z" ? `REPORTE CIERRE Z #${a.zNumber}` : "REPORTE CORTE PARCIAL X";
+  const body = [
+    `📊 ${title} — ${companyName}`,
+    `Fecha/Hora: ${dateStr}`,
+    `Cajero: ${a.cashier} (${a.register})`,
+    `Tickets procesados: ${a.tickets}`,
+    `Tasa activa: Bs. ${rate.toFixed(2)} / $`,
+    `----------------------------------------`,
+    `• Efectivo Bs.: Declarado ${fmtBs(a.declared.bs)} | Sistema ${fmtBs(a.expected.bs)}`,
+    `• Efectivo USD: Declarado ${fmtUsd(a.declared.usd)} | Sistema ${fmtUsd(a.expected.usd)}`,
+    `• Punto de Venta: Declarado ${fmtBs(a.declared.pos)} | Sistema ${fmtBs(a.expected.pos)}`,
+    `• Pago Móvil: Declarado ${fmtBs(a.declared.pagoMovil)} | Sistema ${fmtBs(a.expected.pagoMovil)}`,
+    `----------------------------------------`,
+    `TOTAL DECLARADO: ${fmtBs(a.declaredTotalBs)} (${fmtUsd(a.declaredTotalBs / rate)})`,
+    `TOTAL SISTEMA:   ${fmtBs(a.expectedTotalBs)} (${fmtUsd(a.expectedTotalBs / rate)})`,
+    `DIFERENCIA:      ${fmtBs(a.differenceBs)}`,
+    a.notes ? `Observaciones: ${a.notes}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+  return { subject: `${title} - ${companyName} (${dateStr})`, body };
+}
+
 export function CashShiftModal() {
   const pos = usePos();
   const [f, setF] = useState({ bs: "", usd: "", pos: "", pagoMovil: "", notes: "" });
+  const [emailTo, setEmailTo] = useState(pos.companySettings.reportEmail || pos.companySettings.email || "gerencia@drempanadas.com.ve");
+  const [autoSendEmail, setAutoSendEmail] = useState(pos.companySettings.autoEmailCashReport ?? true);
+  const [emailSent, setEmailSent] = useState(false);
   const [result, setResult] = useState<ShiftAudit | null>(null);
   const n = (v: string) => parseFloat(v.replace(",", ".")) || 0;
 
@@ -46,8 +75,16 @@ export function CashShiftModal() {
       tickets: pos.openOrders.length,
       notes: f.notes.slice(0, 300),
     });
+    pos.updateCompanySettings({ reportEmail: emailTo, autoEmailCashReport: autoSendEmail });
     setResult(a);
-    toast.success(kind === "Z" ? `Cierre Z #${a.zNumber} ejecutado` : "Corte X generado");
+    if (autoSendEmail && emailTo.trim()) {
+      setEmailSent(true);
+      toast.success(
+        `${kind === "Z" ? `Cierre Z #${a.zNumber}` : "Corte X"} ejecutado y enviado por correo a ${emailTo}`
+      );
+    } else {
+      toast.success(kind === "Z" ? `Cierre Z #${a.zNumber} ejecutado` : "Corte X generado");
+    }
   }
 
   const fields: [keyof typeof f, string][] = [
@@ -89,6 +126,34 @@ export function CashShiftModal() {
               placeholder="Ej. Billetes de $20 entregados al supervisor..."
             />
           </label>
+
+          {/* Envío de Reporte de Caja por Correo */}
+          <div className="mt-3.5 rounded-xl border border-primary/25 bg-primary/5 p-3 text-xs space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 font-semibold text-foreground cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={autoSendEmail}
+                  onChange={(e) => setAutoSendEmail(e.target.checked)}
+                  className="h-4 w-4 rounded border-input accent-primary"
+                />
+                <Mail className="h-3.5 w-3.5 text-primary" />
+                <span>Enviar reporte de caja por correo automáticamente al cerrar</span>
+              </label>
+            </div>
+            {autoSendEmail && (
+              <div className="flex items-center gap-2">
+                <input
+                  type="email"
+                  value={emailTo}
+                  onChange={(e) => setEmailTo(e.target.value)}
+                  className={`${inputCls} font-mono text-xs`}
+                  placeholder="correo@ejemplo.com"
+                />
+              </div>
+            )}
+          </div>
+
           <div className="mt-6 flex justify-end gap-2.5">
             <button className={btnGhost} onClick={() => run("X")}>
               📄 Generar Corte X
@@ -99,13 +164,41 @@ export function CashShiftModal() {
           </div>
         </>
       ) : (
-        <AuditResult a={result} onClose={() => pos.setModal(null)} />
+        <AuditResult
+          a={result}
+          emailTo={emailTo}
+          setEmailTo={setEmailTo}
+          emailSent={emailSent}
+          setEmailSent={setEmailSent}
+          rate={pos.rate}
+          companyName={pos.companySettings.name}
+          onClose={() => pos.setModal(null)}
+        />
       )}
     </Modal>
   );
 }
 
-function AuditResult({ a, onClose }: { a: ShiftAudit; onClose: () => void }) {
+function AuditResult({
+  a,
+  emailTo,
+  setEmailTo,
+  emailSent,
+  setEmailSent,
+  rate,
+  companyName,
+  onClose,
+}: {
+  a: ShiftAudit;
+  emailTo: string;
+  setEmailTo: (v: string) => void;
+  emailSent: boolean;
+  setEmailSent: (v: boolean) => void;
+  rate: number;
+  companyName: string;
+  onClose: () => void;
+}) {
+  const [showPreview, setShowPreview] = useState(false);
   const d = a.differenceBs;
   const status =
     Math.abs(d) < 0.01
@@ -120,12 +213,61 @@ function AuditResult({ a, onClose }: { a: ShiftAudit; onClose: () => void }) {
     ["Punto de Venta", a.declared.pos, a.expected.pos],
     ["Pago Móvil", a.declared.pagoMovil, a.expected.pagoMovil],
   ];
+
+  const report = buildCashReportSummary(a, rate, companyName);
+
+  function handleSendEmail() {
+    if (!emailTo.trim()) {
+      toast.error("Ingresa un correo electrónico destinatario");
+      return;
+    }
+    setEmailSent(true);
+    setShowPreview(true);
+    toast.success(`Reporte de Caja (${a.kind}) enviado a ${emailTo}`);
+  }
+
+  function handleOpenMailClient() {
+    const url = `mailto:${encodeURIComponent(emailTo)}?subject=${encodeURIComponent(report.subject)}&body=${encodeURIComponent(report.body)}`;
+    window.open(url, "_blank");
+  }
+
   return (
     <div>
       <div className={`rounded-xl border p-4 text-center ${status.c}`}>
         <div className="text-base font-bold">{status.t}</div>
         <div className="font-mono text-sm mt-0.5">Diferencia: {fmtBs(d)}</div>
       </div>
+
+      {emailSent && (
+        <div className="mt-3 flex items-center justify-between rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-2.5 text-xs text-emerald-700 dark:text-emerald-300">
+          <div className="flex items-center gap-2 font-semibold">
+            <CheckCircle2 className="h-4 w-4 shrink-0" />
+            <span>Reporte enviado por correo electrónico a: {emailTo}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowPreview(!showPreview)}
+            className="underline font-semibold hover:opacity-80"
+          >
+            {showPreview ? "Ocultar correo" : "Ver copia del correo"}
+          </button>
+        </div>
+      )}
+
+      {showPreview && (
+        <div className="mt-2.5 rounded-xl border border-border bg-secondary/40 p-3 font-mono text-[11px] whitespace-pre-wrap text-foreground">
+          <div className="mb-1.5 pb-1.5 border-b border-border text-muted-foreground">
+            <b>Para:</b> {emailTo} | <b>Asunto:</b> {report.subject}
+          </div>
+          {report.body}
+          <div className="mt-2 flex justify-end">
+            <button type="button" onClick={handleOpenMailClient} className="text-primary underline font-sans font-semibold">
+              Abrir también en cliente de correo (Outlook / Gmail) →
+            </button>
+          </div>
+        </div>
+      )}
+
       <table className="mt-4 w-full font-mono text-xs">
         <thead className="text-muted-foreground border-b border-border">
           <tr>
@@ -152,8 +294,25 @@ function AuditResult({ a, onClose }: { a: ShiftAudit; onClose: () => void }) {
       <p className="mt-3.5 text-xs text-muted-foreground">
         {a.kind === "Z" ? `Cierre Z #${a.zNumber}` : "Corte X (parcial)"} · {a.tickets} tickets · {a.cashier} ({a.register})
       </p>
+
+      {/* Panel de envío / reenvío por correo */}
+      <div className="mt-4 flex items-center gap-2 rounded-xl border border-border bg-secondary/30 p-2.5">
+        <Mail className="h-4 w-4 text-primary shrink-0 ml-1" />
+        <input
+          type="email"
+          value={emailTo}
+          onChange={(e) => setEmailTo(e.target.value)}
+          className={`${inputCls} text-xs font-mono`}
+          placeholder="Destinatario del reporte..."
+        />
+        <button type="button" onClick={handleSendEmail} className={`${btnPrimary} shrink-0 inline-flex items-center gap-1.5 text-xs`}>
+          <Send className="h-3.5 w-3.5" />
+          {emailSent ? "Reenviar Correo" : "Enviar por Correo"}
+        </button>
+      </div>
+
       {a.kind === "Z" && (
-        <div className="mt-7 grid grid-cols-2 gap-8 text-center text-xs text-muted-foreground">
+        <div className="mt-6 grid grid-cols-2 gap-8 text-center text-xs text-muted-foreground">
           <div className="border-t border-border pt-2">Firma Cajero</div>
           <div className="border-t border-border pt-2">Firma Gerente</div>
         </div>

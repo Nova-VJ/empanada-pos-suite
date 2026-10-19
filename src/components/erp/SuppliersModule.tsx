@@ -24,11 +24,85 @@ const poStatusFlow: Record<POStatus, POStatus | undefined> = {
   cancelado: undefined,
 };
 
+const MARKET_SUPPLIES = [
+  {
+    id: "supply-1",
+    name: "Harina de Maíz Blanco Precocida (Bulto 20 kg)",
+    category: "Harinas",
+    currentSupplier: "Alimentos Polar Comercial C.A.",
+    currentPriceUsd: 22.5,
+    alternatives: [
+      { supplier: "Alimentos Polar Comercial C.A.", priceUsd: 22.5, rating: 98, deliveryHours: 24, creditDays: 15, verified: true, isCurrent: true },
+      { supplier: "Distribuidora Mayorista Central C.A.", priceUsd: 20.8, rating: 92, deliveryHours: 48, creditDays: 7, verified: true, savingsPct: 7.5 },
+      { supplier: "Inversiones Hermanos Gómez C.A.", priceUsd: 19.9, rating: 85, deliveryHours: 72, creditDays: 0, verified: false, savingsPct: 11.5 },
+    ],
+  },
+  {
+    id: "supply-2",
+    name: "Queso Llanero Blanco Duro (Kilo)",
+    category: "Lácteos",
+    currentSupplier: "Lácteos y Quesera Llanera Guárico C.A.",
+    currentPriceUsd: 4.8,
+    alternatives: [
+      { supplier: "Lácteos y Quesera Llanera Guárico C.A.", priceUsd: 4.8, rating: 88, deliveryHours: 48, creditDays: 7, verified: true, isCurrent: true },
+      { supplier: "Agropecuaria El Sombrero C.A.", priceUsd: 4.1, rating: 94, deliveryHours: 24, creditDays: 10, verified: true, savingsPct: 14.5 },
+      { supplier: "Distribuidora Lácteos Aragua C.A.", priceUsd: 4.35, rating: 90, deliveryHours: 36, creditDays: 15, verified: true, savingsPct: 9.3 },
+    ],
+  },
+  {
+    id: "supply-3",
+    name: "Aceite Vegetal Comestible (Bidón 18 Litros)",
+    category: "Aceites",
+    currentSupplier: "Alimentos Polar Comercial C.A.",
+    currentPriceUsd: 32.0,
+    alternatives: [
+      { supplier: "Alimentos Polar Comercial C.A.", priceUsd: 32.0, rating: 95, deliveryHours: 24, creditDays: 15, verified: true, isCurrent: true },
+      { supplier: "Oleaginosas Industriales C.A. (Portuguesa)", priceUsd: 27.5, rating: 93, deliveryHours: 48, creditDays: 21, verified: true, savingsPct: 14.0 },
+      { supplier: "Comercializadora San Martín", priceUsd: 28.9, rating: 89, deliveryHours: 48, creditDays: 15, verified: true, savingsPct: 9.6 },
+    ],
+  },
+  {
+    id: "supply-4",
+    name: "Carne de Res de Primera para Mechar (Kilo)",
+    category: "Carnes",
+    currentSupplier: "Carnes y Frigorífico San Antonio C.A.",
+    currentPriceUsd: 6.9,
+    alternatives: [
+      { supplier: "Carnes y Frigorífico San Antonio C.A.", priceUsd: 6.9, rating: 91, deliveryHours: 24, creditDays: 7, verified: true, isCurrent: true },
+      { supplier: "Frigorífico Industrial Centro-Occidente", priceUsd: 6.1, rating: 96, deliveryHours: 24, creditDays: 14, verified: true, savingsPct: 11.5 },
+      { supplier: "Distribuidora Cárnica Barinas C.A.", priceUsd: 5.95, rating: 87, deliveryHours: 48, creditDays: 7, verified: true, savingsPct: 13.7 },
+    ],
+  },
+  {
+    id: "supply-5",
+    name: "Cazón Margariteño Fresco Limpio (Kilo)",
+    category: "Pescados",
+    currentSupplier: "Pescadería Mar Caribe C.A.",
+    currentPriceUsd: 5.8,
+    alternatives: [
+      { supplier: "Pescadería Mar Caribe C.A.", priceUsd: 5.8, rating: 89, deliveryHours: 24, creditDays: 0, verified: true, isCurrent: true },
+      { supplier: "Cooperativa Pesquera Sucre & Coche", priceUsd: 4.9, rating: 95, deliveryHours: 36, creditDays: 7, verified: true, savingsPct: 15.5 },
+    ],
+  },
+  {
+    id: "supply-6",
+    name: "Cajas Térmicas Para Llevar (Paquete 100 Uds.)",
+    category: "Empaques",
+    currentSupplier: "Empaques y Plásticos Caracas C.A.",
+    currentPriceUsd: 18.0,
+    alternatives: [
+      { supplier: "Empaques y Plásticos Caracas C.A.", priceUsd: 18.0, rating: 90, deliveryHours: 48, creditDays: 15, verified: true, isCurrent: true },
+      { supplier: "EcoPack Venezuela S.A.", priceUsd: 14.5, rating: 97, deliveryHours: 24, creditDays: 30, verified: true, savingsPct: 19.4 },
+    ],
+  },
+];
+
 export function SuppliersModule() {
   const pos = usePos();
   const { suppliers, purchaseOrders, supplierInvoices, products, rate } = pos;
-  const [tab, setTab] = useState<"suppliers" | "orders" | "invoices">("suppliers");
+  const [tab, setTab] = useState<"finder" | "suppliers" | "orders" | "invoices">("finder");
   const [search, setSearch] = useState("");
+  const [supplyCategory, setSupplyCategory] = useState<string>("Todos");
   const [supModal, setSupModal] = useState(false);
   const [poModal, setPoModal] = useState(false);
   const [editingSup, setEditingSup] = useState<Supplier | null>(null);
@@ -58,6 +132,23 @@ export function SuppliersModule() {
       s.rif.toLowerCase().includes(search.toLowerCase()) ||
       s.category.toLowerCase().includes(search.toLowerCase())
   );
+
+  const filteredSupplies = MARKET_SUPPLIES.filter(
+    (s) =>
+      (supplyCategory === "Todos" || s.category === supplyCategory) &&
+      (s.name.toLowerCase().includes(search.toLowerCase()) || s.currentSupplier.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  function handleOrderFromAlternative(supplyName: string, alt: { supplier: string; priceUsd: number }) {
+    setPoForm({
+      supplierId: suppliers[0]?.id ?? "sup-1",
+      itemsSummary: `Insumo: ${supplyName} (@ $${alt.priceUsd.toFixed(2)} cotizado con ${alt.supplier})`,
+      productId: products[0]?.id ?? "e1",
+      qty: "10",
+      totalUsd: String(alt.priceUsd * 10),
+    });
+    setPoModal(true);
+  }
 
   function openNewSupplier() {
     setEditingSup(null);
@@ -136,9 +227,9 @@ export function SuppliersModule() {
     <div className="space-y-6 p-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Proveedores y Compras</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Proveedores & Compras Inteligentes</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Gestión de proveedores de insumos, órdenes de compra con entrada automática a stock y facturas recibidas
+            Comparador de mejores proveedores de insumos (Harina, Queso, Aceite, Carnes), órdenes de compra y facturas
           </p>
         </div>
         <div className="flex gap-2">
@@ -161,8 +252,17 @@ export function SuppliersModule() {
 
       {/* Tabs */}
       <div className="flex gap-1.5 border-b border-border pb-2">
+        <button
+          onClick={() => setTab("finder")}
+          className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition ${
+            tab === "finder" ? "bg-primary text-primary-foreground shadow-2xs" : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+          }`}
+        >
+          <Search className="h-3.5 w-3.5" />
+          🔍 Buscar Mejores Proveedores (Comparador)
+        </button>
         {[
-          { id: "suppliers", label: `Proveedores (${suppliers.length})`, icon: Truck },
+          { id: "suppliers", label: `Proveedores Registrados (${suppliers.length})`, icon: Truck },
           { id: "orders", label: `Pedidos de Compra (${purchaseOrders.length})`, icon: Package },
           { id: "invoices", label: `Facturas Recibidas (${supplierInvoices.length})`, icon: FileText },
         ].map((t) => (
@@ -170,7 +270,7 @@ export function SuppliersModule() {
             key={t.id}
             onClick={() => setTab(t.id as typeof tab)}
             className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition ${
-              tab === t.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+              tab === t.id ? "bg-primary text-primary-foreground shadow-2xs" : "text-muted-foreground hover:bg-secondary hover:text-foreground"
             }`}
           >
             <t.icon className="h-3.5 w-3.5" />
@@ -178,6 +278,105 @@ export function SuppliersModule() {
           </button>
         ))}
       </div>
+
+      {/* Tab 1: Comparador de Mejores Proveedores */}
+      {tab === "finder" && (
+        <div className="space-y-4">
+          <div className="rounded-xl border border-primary/25 bg-primary/10 p-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-bold text-foreground">💡 Buscador Inteligente de Oportunidades de Compra</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Compara precios en tiempo real entre tus proveedores habituales y el mercado mayorista venezolano para ahorrar en insumos críticos.
+              </p>
+            </div>
+            <div className="flex gap-1">
+              {["Todos", "Harinas", "Lácteos", "Aceites", "Carnes", "Empaques"].map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSupplyCategory(cat)}
+                  className={`rounded-lg px-3 py-1 text-xs font-semibold transition ${
+                    supplyCategory === cat
+                      ? "bg-primary text-primary-foreground shadow-2xs"
+                      : "bg-card text-muted-foreground hover:text-foreground border border-border"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {filteredSupplies.map((item) => (
+              <div key={item.id} className="rounded-xl border border-border bg-card p-4 shadow-xs space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <span className="rounded bg-secondary px-2 py-0.5 text-[10px] font-bold text-muted-foreground uppercase">
+                      {item.category}
+                    </span>
+                    <h4 className="font-bold text-foreground text-sm mt-1">{item.name}</h4>
+                    <p className="text-[11px] text-muted-foreground">Proveedor actual: {item.currentSupplier}</p>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-mono text-base font-bold text-foreground">{fmtUsd(item.currentPriceUsd)}</div>
+                    <div className="font-mono text-[10px] text-muted-foreground">{fmtBs(item.currentPriceUsd * rate)}</div>
+                  </div>
+                </div>
+
+                <div className="space-y-2 pt-1 border-t border-border">
+                  <div className="text-[11px] font-semibold text-muted-foreground">Alternativas y Comparativa de Mercado:</div>
+                  {item.alternatives.map((alt, idx) => (
+                    <div
+                      key={idx}
+                      className={`rounded-lg p-2.5 text-xs flex items-center justify-between gap-3 border ${
+                        alt.isCurrent
+                          ? "bg-secondary/40 border-border"
+                          : alt.savingsPct && alt.savingsPct > 10
+                          ? "bg-emerald-500/10 border-emerald-500/30"
+                          : "bg-card border-border"
+                      }`}
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 font-semibold text-foreground truncate">
+                          <span>{alt.supplier}</span>
+                          {alt.isCurrent && (
+                            <span className="rounded bg-secondary px-1.5 py-0.2 text-[9px] font-bold text-muted-foreground">
+                              Actual
+                            </span>
+                          )}
+                          {alt.savingsPct && (
+                            <span className="rounded bg-emerald-600 px-1.5 py-0.2 text-[9px] font-bold text-white">
+                              Ahorro {alt.savingsPct}%
+                            </span>
+                          )}
+                        </div>
+                        <div className="font-mono text-[11px] text-muted-foreground mt-0.5">
+                          Entrega: {alt.deliveryHours}h · Crédito: {alt.creditDays} días · Score: {alt.rating}/100
+                        </div>
+                      </div>
+
+                      <div className="text-right shrink-0 flex items-center gap-2">
+                        <div>
+                          <div className="font-mono font-bold text-foreground">{fmtUsd(alt.priceUsd)}</div>
+                          <div className="font-mono text-[10px] text-muted-foreground">{fmtBs(alt.priceUsd * rate)}</div>
+                        </div>
+                        {!alt.isCurrent && (
+                          <button
+                            onClick={() => handleOrderFromAlternative(item.name, alt)}
+                            className="rounded-lg bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground hover:bg-primary/90 transition shadow-2xs"
+                          >
+                            Pedir Cotización
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {tab === "suppliers" && (
         <div className="space-y-4">

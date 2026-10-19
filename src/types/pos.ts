@@ -25,6 +25,16 @@ export interface CustomerInfo {
   phone?: string;
 }
 
+export interface CreditMovement {
+  id: string;
+  date: number;
+  type: "cargo" | "abono";
+  amountUsd: number;
+  method?: string;
+  note: string;
+  orderId?: number;
+}
+
 export interface CustomerRecord {
   id: string;
   docType: "V" | "J" | "E" | "G";
@@ -39,6 +49,9 @@ export interface CustomerRecord {
   orderCount: number;
   totalSpentUsd: number;
   lastPurchase: number;
+  debtUsd?: number;
+  creditLimitUsd?: number;
+  creditMovements?: CreditMovement[];
 }
 
 export interface Product {
@@ -207,6 +220,11 @@ export interface CompanySettings {
   postalCode: string;
   valuationMethod: "pmp" | "fifo";
   branch: string;
+  operationMode?: "control_interno" | "fiscal_seniat";
+  reportEmail?: string;
+  autoEmailCashReport?: boolean;
+  teamViewerId?: string;
+  printerWidth?: "58mm" | "80mm";
 }
 
 export interface CartItem {
@@ -217,13 +235,13 @@ export interface CartItem {
   modifiers: string[];
 }
 
-export type TenderType = "usd_cash" | "pago_movil" | "pos_card" | "bs_cash";
+export type TenderType = "usd_cash" | "pago_movil" | "pos_card" | "bs_cash" | "credito";
 
 export interface PaymentSplit {
   id: string;
   type: TenderType;
   amountBs: number; // Bs. value credited to the order
-  amountUsd?: number | undefined; // for usd_cash
+  amountUsd?: number | undefined; // for usd_cash or credito
   igtfBs: number;
   bank?: string | undefined;
   phone?: string | undefined;
@@ -249,7 +267,8 @@ export interface Order {
   id: number;
   invoiceNo: string;
   controlNo: string;
-  invoiceType?: "simplificada" | "completa" | "rectificativa";
+  invoiceType?: "simplificada" | "completa" | "rectificativa" | "control_interno";
+  operationMode?: "control_interno" | "fiscal_seniat";
   status?: "confirmada" | "anulada" | "borrador";
   createdAt: number;
   cashier: string;
