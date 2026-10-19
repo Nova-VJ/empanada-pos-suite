@@ -37,6 +37,7 @@ import { FiscalPrinterModal } from "./FiscalPrinterModal";
 import { RateSelectorModal } from "./RateSelectorModal";
 import { SupportMenuModal } from "./SupportMenuModal";
 import { TerminalLockScreen } from "./TerminalLockScreen";
+import { AuthUserModal } from "./AuthUserModal";
 
 export const SEARCH_ID = "pos-catalog-search";
 
@@ -108,6 +109,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           : pos.activeModule;
 
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const selectModule = (id: ModuleId) => {
     pos.setActiveModule(id);
@@ -252,10 +254,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="p-3 border-b border-sidebar-border flex items-center gap-3">
           <button
             onClick={() => selectModule("dashboard")}
-            className="h-10 w-10 rounded-xl overflow-hidden border border-border shadow-sm shrink-0 bg-card hover:scale-105 transition"
+            className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0 hover:scale-105 transition p-0.5"
             title="Ir al Dashboard"
           >
-            <img src="/logo.jpg" alt="NovaSystem Logo" className="h-full w-full object-cover" />
+            <img src="/logo.png" alt="NovaSystem Logo" className="h-full w-full object-contain filter drop-shadow-xs" />
           </button>
           {!collapsed && (
             <div className="min-w-0 flex-1 leading-tight">
@@ -306,8 +308,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="relative w-72 max-w-[80vw] bg-sidebar border-r border-sidebar-border h-full flex flex-col z-10 shadow-2xl animate-in slide-in-from-left duration-200">
             <div className="p-3.5 border-b border-sidebar-border flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="h-9 w-9 rounded-xl overflow-hidden border border-border shadow-xs shrink-0">
-                  <img src="/logo.jpg" alt="NovaSystem Logo" className="h-full w-full object-cover" />
+                <div className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0 p-0.5">
+                  <img src="/logo.png" alt="NovaSystem Logo" className="h-full w-full object-contain filter drop-shadow-xs" />
                 </div>
                 <div className="leading-tight">
                   <div className="text-sm font-bold text-foreground">NovaSystem</div>
@@ -381,19 +383,20 @@ export function AppShell({ children }: { children: ReactNode }) {
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
             </button>
 
-            {/* Cashier Shift Pill (hidden on very small screens, visible on md+) */}
-            <div className="hidden lg:flex items-center gap-1.5 rounded-lg border border-border bg-secondary/70 py-1 pl-2.5 pr-1 text-xs shrink-0">
-              <span className="text-foreground font-medium">
-                {pos.shift.cashier} <span className="text-muted-foreground">({pos.shift.register})</span>
+            {/* Cashier Shift Pill (compact on md, full on xl) */}
+            <div className="hidden md:flex items-center gap-1.5 rounded-lg border border-border bg-secondary/70 py-1 px-2 text-xs shrink-0">
+              <span className="hidden xl:inline text-foreground font-medium">
+                {pos.shift.cashier}
               </span>
-              <span className="font-mono text-muted-foreground">
+              <span className="font-mono text-muted-foreground text-[11px]">
                 {h}h {String(m).padStart(2, "0")}m
               </span>
               <button
                 onClick={() => pos.setModal("shift")}
-                className="inline-flex items-center gap-1 rounded-md bg-card border border-border px-2 py-0.5 text-[11px] font-semibold text-foreground hover:bg-destructive hover:text-destructive-foreground hover:border-destructive transition"
+                className="inline-flex items-center gap-1 rounded-md bg-card border border-border px-1.5 py-0.5 text-[11px] font-semibold text-foreground hover:bg-destructive hover:text-destructive-foreground hover:border-destructive transition"
+                title="Cierre de Turno y Arqueo X/Z"
               >
-                <Lock className="h-3 w-3" /> Arqueo X-Z
+                <Lock className="h-2.5 w-2.5" /> Arqueo
               </button>
             </div>
 
@@ -402,20 +405,20 @@ export function AppShell({ children }: { children: ReactNode }) {
               onClick={() => {
                 toast.success("🗄️ Gaveta de dinero abierta (Pulso ESC/POS enviado a impresora)");
               }}
-              className="hidden xl:inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary/70 px-2.5 py-1 text-xs font-semibold text-foreground hover:bg-secondary transition shrink-0"
+              className="hidden 2xl:inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary/70 px-2.5 py-1 text-xs font-semibold text-foreground hover:bg-secondary transition shrink-0"
               title="Abrir Gaveta de Dinero (Pulso RJ11 a impresora)"
             >
-              <span>🗄️ Abrir Gaveta</span>
+              <span>🗄️ Gaveta</span>
             </button>
 
             {/* Support / Technician Pill */}
             <button
               onClick={() => pos.setModal("support")}
-              className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2 sm:px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 transition shrink-0"
+              className="hidden lg:inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 transition shrink-0"
               title="Menú Oculto de Soporte Técnico, TeamViewer y Actualizar Biblioteca Móvil"
             >
               <Wrench className="h-3 w-3" />
-              <span className="hidden md:inline">Soporte VIP</span>
+              <span className="hidden xl:inline">Soporte VIP</span>
             </button>
 
             {/* Fiscal Printer Status Pill */}
@@ -430,7 +433,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </button>
 
             {/* Quick Mode Switcher */}
-            <div className="hidden md:flex items-center gap-0.5 rounded-lg border border-border bg-secondary/60 p-0.5 shrink-0">
+            <div className="hidden xl:flex items-center gap-0.5 rounded-lg border border-border bg-secondary/60 p-0.5 shrink-0">
               <button
                 onClick={() => selectModule("pos")}
                 className={`rounded-md px-2 py-1 text-xs font-medium transition ${
@@ -468,37 +471,46 @@ export function AppShell({ children }: { children: ReactNode }) {
               </button>
             </div>
 
-            {/* Theme Toggle (Light / Dark) */}
-            <button
-              onClick={pos.toggleTheme}
-              className="h-8 w-8 rounded-lg border border-border bg-secondary/60 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition shrink-0"
-              title={pos.theme === "light" ? "Cambiar a modo oscuro" : "Cambiar a modo claro"}
-            >
-              {pos.theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-            </button>
+            {/* ALWAYS PINNED ESSENTIAL CONTROLS (Theme, Lock Screen, Profile Login) */}
+            <div className="flex items-center gap-1.5 shrink-0 pl-1.5 sm:pl-2 border-l border-border/60">
+              {/* Theme Toggle (Light / Dark) */}
+              <button
+                onClick={pos.toggleTheme}
+                className="h-8 w-8 rounded-lg border border-border bg-secondary/60 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition shrink-0"
+                title={pos.theme === "light" ? "Cambiar a modo oscuro" : "Cambiar a modo claro"}
+              >
+                {pos.theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+              </button>
 
-            {/* Lock Screen Button */}
-            <button
-              onClick={() => {
-                pos.lockTerminal();
-                toast.info("Terminal bloqueado (Protector de pantalla activo)");
-              }}
-              className="h-8 w-8 rounded-lg border border-border bg-secondary/60 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition shrink-0"
-              title="Bloquear Terminal (Protector de Pantalla con Clave PIN)"
-            >
-              <Lock className="h-4 w-4" />
-            </button>
+              {/* Lock Screen Button */}
+              <button
+                onClick={() => {
+                  pos.lockTerminal();
+                  toast.info("Terminal bloqueado (Protector de pantalla activo)");
+                }}
+                className="h-8 w-8 rounded-lg border border-border bg-secondary/60 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition shrink-0"
+                title="Bloquear Terminal (Protector de Pantalla con Clave PIN)"
+              >
+                <Lock className="h-4 w-4" />
+              </button>
 
-            {/* User Avatar */}
-            <div
-              className="h-8 w-8 rounded-full bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0 cursor-pointer"
-              onClick={() => {
-                pos.lockTerminal();
-                toast.info("Terminal bloqueado");
-              }}
-              title={`${pos.shift.cashier} · ${pos.shift.register} (Click para bloquear)`}
-            >
-              <span className="text-xs font-bold text-primary">MP</span>
+              {/* User Profile Avatar & Login Account Modal Trigger */}
+              <button
+                type="button"
+                onClick={() => setShowAuthModal(true)}
+                className="h-8 w-8 rounded-full bg-primary/15 border-2 border-primary/30 flex items-center justify-center shrink-0 hover:ring-2 hover:ring-primary/40 transition active:scale-95 group relative"
+                title="Cuenta / Iniciar Sesión con Google o Correo / Crear Usuario"
+              >
+                <span className="text-xs font-bold text-primary group-hover:scale-105 transition">
+                  {pos.shift.cashier
+                    .split(" ")
+                    .map((n) => n[0])
+                    .slice(0, 2)
+                    .join("")
+                    .toUpperCase() || "MP"}
+                </span>
+                <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-card" />
+              </button>
             </div>
           </div>
         </header>
@@ -509,6 +521,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* Screen Saver & PIN Security Lock Screen */}
       {pos.isLocked && <TerminalLockScreen onUnlock={pos.unlockTerminal} />}
+
+      {/* User Login & Register Modal */}
+      {showAuthModal && <AuthUserModal onClose={() => setShowAuthModal(false)} />}
 
       {pos.modal === "payment" && <PaymentModal />}
       {pos.modal === "ticket" && <ThermalTicketModal />}
