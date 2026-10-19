@@ -161,7 +161,7 @@ export function PaymentModal() {
           }`}
         >
           <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            {remaining > 0 ? "Saldo Restante" : "Vuelto / Cambio"}
+            {remaining > 0 ? "Saldo Restante" : "Vuelto / Cambio a Entregar"}
           </div>
           <div className={`font-mono text-2xl font-black mt-0.5 ${remaining > 0 ? "text-module-cash" : "text-module-inventory"}`}>
             {fmtBs(remaining > 0 ? remaining : change)}
@@ -171,6 +171,48 @@ export function PaymentModal() {
           </div>
         </div>
       </div>
+
+      {/* Desglose de Vuelto Bimoneda Automático (Efectivo USD, Efectivo Bs. o Pago Móvil) */}
+      {change > 0 && (
+        <div className="mt-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs space-y-2">
+          <div className="flex items-center justify-between font-bold text-emerald-800 dark:text-emerald-300">
+            <span>💡 Calculadora de Vuelto Rápido (Elige cómo devolver al cliente):</span>
+            <span className="font-mono text-[11px]">Tasa: Bs. {rate.toFixed(2)}</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => toast.info(`Entregar $${(change / rate).toFixed(2)} en billetes USD`)}
+              className="rounded-lg border border-emerald-500/20 bg-background/80 p-2 text-left hover:bg-background transition"
+            >
+              <div className="text-[10px] text-muted-foreground font-semibold">Opción 1: En Divisas ($)</div>
+              <div className="font-mono font-black text-sm text-foreground mt-0.5">{fmtUsd(change / rate)}</div>
+              <div className="text-[10px] text-emerald-600 font-medium">Billetes / Sencillo USD</div>
+            </button>
+            <button
+              type="button"
+              onClick={() => toast.info(`Entregar ${fmtBs(change)} en efectivo de gaveta`)}
+              className="rounded-lg border border-emerald-500/20 bg-background/80 p-2 text-left hover:bg-background transition"
+            >
+              <div className="text-[10px] text-muted-foreground font-semibold">Opción 2: Efectivo en Bs.</div>
+              <div className="font-mono font-black text-sm text-foreground mt-0.5">{fmtBs(change)}</div>
+              <div className="text-[10px] text-emerald-600 font-medium">Billetes venezolanos</div>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(change.toFixed(2));
+                toast.success(`Monto ${fmtBs(change)} copiado para hacer Pago Móvil de vuelto`);
+              }}
+              className="rounded-lg border border-emerald-500/20 bg-background/80 p-2 text-left hover:bg-background transition"
+            >
+              <div className="text-[10px] text-muted-foreground font-semibold">Opción 3: Pago Móvil</div>
+              <div className="font-mono font-black text-sm text-foreground mt-0.5">{fmtBs(change)}</div>
+              <div className="text-[10px] text-emerald-600 font-medium">Copiar monto para transferir 📋</div>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Selector de Cliente Fiscal */}
       <div className="mt-3.5 rounded-xl border border-border bg-secondary/30 p-3 text-xs">

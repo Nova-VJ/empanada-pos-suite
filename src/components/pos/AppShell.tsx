@@ -333,6 +333,17 @@ export function AppShell({ children }: { children: ReactNode }) {
               </button>
             </div>
 
+            {/* Quick Open Cash Drawer Button */}
+            <button
+              onClick={() => {
+                toast.success("🗄️ Gaveta de dinero abierta (Pulso ESC/POS enviado a impresora)");
+              }}
+              className="hidden lg:inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary/70 px-2.5 py-1 text-xs font-semibold text-foreground hover:bg-secondary transition"
+              title="Abrir Gaveta de Dinero (Pulso RJ11 a impresora)"
+            >
+              <span>🗄️ Abrir Gaveta</span>
+            </button>
+
             {/* Support / Technician Pill (TeamViewer & Resincronización) */}
             <button
               onClick={() => pos.setModal("support")}
