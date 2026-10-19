@@ -23,6 +23,8 @@ import {
   Lock,
   RefreshCw,
   Wrench,
+  Menu,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { usePos } from "@/context/PosContext";
@@ -105,8 +107,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           ? "dashboard"
           : pos.activeModule;
 
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
   const selectModule = (id: ModuleId) => {
     pos.setActiveModule(id);
+    setMobileNavOpen(false);
     if (id === "pos") {
       navigate({ to: "/" });
     } else if (id === "kds") {
@@ -238,9 +243,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen flex w-full bg-background text-foreground">
-      {/* Left Collapsible NovaSystem Sidebar */}
+      {/* Left Collapsible NovaSystem Sidebar (Desktop) */}
       <aside
-        className={`no-print shrink-0 border-r border-sidebar-border bg-sidebar flex flex-col transition-all duration-200 sticky top-0 h-screen z-40 ${
+        className={`no-print shrink-0 border-r border-sidebar-border bg-sidebar hidden md:flex flex-col transition-all duration-200 sticky top-0 h-screen z-40 ${
           collapsed ? "w-16" : "w-60"
         }`}
       >
@@ -287,44 +292,98 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
+      {/* Mobile Drawer (Visible when burger menu clicked) */}
+      {mobileNavOpen && (
+        <div className="fixed inset-0 z-50 md:hidden flex">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs animate-in fade-in"
+            onClick={() => setMobileNavOpen(false)}
+          />
+
+          {/* Drawer Content */}
+          <div className="relative w-72 max-w-[80vw] bg-sidebar border-r border-sidebar-border h-full flex flex-col z-10 shadow-2xl animate-in slide-in-from-left duration-200">
+            <div className="p-3.5 border-b border-sidebar-border flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-xs">
+                  N
+                </div>
+                <div className="leading-tight">
+                  <div className="text-sm font-bold text-foreground">NovaSystem 🥟</div>
+                  <div className="text-[10px] text-muted-foreground truncate max-w-[140px]">{pos.companySettings.name}</div>
+                </div>
+              </div>
+              <button
+                onClick={() => setMobileNavOpen(false)}
+                className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-2 py-3">
+              {renderGroup("Principal", MAIN_NAV)}
+              {renderGroup("Gestión", MANAGEMENT_NAV)}
+              {renderGroup("Reportes & IA", REPORTS_NAV)}
+            </div>
+
+            <div className="p-3 border-t border-sidebar-border bg-sidebar text-[11px] text-muted-foreground flex items-center justify-between">
+              <span className="font-mono">{pos.companySettings.rif}</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">v1.0 SENIAT</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Sticky Top Header */}
-        <header className="no-print h-14 border-b border-border flex items-center gap-2.5 px-4 bg-card/85 backdrop-blur-md sticky top-0 z-30">
-          <button
-            onClick={() => pos.setSidebarCollapsed(!collapsed)}
-            className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0"
-            title={collapsed ? "Expandir menú lateral" : "Contraer menú lateral"}
-          >
-            <PanelLeft className="h-4 w-4" />
-          </button>
+        <header className="no-print h-14 border-b border-border flex items-center justify-between px-3 sm:px-4 bg-card/85 backdrop-blur-md sticky top-0 z-30 gap-2">
+          {/* Left section: Mobile Menu / Collapse Button + Title */}
+          <div className="flex items-center gap-2 min-w-0 shrink-0">
+            {/* Mobile Hamburger Drawer Button */}
+            <button
+              onClick={() => setMobileNavOpen(true)}
+              className="md:hidden h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition shrink-0"
+              title="Abrir menú"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
 
-          <div className="h-5 w-px bg-border shrink-0" />
+            {/* Desktop Collapse Button */}
+            <button
+              onClick={() => pos.setSidebarCollapsed(!collapsed)}
+              className="hidden md:flex h-8 w-8 rounded-lg items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0"
+              title={collapsed ? "Expandir menú lateral" : "Contraer menú lateral"}
+            >
+              <PanelLeft className="h-4 w-4" />
+            </button>
 
-          <div className="min-w-0">
-            <h2 className="text-sm font-semibold text-foreground truncate">
+            <div className="h-4 w-px bg-border shrink-0 hidden sm:block" />
+
+            <h2 className="text-xs sm:text-sm font-bold text-foreground truncate max-w-[140px] sm:max-w-[200px] lg:max-w-none">
               {MODULE_TITLES[currentModule]}
             </h2>
           </div>
 
-          {/* Right Operational & Fiscal Pills */}
-          <div className="ml-auto flex flex-wrap items-center gap-2">
-            {/* Live Multi-source Rate Pill */}
+          {/* Right section: Pills & Controls with intelligent overflow */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* Live Rate Pill */}
             <button
               onClick={() => pos.setModal("bcv")}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-primary/25 bg-primary/10 px-2.5 py-1 font-mono text-xs font-semibold text-primary hover:bg-primary/15 transition"
-              title="Monitor Multi-Divisas (monitordolarve, monitordedivisa, BCV, Binance)"
+              className="inline-flex items-center gap-1 sm:gap-1.5 rounded-lg border border-primary/25 bg-primary/10 px-2 py-1 font-mono text-[11px] sm:text-xs font-semibold text-primary hover:bg-primary/15 transition shrink-0"
+              title="Monitor Multi-Divisas (monitordolarve, BCV, Binance)"
             >
               <RefreshCw className={`h-3 w-3 ${pos.isRefreshingRates ? "animate-spin" : ""}`} />
-              <span>{pos.ratesData.variants[pos.ratesData.activeVariantId]?.name?.replace(/\s*\(.*?\)/, "") ?? "BCV"}: Bs. {pos.rate.toFixed(2)} / $</span>
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" title="Actualización automática activa" />
+              <span className="hidden sm:inline">{pos.ratesData.variants[pos.ratesData.activeVariantId]?.name?.replace(/\s*\(.*?\)/, "") ?? "BCV"}:</span>
+              <span>Bs. {pos.rate.toFixed(2)}</span>
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
             </button>
 
-            {/* Cashier & Arqueo X-Z Pill */}
-            <div className="hidden sm:flex items-center gap-1.5 rounded-lg border border-border bg-secondary/70 py-1 pl-2.5 pr-1 text-xs">
+            {/* Cashier Shift Pill (hidden on very small screens, visible on md+) */}
+            <div className="hidden lg:flex items-center gap-1.5 rounded-lg border border-border bg-secondary/70 py-1 pl-2.5 pr-1 text-xs shrink-0">
               <span className="text-foreground font-medium">
-                {pos.shift.cashier}{" "}
-                <span className="text-muted-foreground">({pos.shift.register})</span>
+                {pos.shift.cashier} <span className="text-muted-foreground">({pos.shift.register})</span>
               </span>
               <span className="font-mono text-muted-foreground">
                 {h}h {String(m).padStart(2, "0")}m
@@ -342,26 +401,26 @@ export function AppShell({ children }: { children: ReactNode }) {
               onClick={() => {
                 toast.success("🗄️ Gaveta de dinero abierta (Pulso ESC/POS enviado a impresora)");
               }}
-              className="hidden lg:inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary/70 px-2.5 py-1 text-xs font-semibold text-foreground hover:bg-secondary transition"
+              className="hidden xl:inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary/70 px-2.5 py-1 text-xs font-semibold text-foreground hover:bg-secondary transition shrink-0"
               title="Abrir Gaveta de Dinero (Pulso RJ11 a impresora)"
             >
               <span>🗄️ Abrir Gaveta</span>
             </button>
 
-            {/* Support / Technician Pill (TeamViewer & Resincronización) */}
+            {/* Support / Technician Pill */}
             <button
               onClick={() => pos.setModal("support")}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 transition"
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2 sm:px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 transition shrink-0"
               title="Menú Oculto de Soporte Técnico, TeamViewer y Actualizar Biblioteca Móvil"
             >
               <Wrench className="h-3 w-3" />
-              <span className="hidden sm:inline">Soporte VIP</span>
+              <span className="hidden md:inline">Soporte VIP</span>
             </button>
 
             {/* Fiscal Printer Status Pill */}
             <button
               onClick={() => pos.setModal("printer")}
-              className="hidden md:inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary/70 px-2.5 py-1 font-mono text-xs text-muted-foreground hover:text-foreground hover:border-primary/40 transition"
+              className="hidden 2xl:inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary/70 px-2.5 py-1 font-mono text-xs text-muted-foreground hover:text-foreground hover:border-primary/40 transition shrink-0"
               title="Estado Impresora Fiscal The Factory HKA"
             >
               <Printer className="h-3.5 w-3.5" />
@@ -370,10 +429,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             </button>
 
             {/* Quick Mode Switcher */}
-            <div className="hidden xl:flex items-center gap-1 rounded-lg border border-border bg-secondary/60 p-0.5">
+            <div className="hidden md:flex items-center gap-0.5 rounded-lg border border-border bg-secondary/60 p-0.5 shrink-0">
               <button
                 onClick={() => selectModule("pos")}
-                className={`rounded-md px-2.5 py-1 text-xs font-medium transition ${
+                className={`rounded-md px-2 py-1 text-xs font-medium transition ${
                   currentModule === "pos"
                     ? "bg-primary text-primary-foreground shadow-2xs"
                     : "text-muted-foreground hover:text-foreground"
@@ -383,7 +442,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </button>
               <button
                 onClick={() => selectModule("kds")}
-                className={`rounded-md px-2.5 py-1 text-xs font-medium transition flex items-center gap-1 ${
+                className={`rounded-md px-2 py-1 text-xs font-medium transition flex items-center gap-1 ${
                   currentModule === "kds"
                     ? "bg-primary text-primary-foreground shadow-2xs"
                     : "text-muted-foreground hover:text-foreground"
@@ -391,14 +450,14 @@ export function AppShell({ children }: { children: ReactNode }) {
               >
                 <span>KDS (F2)</span>
                 {pendingFryer > 0 && (
-                  <span className="rounded-full bg-amber-500 px-1.5 text-[10px] font-bold text-white">
+                  <span className="rounded-full bg-amber-500 px-1 text-[9px] font-bold text-white">
                     {pendingFryer}
                   </span>
                 )}
               </button>
               <button
                 onClick={() => selectModule("dashboard")}
-                className={`rounded-md px-2.5 py-1 text-xs font-medium transition ${
+                className={`rounded-md px-2 py-1 text-xs font-medium transition ${
                   currentModule !== "pos" && currentModule !== "kds"
                     ? "bg-primary text-primary-foreground shadow-2xs"
                     : "text-muted-foreground hover:text-foreground"
@@ -411,19 +470,19 @@ export function AppShell({ children }: { children: ReactNode }) {
             {/* Theme Toggle (Light / Dark) */}
             <button
               onClick={pos.toggleTheme}
-              className="h-8 w-8 rounded-lg border border-border bg-secondary/60 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition"
+              className="h-8 w-8 rounded-lg border border-border bg-secondary/60 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition shrink-0"
               title={pos.theme === "light" ? "Cambiar a modo oscuro" : "Cambiar a modo claro"}
             >
               {pos.theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
             </button>
 
-            {/* Lock Screen Button (Protector de Pantalla / Clave PIN) */}
+            {/* Lock Screen Button */}
             <button
               onClick={() => {
                 pos.lockTerminal();
                 toast.info("Terminal bloqueado (Protector de pantalla activo)");
               }}
-              className="h-8 w-8 rounded-lg border border-border bg-secondary/60 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition"
+              className="h-8 w-8 rounded-lg border border-border bg-secondary/60 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition shrink-0"
               title="Bloquear Terminal (Protector de Pantalla con Clave PIN)"
             >
               <Lock className="h-4 w-4" />

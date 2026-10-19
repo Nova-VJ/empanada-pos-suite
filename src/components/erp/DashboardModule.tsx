@@ -87,11 +87,11 @@ export function DashboardModule() {
   ];
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+    <div className="space-y-4 sm:space-y-6 p-3 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Bienvenido a NovaSystem · Dr. Empanadas</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Bienvenido a NovaSystem · Dr. Empanadas</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
             Resumen ejecutivo —{" "}
             {new Date().toLocaleDateString("es-VE", {
               weekday: "long",
@@ -110,16 +110,16 @@ export function DashboardModule() {
             </button>
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => pos.setActiveModule("pos")}
-            className="rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-xs hover:bg-primary/90 transition"
+            className="flex-1 sm:flex-none rounded-xl bg-primary px-3 sm:px-4 py-2 text-xs font-semibold text-primary-foreground shadow-xs hover:bg-primary/90 transition text-center"
           >
             Ir al Terminal TPV (F1)
           </button>
           <button
             onClick={() => pos.setModal("shift")}
-            className="rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-secondary transition"
+            className="flex-1 sm:flex-none rounded-xl border border-border bg-card px-3 sm:px-4 py-2 text-xs font-semibold text-foreground hover:bg-secondary transition text-center"
           >
             🔒 Arqueo X / Cierre Z
           </button>
