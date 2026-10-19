@@ -34,6 +34,7 @@ import { CashShiftModal } from "./CashShiftModal";
 import { FiscalPrinterModal } from "./FiscalPrinterModal";
 import { RateSelectorModal } from "./RateSelectorModal";
 import { SupportMenuModal } from "./SupportMenuModal";
+import { TerminalLockScreen } from "./TerminalLockScreen";
 
 export const SEARCH_ID = "pos-catalog-search";
 
@@ -416,10 +417,26 @@ export function AppShell({ children }: { children: ReactNode }) {
               {pos.theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
             </button>
 
+            {/* Lock Screen Button (Protector de Pantalla / Clave PIN) */}
+            <button
+              onClick={() => {
+                pos.lockTerminal();
+                toast.info("Terminal bloqueado (Protector de pantalla activo)");
+              }}
+              className="h-8 w-8 rounded-lg border border-border bg-secondary/60 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition"
+              title="Bloquear Terminal (Protector de Pantalla con Clave PIN)"
+            >
+              <Lock className="h-4 w-4" />
+            </button>
+
             {/* User Avatar */}
             <div
-              className="h-8 w-8 rounded-full bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0"
-              title={`${pos.shift.cashier} · ${pos.shift.register}`}
+              className="h-8 w-8 rounded-full bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0 cursor-pointer"
+              onClick={() => {
+                pos.lockTerminal();
+                toast.info("Terminal bloqueado");
+              }}
+              title={`${pos.shift.cashier} · ${pos.shift.register} (Click para bloquear)`}
             >
               <span className="text-xs font-bold text-primary">MP</span>
             </div>
@@ -429,6 +446,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         {/* Active View Content */}
         <main className="flex-1 min-w-0 bg-background">{children}</main>
       </div>
+
+      {/* Screen Saver & PIN Security Lock Screen */}
+      {pos.isLocked && <TerminalLockScreen onUnlock={pos.unlockTerminal} />}
 
       {pos.modal === "payment" && <PaymentModal />}
       {pos.modal === "ticket" && <ThermalTicketModal />}

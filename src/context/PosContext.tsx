@@ -209,7 +209,10 @@ interface Ctx extends PosState {
   createExpense: (e: Omit<ExpenseRecord, "id" | "createdAt" | "taxAmountUsd" | "totalUsd">) => void;
   deleteExpense: (id: string) => void;
   createJournalEntry: (desc: string, entryDate: string, lines: Omit<JournalEntryLine, "id">[]) => void;
-  confirmJournalEntry: (id: string) => void;
+  // Security Lock Screen
+  isLocked: boolean;
+  lockTerminal: () => void;
+  unlockTerminal: () => void;
   updateCompanySettings: (c: Partial<CompanySettings>) => void;
 }
 
@@ -233,6 +236,12 @@ export function PosProvider({ children }: { children: ReactNode }) {
   const [now, setNow] = useState(0);
   const [ratesData, setRatesData] = useState<MultiSourceRatesData>(initialRatesData);
   const [isRefreshingRates, setIsRefreshingRates] = useState(false);
+  const [isLocked, setIsLocked] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("novasystem_terminal_unlocked_session") !== "true";
+    }
+    return true;
+  });
   const stateRef = useRef(s);
   stateRef.current = s;
 
@@ -939,6 +948,20 @@ export function PosProvider({ children }: { children: ReactNode }) {
         ...x,
         journalEntries: x.journalEntries.map((j) => (j.id === id ? { ...j, status: "confirmado" } : j)),
       })),
+    // Security screen lock actions
+    isLocked,
+    lockTerminal: () => {
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("novasystem_terminal_unlocked_session");
+      }
+      setIsLocked(true);
+    },
+    unlockTerminal: () => {
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("novasystem_terminal_unlocked_session", "true");
+      }
+      setIsLocked(false);
+    },
     updateCompanySettings: (c) =>
       setS((x) => ({
         ...x,
