@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { ArrowRight, CheckCircle2, Edit, FileText, Filter, Package, Plus, Search, SlidersHorizontal, Truck, Award, Sparkles } from "lucide-react";
+import { useState, useMemo } from "react";
+import { ArrowRight, CheckCircle2, Edit, FileText, Filter, Package, Plus, Search, SlidersHorizontal, Truck, Award, Sparkles, X, Calculator } from "lucide-react";
 import { toast } from "sonner";
 import { usePos } from "@/context/PosContext";
 import { fmtBs, fmtUsd } from "@/lib/money";
@@ -24,7 +24,27 @@ const poStatusFlow: Record<POStatus, POStatus | undefined> = {
   cancelado: undefined,
 };
 
-const MARKET_SUPPLIES = [
+export interface SupplyAlternative {
+  supplier: string;
+  priceUsd: number;
+  rating: number;
+  deliveryHours: number;
+  creditDays: number;
+  verified: boolean;
+  isCurrent?: boolean;
+  savingsPct?: number;
+}
+
+export interface MarketSupplyItem {
+  id: string;
+  name: string;
+  category: string;
+  currentSupplier: string;
+  currentPriceUsd: number;
+  alternatives: SupplyAlternative[];
+}
+
+export const MARKET_SUPPLIES: MarketSupplyItem[] = [
   {
     id: "supply-1",
     name: "Harina de Maíz Blanco Precocida (Bulto 20 kg)",
@@ -97,6 +117,108 @@ const MARKET_SUPPLIES = [
   },
 ];
 
+export interface SimulationItem {
+  supplyId: string;
+  qty: number;
+}
+
+export interface SimulationResultItem {
+  supplyId: string;
+  name: string;
+  qty: number;
+  currentSupplier: string;
+  currentPrice: number;
+  currentSubtotal: number;
+  recommendedSupplier: string;
+  recommendedPrice: number;
+  recommendedSubtotal: number;
+  itemSavingsUsd: number;
+  itemSavingsPct: number;
+  deliveryHours: number;
+  creditDays: number;
+}
+
+export interface SimulationResult {
+  currentTotalUsd: number;
+  optimizedTotalUsd: number;
+  savingsUsd: number;
+  savingsPct: number;
+  itemsBreakdown: SimulationResultItem[];
+}
+
+export function calculateSupplySavingsSimulation(
+  items: SimulationItem[],
+  suppliesList: MarketSupplyItem[] = MARKET_SUPPLIES
+): SimulationResult {
+  let currentTotalUsd = 0;
+  let optimizedTotalUsd = 0;
+
+  const itemsBreakdown: SimulationResultItem[] = items.map((item) => {
+    const supply = suppliesList.find((s) => s.id === item.supplyId);
+    if (!supply) {
+      return {
+        supplyId: item.supplyId,
+        name: "Insumo desconocido",
+        qty: item.qty,
+        currentSupplier: "N/A",
+        currentPrice: 0,
+        currentSubtotal: 0,
+        recommendedSupplier: "N/A",
+        recommendedPrice: 0,
+        recommendedSubtotal: 0,
+        itemSavingsUsd: 0,
+        itemSavingsPct: 0,
+        deliveryHours: 0,
+        creditDays: 0,
+      };
+    }
+
+    const nonCurrentAlts = supply.alternatives.filter((a) => !a.isCurrent);
+    const bestAlt =
+      nonCurrentAlts.length > 0
+        ? [...nonCurrentAlts].sort((a, b) => a.priceUsd - b.priceUsd)[0]
+        : supply.alternatives[0];
+
+    const recommendedPrice = bestAlt ? bestAlt.priceUsd : supply.currentPriceUsd;
+    const currentSubtotal = Math.round(supply.currentPriceUsd * item.qty * 100) / 100;
+    const recommendedSubtotal = Math.round(recommendedPrice * item.qty * 100) / 100;
+    const itemSavingsUsd = Math.round(Math.max(0, currentSubtotal - recommendedSubtotal) * 100) / 100;
+    const itemSavingsPct = currentSubtotal > 0 ? Math.round((itemSavingsUsd / currentSubtotal) * 1000) / 10 : 0;
+
+    currentTotalUsd += currentSubtotal;
+    optimizedTotalUsd += recommendedSubtotal;
+
+    return {
+      supplyId: supply.id,
+      name: supply.name,
+      qty: item.qty,
+      currentSupplier: supply.currentSupplier,
+      currentPrice: supply.currentPriceUsd,
+      currentSubtotal,
+      recommendedSupplier: bestAlt ? bestAlt.supplier : supply.currentSupplier,
+      recommendedPrice,
+      recommendedSubtotal,
+      itemSavingsUsd,
+      itemSavingsPct,
+      deliveryHours: bestAlt ? bestAlt.deliveryHours : 24,
+      creditDays: bestAlt ? bestAlt.creditDays : 0,
+    };
+  });
+
+  currentTotalUsd = Math.round(currentTotalUsd * 100) / 100;
+  optimizedTotalUsd = Math.round(optimizedTotalUsd * 100) / 100;
+  const savingsUsd = Math.round(Math.max(0, currentTotalUsd - optimizedTotalUsd) * 100) / 100;
+  const savingsPct = currentTotalUsd > 0 ? Math.round((savingsUsd / currentTotalUsd) * 1000) / 10 : 0;
+
+  return {
+    currentTotalUsd,
+    optimizedTotalUsd,
+    savingsUsd,
+    savingsPct,
+    itemsBreakdown,
+  };
+}
+
 export function SuppliersModule() {
   const pos = usePos();
   const { suppliers, purchaseOrders, supplierInvoices, products, rate } = pos;
@@ -105,7 +227,24 @@ export function SuppliersModule() {
   const [supplyCategory, setSupplyCategory] = useState<string>("Todos");
   const [supModal, setSupModal] = useState(false);
   const [poModal, setPoModal] = useState(false);
+  const [simModal, setSimModal] = useState(false);
   const [editingSup, setEditingSup] = useState<Supplier | null>(null);
+
+  const [simQtys, setSimQtys] = useState<Record<string, number>>({
+    "supply-1": 20, // 20 Bultos Harina P.A.N. (20kg)
+    "supply-2": 30, // 30 Kilos Queso Llanero Duro
+    "supply-3": 5,  // 5 Bidones Aceite Vegetal 18L
+    "supply-4": 25, // 25 Kilos Carne de Res para Mechar
+    "supply-5": 15, // 15 Kilos Cazón Margariteño
+    "supply-6": 5,  // 5 Paquetes Cajas Térmicas (100 uds)
+  });
+
+  const simulationResult = useMemo(() => {
+    const items: SimulationItem[] = Object.entries(simQtys)
+      .filter(([_, q]) => q > 0)
+      .map(([supplyId, qty]) => ({ supplyId, qty }));
+    return calculateSupplySavingsSimulation(items);
+  }, [simQtys]);
 
   const [supForm, setSupForm] = useState({
     name: "",
@@ -257,17 +396,25 @@ export function SuppliersModule() {
             Comparador de mejores proveedores de insumos (Harina, Queso, Aceite, Carnes), órdenes de compra y facturas
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setSimModal(true)}
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3.5 py-2 text-xs font-semibold text-white shadow-xs transition"
+            title="Simular orden en lote y calcular ahorro frente a mayoristas"
+          >
+            <Sparkles className="h-4 w-4" />
+            Simulador de Ahorro Mayorista
+          </button>
           <button
             onClick={() => setPoModal(true)}
-            className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-secondary transition"
+            className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2 text-xs font-semibold text-foreground hover:bg-secondary transition"
           >
             <Package className="h-4 w-4 text-module-suppliers" />
             Nuevo pedido de compra
           </button>
           <button
             onClick={openNewSupplier}
-            className="inline-flex items-center gap-2 rounded-xl bg-module-suppliers px-4 py-2 text-xs font-semibold text-white shadow-xs hover:opacity-90 transition"
+            className="inline-flex items-center gap-2 rounded-xl bg-module-suppliers px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:opacity-90 transition"
           >
             <Plus className="h-4 w-4" />
             Nuevo proveedor
@@ -317,20 +464,29 @@ export function SuppliersModule() {
                 Compara precios en tiempo real entre tus proveedores habituales y el mercado mayorista venezolano para ahorrar en insumos críticos.
               </p>
             </div>
-            <div className="flex flex-wrap gap-1">
-              {["Todos", "Harinas", "Lácteos", "Aceites", "Carnes", "Empaques"].map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setSupplyCategory(cat)}
-                  className={`rounded-lg px-3 py-1 text-xs font-semibold transition ${
-                    supplyCategory === cat
-                      ? "bg-primary text-primary-foreground shadow-2xs"
-                      : "bg-card text-muted-foreground hover:text-foreground border border-border"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => setSimModal(true)}
+                className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 text-xs font-semibold shadow-2xs transition flex items-center gap-1.5"
+              >
+                <Calculator className="h-3.5 w-3.5" />
+                <span>Simular Lote de Compra</span>
+              </button>
+              <div className="flex flex-wrap gap-1">
+                {["Todos", "Harinas", "Lácteos", "Aceites", "Carnes", "Empaques"].map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setSupplyCategory(cat)}
+                    className={`rounded-lg px-3 py-1 text-xs font-semibold transition ${
+                      supplyCategory === cat
+                        ? "bg-primary text-primary-foreground shadow-2xs"
+                        : "bg-card text-muted-foreground hover:text-foreground border border-border"
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -810,6 +966,165 @@ export function SuppliersModule() {
                 className={`${inputCls} mt-1 font-mono font-bold`}
               />
             </label>
+          </div>
+        </Modal>
+      )}
+
+      {/* Simulador de Compras Mayoristas & Cálculo de Ahorro Real */}
+      {simModal && (
+        <Modal
+          title="Simulador de Compras Mayoristas & Cálculo de Ahorro Real"
+          onClose={() => setSimModal(false)}
+          width="max-w-3xl"
+          footer={
+            <div className="flex flex-wrap items-center justify-between gap-3 w-full">
+              <div className="text-xs">
+                <span className="text-muted-foreground">Ahorro total estimado en este lote: </span>
+                <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-sm">
+                  {fmtUsd(simulationResult.savingsUsd)} ({simulationResult.savingsPct.toFixed(1)}%)
+                </span>
+                <span className="text-muted-foreground ml-1">· {fmtBs(simulationResult.savingsUsd * rate)}</span>
+              </div>
+              <div className="flex gap-2">
+                <button className={btnGhost} onClick={() => setSimModal(false)}>
+                  Cerrar
+                </button>
+                <button
+                  className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-xs font-semibold shadow-xs transition"
+                  onClick={() => {
+                    setPoForm({
+                      supplierId: suppliers[0]?.id ?? "sup-1",
+                      itemsSummary: `Lote mayorista optimizado: ${simulationResult.itemsBreakdown
+                        .filter((i) => i.qty > 0)
+                        .map((i) => `${i.qty}x ${i.name.split(" (")[0]}`)
+                        .join(", ")}`,
+                      productId: products[0]?.id ?? "e1",
+                      qty: "100",
+                      totalUsd: simulationResult.optimizedTotalUsd.toFixed(2),
+                    });
+                    setSimModal(false);
+                    setPoModal(true);
+                    toast.success("Orden de compra precargada con los mejores precios mayoristas");
+                  }}
+                >
+                  Generar Orden con Precios de Ahorro
+                </button>
+              </div>
+            </div>
+          }
+        >
+          <div className="space-y-4 text-xs">
+            {/* Top comparison banners */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="rounded-xl border border-border bg-card p-3">
+                <span className="text-[11px] text-muted-foreground block font-medium">Costo Proveedores Habituales</span>
+                <span className="text-lg font-mono font-bold text-foreground mt-0.5 block">
+                  {fmtUsd(simulationResult.currentTotalUsd)}
+                </span>
+                <span className="text-[10px] font-mono text-muted-foreground block">
+                  {fmtBs(simulationResult.currentTotalUsd * rate)}
+                </span>
+              </div>
+              <div className="rounded-xl border border-border bg-card p-3">
+                <span className="text-[11px] text-muted-foreground block font-medium">Costo Alternativas Mayoristas</span>
+                <span className="text-lg font-mono font-bold text-primary mt-0.5 block">
+                  {fmtUsd(simulationResult.optimizedTotalUsd)}
+                </span>
+                <span className="text-[10px] font-mono text-muted-foreground block">
+                  {fmtBs(simulationResult.optimizedTotalUsd * rate)}
+                </span>
+              </div>
+              <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3">
+                <span className="text-[11px] text-emerald-700 dark:text-emerald-300 block font-bold">
+                  Ahorro Neto Real Obtenido
+                </span>
+                <span className="text-lg font-mono font-bold text-emerald-600 dark:text-emerald-400 mt-0.5 block">
+                  -{fmtUsd(simulationResult.savingsUsd)}
+                </span>
+                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 block">
+                  {simulationResult.savingsPct.toFixed(1)}% de optimización de capital
+                </span>
+              </div>
+            </div>
+
+            {/* Instruction */}
+            <p className="text-[11px] text-muted-foreground">
+              Ajusta las cantidades que necesitas adquirir para la semana o el mes. El sistema calcula en vivo el proveedor más conveniente, sus plazos de entrega y días de crédito:
+            </p>
+
+            {/* Interactive Quantity and Item Table */}
+            <div className="rounded-xl border border-border overflow-hidden">
+              <table className="w-full text-xs">
+                <thead className="bg-secondary/50 border-b border-border text-muted-foreground text-left">
+                  <tr>
+                    <th className="p-2.5 font-semibold">Insumo</th>
+                    <th className="p-2.5 font-semibold text-center w-20">Cantidad</th>
+                    <th className="p-2.5 font-semibold">Proveedor Actual</th>
+                    <th className="p-2.5 font-semibold">Alternativa Recomendada</th>
+                    <th className="p-2.5 font-semibold text-right">Ahorro ($)</th>
+                    <th className="p-2.5 font-semibold text-right">% Ahorro</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {MARKET_SUPPLIES.map((supply) => {
+                    const breakdownItem = simulationResult.itemsBreakdown.find((i) => i.supplyId === supply.id);
+                    const qty = simQtys[supply.id] ?? 0;
+                    return (
+                      <tr key={supply.id} className="hover:bg-secondary/20">
+                        <td className="p-2.5 font-semibold text-foreground">
+                          <div>{supply.name}</div>
+                          <div className="text-[10px] text-muted-foreground">{supply.category}</div>
+                        </td>
+                        <td className="p-2.5 text-center">
+                          <input
+                            type="number"
+                            min="0"
+                            value={qty}
+                            onChange={(e) =>
+                              setSimQtys((prev) => ({
+                                ...prev,
+                                [supply.id]: Math.max(0, parseInt(e.target.value, 10) || 0),
+                              }))
+                            }
+                            className="w-16 rounded-lg border border-input bg-background p-1 text-center font-mono font-bold text-xs text-foreground outline-none focus:border-primary"
+                          />
+                        </td>
+                        <td className="p-2.5">
+                          <div className="font-medium text-foreground truncate max-w-[150px]">
+                            {supply.currentSupplier}
+                          </div>
+                          <div className="font-mono text-[10px] text-muted-foreground">
+                            ${supply.currentPriceUsd.toFixed(2)} / ud
+                          </div>
+                        </td>
+                        <td className="p-2.5">
+                          <div className="font-bold text-emerald-600 dark:text-emerald-400 truncate max-w-[170px]">
+                            {breakdownItem?.recommendedSupplier}
+                          </div>
+                          <div className="font-mono text-[10px] text-muted-foreground">
+                            ${breakdownItem?.recommendedPrice.toFixed(2)} / ud · {breakdownItem?.deliveryHours}h entrega · {breakdownItem?.creditDays}d crédito
+                          </div>
+                        </td>
+                        <td className="p-2.5 font-mono font-bold text-right text-emerald-600 dark:text-emerald-400">
+                          {breakdownItem && breakdownItem.itemSavingsUsd > 0
+                            ? `-${fmtUsd(breakdownItem.itemSavingsUsd)}`
+                            : "$0.00"}
+                        </td>
+                        <td className="p-2.5 text-right font-mono font-bold">
+                          {breakdownItem && breakdownItem.itemSavingsPct > 0 ? (
+                            <span className="rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 text-[10px]">
+                              {breakdownItem.itemSavingsPct.toFixed(1)}%
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         </Modal>
       )}
