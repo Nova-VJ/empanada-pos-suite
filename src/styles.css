@@ -74,138 +74,138 @@
 }
 
 :root {
-  --background: 0 0% 100%;
-  --foreground: 220 13% 18%;
+  --background: 220 20% 98%;
+  --foreground: 222 47% 11%;
 
   --card: 0 0% 100%;
-  --card-foreground: 220 13% 18%;
+  --card-foreground: 222 47% 11%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 220 13% 18%;
+  --popover-foreground: 222 47% 11%;
 
-  --primary: 245 58% 51%;
+  --primary: 246 80% 60%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 220 14% 96%;
-  --secondary-foreground: 220 13% 18%;
+  --secondary: 220 16% 94%;
+  --secondary-foreground: 222 47% 14%;
 
-  --muted: 220 14% 96%;
-  --muted-foreground: 220 9% 46%;
+  --muted: 220 14% 94%;
+  --muted-foreground: 220 10% 46%;
 
-  --accent: 220 14% 96%;
-  --accent-foreground: 220 13% 18%;
+  --accent: 246 80% 96%;
+  --accent-foreground: 246 80% 40%;
 
-  --destructive: 0 72% 51%;
+  --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
 
-  --border: 220 13% 91%;
-  --input: 220 13% 91%;
-  --ring: 245 58% 51%;
+  --border: 220 13% 89%;
+  --input: 220 13% 89%;
+  --ring: 246 80% 60%;
 
-  --radius: 0.625rem;
+  --radius: 0.75rem;
 
   /* Nova semantic tokens */
-  --nova-success: 142 71% 45%;
+  --nova-success: 152 76% 40%;
   --nova-warning: 38 92% 50%;
   --nova-info: 217 91% 60%;
 
   /* Google-style module colors */
-  --module-sales: 217 89% 51%;
-  --module-sales-light: 217 89% 96%;
-  --module-products: 262 52% 56%;
-  --module-products-light: 262 52% 96%;
-  --module-inventory: 142 71% 40%;
-  --module-inventory-light: 142 71% 96%;
+  --module-sales: 246 80% 60%;
+  --module-sales-light: 246 80% 96%;
+  --module-products: 262 60% 58%;
+  --module-products-light: 262 60% 96%;
+  --module-inventory: 152 76% 38%;
+  --module-inventory-light: 152 76% 95%;
   --module-customers: 24 95% 53%;
   --module-customers-light: 24 95% 96%;
-  --module-invoicing: 340 65% 52%;
-  --module-invoicing-light: 340 65% 96%;
-  --module-suppliers: 199 89% 44%;
-  --module-suppliers-light: 199 89% 96%;
-  --module-cash: 45 93% 47%;
-  --module-cash-light: 45 93% 96%;
-  --module-expenses: 0 72% 51%;
-  --color-expenses: hsl(0 72% 51%);
-  --module-expenses-light: 0 72% 96%;
+  --module-invoicing: 340 75% 54%;
+  --module-invoicing-light: 340 75% 96%;
+  --module-suppliers: 201 96% 40%;
+  --module-suppliers-light: 201 96% 95%;
+  --module-cash: 38 92% 50%;
+  --module-cash-light: 38 92% 95%;
+  --module-expenses: 0 84% 60%;
+  --color-expenses: hsl(0 84% 60%);
+  --module-expenses-light: 0 84% 96%;
   --module-reports: 262 83% 58%;
   --module-reports-light: 262 83% 96%;
   --module-accounting: 173 80% 36%;
   --module-accounting-light: 173 80% 96%;
 
   /* Sidebar */
-  --sidebar-background: 220 14% 98%;
-  --sidebar-foreground: 220 9% 36%;
-  --sidebar-primary: 245 58% 51%;
+  --sidebar-background: 220 20% 97%;
+  --sidebar-foreground: 220 12% 40%;
+  --sidebar-primary: 246 80% 60%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 245 58% 96%;
-  --sidebar-accent-foreground: 245 58% 41%;
-  --sidebar-border: 220 13% 93%;
-  --sidebar-ring: 245 58% 51%;
+  --sidebar-accent: 246 80% 96%;
+  --sidebar-accent-foreground: 246 80% 40%;
+  --sidebar-border: 220 14% 92%;
+  --sidebar-ring: 246 80% 60%;
 }
 
 .dark {
-  --background: 224 15% 8%;
-  --foreground: 220 14% 96%;
+  --background: 222 47% 7%;
+  --foreground: 210 40% 98%;
 
-  --card: 224 15% 10%;
-  --card-foreground: 220 14% 96%;
+  --card: 222 47% 10%;
+  --card-foreground: 210 40% 98%;
 
-  --popover: 224 15% 10%;
-  --popover-foreground: 220 14% 96%;
+  --popover: 222 47% 10%;
+  --popover-foreground: 210 40% 98%;
 
-  --primary: 245 58% 61%;
+  --primary: 246 80% 65%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 224 15% 15%;
-  --secondary-foreground: 220 14% 96%;
+  --secondary: 222 40% 14%;
+  --secondary-foreground: 210 40% 98%;
 
-  --muted: 224 15% 15%;
-  --muted-foreground: 220 9% 56%;
+  --muted: 222 40% 14%;
+  --muted-foreground: 215 20% 65%;
 
-  --accent: 224 15% 15%;
-  --accent-foreground: 220 14% 96%;
+  --accent: 246 80% 16%;
+  --accent-foreground: 246 80% 80%;
 
-  --destructive: 0 62% 40%;
+  --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 100%;
 
-  --border: 224 15% 18%;
-  --input: 224 15% 18%;
-  --ring: 245 58% 61%;
+  --border: 222 35% 17%;
+  --input: 222 35% 17%;
+  --ring: 246 80% 65%;
 
-  --nova-success: 142 71% 40%;
-  --nova-warning: 38 80% 45%;
-  --nova-info: 217 80% 55%;
+  --nova-success: 152 76% 45%;
+  --nova-warning: 38 92% 55%;
+  --nova-info: 217 91% 65%;
 
   /* Google-style module colors (dark) */
-  --module-sales: 217 89% 61%;
-  --module-sales-light: 217 40% 15%;
-  --module-products: 262 52% 66%;
-  --module-products-light: 262 30% 15%;
-  --module-inventory: 142 71% 50%;
-  --module-inventory-light: 142 30% 15%;
+  --module-sales: 246 80% 65%;
+  --module-sales-light: 246 45% 16%;
+  --module-products: 262 60% 68%;
+  --module-products-light: 262 40% 16%;
+  --module-inventory: 152 76% 45%;
+  --module-inventory-light: 152 45% 14%;
   --module-customers: 24 95% 63%;
-  --module-customers-light: 24 40% 15%;
-  --module-invoicing: 340 65% 62%;
-  --module-invoicing-light: 340 30% 15%;
-  --module-suppliers: 199 89% 54%;
-  --module-suppliers-light: 199 40% 15%;
-  --module-cash: 45 93% 57%;
-  --module-cash-light: 45 40% 15%;
-  --module-expenses: 0 72% 61%;
-  --module-expenses-light: 0 30% 15%;
+  --module-customers-light: 24 45% 16%;
+  --module-invoicing: 340 75% 64%;
+  --module-invoicing-light: 340 40% 16%;
+  --module-suppliers: 201 96% 50%;
+  --module-suppliers-light: 201 45% 14%;
+  --module-cash: 38 92% 55%;
+  --module-cash-light: 38 45% 16%;
+  --module-expenses: 0 84% 65%;
+  --module-expenses-light: 0 45% 16%;
   --module-reports: 262 83% 68%;
-  --module-reports-light: 262 40% 15%;
+  --module-reports-light: 262 40% 16%;
   --module-accounting: 173 80% 46%;
-  --module-accounting-light: 173 30% 15%;
+  --module-accounting-light: 173 40% 15%;
 
-  --sidebar-background: 224 15% 6%;
-  --sidebar-foreground: 220 14% 80%;
-  --sidebar-primary: 245 58% 61%;
+  --sidebar-background: 222 47% 6%;
+  --sidebar-foreground: 215 20% 75%;
+  --sidebar-primary: 246 80% 65%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 245 30% 15%;
-  --sidebar-accent-foreground: 245 58% 75%;
-  --sidebar-border: 224 15% 14%;
-  --sidebar-ring: 245 58% 61%;
+  --sidebar-accent: 246 40% 16%;
+  --sidebar-accent-foreground: 246 80% 80%;
+  --sidebar-border: 222 35% 14%;
+  --sidebar-ring: 246 80% 65%;
 }
 
 @layer base {

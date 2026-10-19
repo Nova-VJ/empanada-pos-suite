@@ -35,8 +35,9 @@ export function PosTerminal() {
   return (
     <div className="grid h-[calc(100vh-56px)] grid-cols-1 gap-4 p-4 lg:grid-cols-[65fr_35fr] bg-background">
       <section className="flex min-h-0 flex-col">
+        {/* Modern Search bar */}
         <div className="relative">
-          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             id={SEARCH_ID}
             autoFocus
@@ -49,33 +50,38 @@ export function PosTerminal() {
               }
             }}
             placeholder="Buscar sabor, SKU o escanear código de barras… (/ o F5)"
-            className="w-full rounded-xl border border-input bg-card py-2.5 pl-10 pr-10 text-sm text-foreground placeholder:text-muted-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 shadow-2xs"
+            className="w-full rounded-2xl border border-border/80 bg-card py-3 pl-11 pr-11 text-sm font-medium text-foreground placeholder:text-muted-foreground outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/15 shadow-xs"
           />
-          <Barcode className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/60" />
+          <Barcode className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/50" />
         </div>
-        <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1">
+
+        {/* Modern Category Pills */}
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
           {CATEGORIES.map((c) => (
             <button
               key={c}
               onClick={() => setCat(c)}
-              className={`whitespace-nowrap rounded-lg border px-3.5 py-1.5 text-xs font-medium transition-all ${
+              className={`whitespace-nowrap rounded-xl px-4 py-2 text-xs font-bold transition-all select-none active:scale-95 ${
                 cat === c
-                  ? "border-primary bg-primary text-primary-foreground shadow-2xs"
-                  : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-secondary/60"
+                  ? "bg-primary text-primary-foreground shadow-sm shadow-primary/25"
+                  : "border border-border/80 bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-secondary/70"
               }`}
             >
               {c}
             </button>
           ))}
         </div>
-        <div className="mt-3 grid flex-1 auto-rows-min grid-cols-2 gap-3 overflow-y-auto pb-4 sm:grid-cols-3 xl:grid-cols-4 pr-1">
+
+        {/* Product Cards Grid */}
+        <div className="mt-3.5 grid flex-1 auto-rows-min grid-cols-2 gap-3.5 overflow-y-auto pb-4 sm:grid-cols-3 xl:grid-cols-4 pr-1">
           {list.map((p) => (
             <ProductCard key={p.id} product={p} rate={pos.rate} onAdd={pos.addToCart} />
           ))}
           {list.length === 0 && (
-            <div className="col-span-full py-20 text-center text-muted-foreground">
-              <div className="text-4xl">🥟</div>
-              <p className="mt-2 text-sm font-medium">No se encontraron productos para “{q}”</p>
+            <div className="col-span-full py-24 text-center text-muted-foreground">
+              <div className="text-5xl animate-bounce">🥟</div>
+              <p className="mt-3 text-sm font-bold text-foreground">No se encontraron productos para “{q}”</p>
+              <p className="mt-1 text-xs text-muted-foreground">Prueba buscando por carne, queso, malta o código</p>
             </div>
           )}
         </div>

@@ -121,80 +121,97 @@ export function CartPanel() {
         })}
       </div>
 
-      <div className="border-t border-border bg-secondary/30 p-3.5">
-        <div className="mb-2 flex items-center justify-between rounded-lg border border-border bg-card p-1 text-[11px]">
+      <div className="border-t border-border bg-gradient-to-b from-card to-secondary/30 p-4 space-y-3">
+        {/* Selector Modo Fiscal vs Control Interno */}
+        <div className="flex items-center justify-between rounded-xl border border-border bg-secondary/80 p-1 text-[11px]">
           <button
             type="button"
             onClick={() => pos.updateCompanySettings({ operationMode: "control_interno" })}
-            className={`flex-1 rounded-md py-1 font-semibold transition ${
+            className={`flex-1 rounded-lg py-1.5 font-bold transition-all ${
               pos.companySettings.operationMode !== "fiscal_seniat"
-                ? "bg-violet-600 text-white shadow-2xs"
+                ? "bg-violet-600 text-white shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            📋 Control Interno (Sin IVA)
+            📋 Control Interno (0% IVA)
           </button>
           <button
             type="button"
             onClick={() => pos.updateCompanySettings({ operationMode: "fiscal_seniat" })}
-            className={`flex-1 rounded-md py-1 font-semibold transition ${
+            className={`flex-1 rounded-lg py-1.5 font-bold transition-all ${
               pos.companySettings.operationMode === "fiscal_seniat"
-                ? "bg-primary text-primary-foreground shadow-2xs"
+                ? "bg-primary text-primary-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            🧾 Factura Fiscal (16% IVA)
+            🧾 Factura Fiscal (16%)
           </button>
         </div>
 
-        <div className="mb-2.5 flex gap-1.5">
+        {/* Descuentos rápidos */}
+        <div className="flex gap-1.5">
           {DISCOUNTS.map((d) => (
             <button
               key={d.label}
               onClick={() => pos.setDiscount(d.v)}
-              className={`flex-1 rounded-lg border py-1 text-xs font-semibold transition-all ${
+              className={`flex-1 rounded-lg border py-1.5 text-xs font-bold transition-all ${
                 pos.discount === d.v
-                  ? "border-primary bg-primary text-primary-foreground shadow-2xs"
-                  : "border-border bg-card text-muted-foreground hover:text-foreground"
+                  ? "border-primary bg-primary text-primary-foreground shadow-xs"
+                  : "border-border bg-card text-muted-foreground hover:text-foreground hover:bg-secondary/60"
               }`}
             >
               {d.label}
             </button>
           ))}
         </div>
-        <dl className="space-y-1 font-mono text-xs">
+
+        {/* Desglose impositivo */}
+        <dl className="space-y-1 font-mono text-xs pt-1">
           {pos.companySettings.operationMode === "fiscal_seniat" ? (
             <>
               <Row label="Base Imponible (16% IVA)" bs={totals.baseBs} usd={r(totals.baseBs)} />
               <Row label="Débito Fiscal IVA (16%)" bs={totals.ivaBs} usd={r(totals.ivaBs)} />
-              <div className="flex justify-between text-module-cash text-[11px]">
-                <dt>IGTF proyectado (3% divisas)</dt>
+              <div className="flex justify-between text-amber-600 dark:text-amber-400 text-[11px] font-medium">
+                <dt>IGTF Proyectado (3% Divisas)</dt>
                 <dd>máx. {fmtBs(totals.totalBs * IGTF)}</dd>
               </div>
             </>
           ) : (
             <>
               <Row label="Subtotal Nota de Control" bs={totals.baseBs} usd={r(totals.baseBs)} />
-              <div className="flex justify-between text-violet-600 dark:text-violet-400 text-[11px] font-sans font-medium">
-                <dt>Modo Control Interno (Estilo Fina)</dt>
+              <div className="flex justify-between text-violet-600 dark:text-violet-400 text-[11px] font-sans font-semibold">
+                <dt>Modo Control Interno</dt>
                 <dd className="font-mono">Exento / Sin IVA (0%)</dd>
               </div>
             </>
           )}
         </dl>
-        <div className="mt-2.5 flex items-end justify-between rounded-xl border border-primary/20 bg-module-sales-light px-3.5 py-2.5">
-          <span className="text-xs font-semibold uppercase tracking-wider text-module-sales">Total a pagar</span>
-          <div className="text-right">
-            <div className="font-mono text-xl font-black text-foreground">{fmtBs(totals.totalBs)}</div>
-            <div className="font-mono text-xs font-bold text-module-inventory">{fmtUsd(totals.totalUsd)} USD</div>
+
+        {/* Gran Pantalla Digital de Total (Digital Display) */}
+        <div className="rounded-2xl border border-border/80 bg-slate-900 p-4 text-white shadow-md relative overflow-hidden">
+          <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 h-24 w-24 rounded-full bg-primary/20 blur-xl pointer-events-none" />
+          <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            <span>Total a Liquidar</span>
+            <span className="font-mono text-emerald-400">En Caja 🥟</span>
+          </div>
+          <div className="mt-1 flex items-baseline justify-between">
+            <div className="font-mono text-2xl sm:text-3xl font-black tracking-tight text-white">
+              {fmtBs(totals.totalBs)}
+            </div>
+            <div className="font-mono text-base font-extrabold text-emerald-400">
+              {fmtUsd(totals.totalUsd)} <span className="text-xs text-slate-400">USD</span>
+            </div>
           </div>
         </div>
+
+        {/* Botón Cobrar Orden */}
         <button
           disabled={cart.length === 0}
           onClick={() => pos.setModal("payment")}
-          className="mt-2.5 w-full rounded-xl bg-primary py-3 text-sm font-bold tracking-wide text-primary-foreground shadow-sm transition hover:bg-primary/90 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
+          className="w-full rounded-2xl bg-gradient-to-r from-primary to-indigo-600 py-3.5 text-sm font-black tracking-wide text-white shadow-md hover:shadow-lg transition-all active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40 select-none flex items-center justify-center gap-2"
         >
-          💳 COBRAR ORDEN <span className="opacity-75 font-normal">(F10)</span>
+          <span>💳 COBRAR ORDEN</span>
+          <span className="rounded-md bg-black/20 px-2 py-0.5 text-xs font-mono font-normal">F10 o Espacio</span>
         </button>
       </div>
     </aside>
