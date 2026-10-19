@@ -11,10 +11,12 @@ import {
   Sparkles,
   Building2,
   BadgeCheck,
+  Rocket,
 } from "lucide-react";
 import { toast } from "sonner";
 import { usePos } from "@/context/PosContext";
 import { Modal, btnGhost, btnPrimary, inputCls } from "./Modal";
+import { BusinessSetupWizardModal } from "./BusinessSetupWizardModal";
 
 export interface AuthUserProfile {
   id: string;
@@ -52,6 +54,7 @@ export function AuthUserModal({ onClose }: { onClose: () => void }) {
   });
 
   const [tab, setTab] = useState<"profile" | "login" | "register">("profile");
+  const [showWizard, setShowWizard] = useState(false);
 
   // Login form state
   const [loginEmail, setLoginEmail] = useState("");
@@ -232,7 +235,15 @@ export function AuthUserModal({ onClose }: { onClose: () => void }) {
               </div>
             </div>
 
-            <div className="flex gap-2 pt-2">
+            <button
+              onClick={() => setShowWizard(true)}
+              className="w-full rounded-xl border border-primary/40 bg-primary/10 hover:bg-primary/20 text-primary py-2.5 px-3 text-xs font-bold transition flex items-center justify-center gap-2 shadow-2xs"
+            >
+              <Rocket className="h-4 w-4" />
+              <span>Configurar Datos Reales del Negocio (Dejar Demo)</span>
+            </button>
+
+            <div className="flex gap-2 pt-1">
               <button
                 onClick={() => {
                   pos.lockTerminal();
@@ -412,6 +423,8 @@ export function AuthUserModal({ onClose }: { onClose: () => void }) {
             </button>
           </form>
         )}
+
+        {showWizard && <BusinessSetupWizardModal onClose={() => setShowWizard(false)} />}
       </div>
     </Modal>
   );

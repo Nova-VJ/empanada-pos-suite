@@ -8,17 +8,20 @@ import {
   Landmark,
   ShoppingCart,
   Share2,
+  Rocket,
 } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { usePos } from "@/context/PosContext";
 import { fmtBs, fmtUsd } from "@/lib/money";
 import type { ModuleId } from "@/types/pos";
 import { SocialPromotionsModal } from "../pos/SocialPromotionsModal";
+import { BusinessSetupWizardModal } from "../pos/BusinessSetupWizardModal";
 
 export function DashboardModule() {
   const pos = usePos();
   const { orders, products, supplierInvoices, shift, rate } = pos;
   const [showPromos, setShowPromos] = useState(false);
+  const [showSetupWizard, setShowSetupWizard] = useState(false);
 
   const activeOrders = orders.filter((o) => o.status !== "anulada");
   const todayTotalBs = activeOrders.reduce((s, o) => s + o.totalBs, 0);
@@ -114,7 +117,15 @@ export function DashboardModule() {
             </button>
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+          <button
+            onClick={() => setShowSetupWizard(true)}
+            className="flex-1 sm:flex-none rounded-xl border border-primary/40 bg-primary/10 hover:bg-primary/20 text-primary px-3 sm:px-3.5 py-2 text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs"
+            title="Cargar tus datos reales de empresa y dejar atrás el modo demo"
+          >
+            <Rocket className="h-3.5 w-3.5" />
+            <span>Datos Reales (Salir Demo)</span>
+          </button>
           <button
             onClick={() => pos.setActiveModule("pos")}
             className="flex-1 sm:flex-none rounded-xl bg-primary px-3 sm:px-4 py-2 text-xs font-semibold text-primary-foreground shadow-xs hover:bg-primary/90 transition text-center"
@@ -254,6 +265,7 @@ export function DashboardModule() {
       </div>
 
       {showPromos && <SocialPromotionsModal onClose={() => setShowPromos(false)} />}
+      {showSetupWizard && <BusinessSetupWizardModal onClose={() => setShowSetupWizard(false)} />}
     </div>
   );
 }

@@ -264,9 +264,8 @@ export function AppShell({ children }: { children: ReactNode }) {
               <h1 className="text-sm font-bold text-foreground tracking-tight truncate">
                 NovaSystem
               </h1>
-              <p className="text-[11px] text-muted-foreground truncate flex items-center gap-1">
-                <span>🥟</span>
-                <span>{pos.companySettings.name}</span>
+              <p className="text-[11px] text-muted-foreground truncate">
+                {pos.companySettings.name}
               </p>
             </div>
           )}

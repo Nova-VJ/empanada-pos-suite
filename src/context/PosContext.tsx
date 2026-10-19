@@ -214,6 +214,7 @@ interface Ctx extends PosState {
   lockTerminal: () => void;
   unlockTerminal: () => void;
   updateCompanySettings: (c: Partial<CompanySettings>) => void;
+  clearDemoOrders: () => void;
 }
 
 const PosCtx = createContext<Ctx | null>(null);
@@ -966,6 +967,28 @@ export function PosProvider({ children }: { children: ReactNode }) {
       setS((x) => ({
         ...x,
         companySettings: { ...x.companySettings, ...c },
+      })),
+    clearDemoOrders: () =>
+      setS((x) => ({
+        ...x,
+        orders: [],
+        shift: {
+          ...x.shift,
+          openedAt: Date.now(),
+          salesCount: 0,
+          totalBs: 0,
+          totalUsd: 0,
+          expectedBs: x.shift.openingBs,
+          expectedUsd: x.shift.openingUsd,
+          cardBs: 0,
+          pagoMovilBs: 0,
+          cashBs: 0,
+          cashUsd: 0,
+          zivaExento: 0,
+          zivaBase: 0,
+          zivaTax: 0,
+          zigtfTax: 0,
+        },
       })),
   };
 

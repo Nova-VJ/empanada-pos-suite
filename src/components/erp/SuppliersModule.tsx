@@ -38,6 +38,8 @@ export interface SupplyAlternative {
   officialUrl?: string;
   socialHandle?: string;
   sourceNote?: string;
+  zone?: string;
+  distanceKm?: number;
 }
 
 export interface MarketSupplyItem {
@@ -61,37 +63,42 @@ export const MARKET_SUPPLIES: MarketSupplyItem[] = [
         supplier: "Alimentos Polar Comercial C.A.",
         priceUsd: 22.5,
         rating: 98,
-        deliveryHours: 24,
+        deliveryHours: 12,
         creditDays: 15,
         verified: true,
         isCurrent: true,
         channelType: "official_web",
         officialUrl: "https://empresaspolar.com",
-        sourceNote: "Web oficial / Portal Clientes Polar (PBX 0212-2023111)",
+        sourceNote: "Planta Turmero / San Joaquín (Canal Oficial Polar Aragua)",
+        zone: "Planta Turmero (Autopista Regional del Centro)",
+        distanceKm: 8.5,
       },
       {
         supplier: "Distribuidora Mayorista Central C.A.",
         priceUsd: 20.8,
         rating: 92,
-        deliveryHours: 48,
+        deliveryHours: 4,
         creditDays: 7,
         verified: true,
         savingsPct: 7.5,
         channelType: "direct_pbx",
-        officialUrl: "https://inmerca.gob.ve",
-        sourceNote: "Mercado Mayorista de Coche · Galpón 3 (Canal Oficial Inmerca)",
+        sourceNote: "Galpón 2 Mercado Mayorista de Maracay (Entrega express en San Jacinto)",
+        zone: "Mercado Mayorista de Maracay (Av. Intercomunal)",
+        distanceKm: 4.2,
       },
       {
         supplier: "Inversiones Hermanos Gómez C.A.",
         priceUsd: 19.9,
         rating: 85,
-        deliveryHours: 72,
+        deliveryHours: 24,
         creditDays: 0,
         verified: false,
         savingsPct: 11.5,
         channelType: "social_media",
-        socialHandle: "@distribuidoragomez_vzla",
-        sourceNote: "Lista de difusión por WhatsApp / IG (No verificado de fuentes oficiales)",
+        socialHandle: "@distribuidoragomez_mcy",
+        sourceNote: "Lista por WhatsApp / Redes (Venta al mayor en San Vicente)",
+        zone: "Zona Industrial San Vicente II, Maracay",
+        distanceKm: 7.8,
       },
     ],
   },
@@ -106,35 +113,41 @@ export const MARKET_SUPPLIES: MarketSupplyItem[] = [
         supplier: "Lácteos y Quesera Llanera Guárico C.A.",
         priceUsd: 4.8,
         rating: 88,
-        deliveryHours: 48,
+        deliveryHours: 24,
         creditDays: 7,
         verified: true,
         isCurrent: true,
         channelType: "official_web",
-        sourceNote: "Asociación de Ganaderos Guárico (Registro SICA / INSAI oficial)",
+        sourceNote: "Ruta de quesos llaneros directo a San Jacinto (Guía SICA)",
+        zone: "Eje San Juan de los Morros - Villa de Cura",
+        distanceKm: 38.0,
       },
       {
         supplier: "Agropecuaria El Sombrero C.A.",
         priceUsd: 4.1,
         rating: 94,
-        deliveryHours: 24,
+        deliveryHours: 4,
         creditDays: 10,
         verified: true,
         savingsPct: 14.5,
         channelType: "direct_pbx",
-        sourceNote: "Despacho directo de finca (Guárico) con guía SICA verificada",
+        sourceNote: "Puesto de lácteos mayorista en Intercomunal (Queso blanco duro directo)",
+        zone: "Mercado Mayorista de Maracay (Sector Lácteos)",
+        distanceKm: 4.2,
       },
       {
         supplier: "Distribuidora Lácteos Aragua C.A.",
         priceUsd: 4.35,
         rating: 90,
-        deliveryHours: 36,
+        deliveryHours: 6,
         creditDays: 15,
         verified: true,
         savingsPct: 9.3,
         channelType: "social_media",
-        socialHandle: "@lacteos_aragua_mayor",
-        sourceNote: "Catálogo comercial de redes sociales (Precios referenciales no auditados)",
+        socialHandle: "@lacteos_aragua_mcy",
+        sourceNote: "Distribución local diaria en La Morita y San Jacinto",
+        zone: "La Morita / Av. Aragua (a 5 min de San Jacinto)",
+        distanceKm: 3.1,
       },
     ],
   },
@@ -149,37 +162,43 @@ export const MARKET_SUPPLIES: MarketSupplyItem[] = [
         supplier: "Alimentos Polar Comercial C.A.",
         priceUsd: 32.0,
         rating: 95,
-        deliveryHours: 24,
+        deliveryHours: 12,
         creditDays: 15,
         verified: true,
         isCurrent: true,
         channelType: "official_web",
         officialUrl: "https://empresaspolar.com",
-        sourceNote: "Canal corporativo Alimentos Polar (Marca Mazeite / Diana)",
+        sourceNote: "Canal corporativo Alimentos Polar (Marca Mazeite Turmero)",
+        zone: "Centro de Distribución ARC Turmero",
+        distanceKm: 9.0,
       },
       {
         supplier: "Oleaginosas Industriales C.A. (Portuguesa)",
         priceUsd: 27.5,
         rating: 93,
-        deliveryHours: 48,
+        deliveryHours: 18,
         creditDays: 21,
         verified: true,
         savingsPct: 14.0,
         channelType: "official_web",
         officialUrl: "https://asoportuguesa.org",
-        sourceNote: "Canal institucional Asoportuguesa Acarigua (Oficial)",
+        sourceNote: "Planta de grasas y aceites comestibles en Santa Cruz de Aragua",
+        zone: "Zona Industrial Santa Cruz de Aragua",
+        distanceKm: 11.5,
       },
       {
         supplier: "Comercializadora San Martín",
         priceUsd: 28.9,
         rating: 89,
-        deliveryHours: 48,
+        deliveryHours: 4,
         creditDays: 15,
         verified: true,
         savingsPct: 9.6,
         channelType: "social_media",
-        socialHandle: "@sanmartin_mayorista",
-        sourceNote: "Redes sociales / WhatsApp (Sujeto a confirmación con preventista)",
+        socialHandle: "@sanmartin_maracay",
+        sourceNote: "Preventista de víveres zona San Jacinto - Montaña Fresca",
+        zone: "San Jacinto / Urb. Montaña Fresca (Maracay)",
+        distanceKm: 2.3,
       },
     ],
   },
@@ -194,35 +213,41 @@ export const MARKET_SUPPLIES: MarketSupplyItem[] = [
         supplier: "Carnes y Frigorífico San Antonio C.A.",
         priceUsd: 6.9,
         rating: 91,
-        deliveryHours: 24,
+        deliveryHours: 6,
         creditDays: 7,
         verified: true,
         isCurrent: true,
         channelType: "direct_pbx",
-        sourceNote: "Frigorífico industrial con guía sanitaria INSAI oficial",
+        sourceNote: "Despacho cárnico con guía sanitaria INSAI Aragua",
+        zone: "Av. Bolívar Este (Maracay Centro)",
+        distanceKm: 3.8,
       },
       {
         supplier: "Frigorífico Industrial Centro-Occidente",
         priceUsd: 6.1,
         rating: 96,
-        deliveryHours: 24,
+        deliveryHours: 12,
         creditDays: 14,
         verified: true,
         savingsPct: 11.5,
         channelType: "official_web",
-        sourceNote: "Matadero Frigorífico registrado ante INSAI y Contraloría Sanitaria",
+        sourceNote: "Matadero Industrial Turmero / Cagua (Carne en canal y vara)",
+        zone: "Matadero Industrial Turmero / Cagua",
+        distanceKm: 13.0,
       },
       {
         supplier: "Distribuidora Cárnica Barinas C.A.",
         priceUsd: 5.95,
         rating: 87,
-        deliveryHours: 48,
+        deliveryHours: 4,
         creditDays: 7,
         verified: true,
         savingsPct: 13.7,
         channelType: "social_media",
-        socialHandle: "@carnes_barinas_dist",
-        sourceNote: "Lista por mensajería / redes (Precios referenciales)",
+        socialHandle: "@carnes_maracay_mayor",
+        sourceNote: "Recepción de ganado de Barinas en el Mayorista de Maracay",
+        zone: "Mercado Mayorista de Maracay (Sector Cárnicos)",
+        distanceKm: 4.2,
       },
     ],
   },
@@ -237,24 +262,28 @@ export const MARKET_SUPPLIES: MarketSupplyItem[] = [
         supplier: "Pescadería Mar Caribe C.A.",
         priceUsd: 5.8,
         rating: 89,
-        deliveryHours: 24,
+        deliveryHours: 6,
         creditDays: 0,
         verified: true,
         isCurrent: true,
         channelType: "direct_pbx",
-        sourceNote: "Distribuidor mayorista La Guaira / Coche",
+        sourceNote: "Pescadería mayorista con cazón fresco limpio para guisar",
+        zone: "Mercado Principal de Maracay (Calle Santos Michelena)",
+        distanceKm: 4.5,
       },
       {
         supplier: "Cooperativa Pesquera Sucre & Coche",
         priceUsd: 4.9,
         rating: 95,
-        deliveryHours: 36,
+        deliveryHours: 24,
         creditDays: 7,
         verified: true,
         savingsPct: 15.5,
         channelType: "official_web",
         officialUrl: "https://inmerca.gob.ve",
-        sourceNote: "Muelle pesquero / INMERCA Coche C.A. (Canal Oficial)",
+        sourceNote: "Despacho directo de costa a Maracay (Canal Oficial)",
+        zone: "Ruta Costera Ocumare - Maracay",
+        distanceKm: 45.0,
       },
     ],
   },
@@ -269,24 +298,28 @@ export const MARKET_SUPPLIES: MarketSupplyItem[] = [
         supplier: "Empaques y Plásticos Caracas C.A.",
         priceUsd: 18.0,
         rating: 90,
-        deliveryHours: 48,
+        deliveryHours: 24,
         creditDays: 15,
         verified: true,
         isCurrent: true,
         channelType: "direct_pbx",
-        sourceNote: "Distribuidor de bolsas y envases termoformados en Boleíta",
+        sourceNote: "Distribuidor regional de empaques y envases termoformados",
+        zone: "Zona Industrial San Jacinto / Casanova Godoy",
+        distanceKm: 1.5,
       },
       {
         supplier: "EcoPack Venezuela S.A.",
         priceUsd: 14.5,
         rating: 97,
-        deliveryHours: 24,
+        deliveryHours: 3,
         creditDays: 30,
         verified: true,
         savingsPct: 19.4,
         channelType: "official_web",
         officialUrl: "https://ecopackve.com",
-        sourceNote: "Web oficial EcoPack Venezuela · Distribución Guatire",
+        sourceNote: "Almacén directo en Maracay (Cajas térmicas y papel parafinado)",
+        zone: "Zona Industrial Piñonal / San Jacinto (Maracay)",
+        distanceKm: 2.0,
       },
     ],
   },
@@ -668,18 +701,18 @@ export function SuppliersModule() {
             </div>
           </div>
 
-          {/* Banner de Transparencia de Fuentes Oficiales vs Redes Sociales */}
+          {/* Banner de Transparencia de Fuentes Oficiales y Zona Maracay / San Jacinto */}
           <div className="rounded-xl border border-sky-500/30 bg-sky-500/10 p-3.5 text-xs text-foreground flex items-start gap-3">
-            <div className="text-xl shrink-0">🏛️</div>
+            <div className="text-xl shrink-0">📍</div>
             <div className="space-y-1">
-              <div className="font-bold flex items-center gap-2">
-                <span>Transparencia de Datos & Auditoría de Fuentes (Venezuela)</span>
+              <div className="font-bold flex items-center gap-2 flex-wrap">
+                <span>Centro Operativo: Dr. Empanadas (San Jacinto, Maracay, Edo. Aragua)</span>
                 <span className="rounded bg-sky-500/20 text-sky-700 dark:text-sky-300 px-2 py-0.2 text-[10px] font-semibold">
-                  Canales Oficiales vs Redes
+                  Proveedores Locales Aragua
                 </span>
               </div>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Priorizamos <strong>webs institucionales y canales oficiales</strong> de mayoristas (Alimentos Polar, INMERCA Mercado de Coche, Asoportuguesa, EcoPack) con RIF comprobado ante el SENIAT. Los datos obtenidos mediante <strong>redes sociales o listas de difusión de WhatsApp</strong> se señalan claramente con la etiqueta <span className="text-amber-600 dark:text-amber-400 font-semibold">⚠️ No verificado de fuentes oficiales</span> como estimación referencial.
+                Búsqueda y cotización inteligente geolocalizada en <strong>San Jacinto, Mercado Mayorista de Maracay (Av. Intercomunal), Zona Industrial San Vicente, Turmero, Cagua y Valles de Aragua</strong>. Distinguimos entre <strong>canales oficiales auditados</strong> (RIF SENIAT / Guía SICA) y <strong>redes sociales referenciales</strong>.
               </p>
             </div>
           </div>
@@ -838,6 +871,15 @@ export function SuppliersModule() {
                               >
                                 Visitar web oficial ↗
                               </a>
+                            )}
+                          </div>
+                        )}
+
+                        {alt.zone && (
+                          <div className="text-[10px] text-amber-700 dark:text-amber-400 font-medium flex items-center gap-1 mt-0.5">
+                            <span>📍 {alt.zone}</span>
+                            {alt.distanceKm !== undefined && (
+                              <span className="font-mono text-muted-foreground">({alt.distanceKm} km de San Jacinto)</span>
                             )}
                           </div>
                         )}
