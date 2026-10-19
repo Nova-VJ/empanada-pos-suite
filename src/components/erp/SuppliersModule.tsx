@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, CheckCircle2, Edit, FileText, Package, Plus, Search, Truck } from "lucide-react";
+import { ArrowRight, CheckCircle2, Edit, FileText, Filter, Package, Plus, Search, SlidersHorizontal, Truck, Award, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { usePos } from "@/context/PosContext";
 import { fmtBs, fmtUsd } from "@/lib/money";
@@ -133,11 +133,36 @@ export function SuppliersModule() {
       s.category.toLowerCase().includes(search.toLowerCase())
   );
 
+  const [sortBy, setSortBy] = useState<"savings" | "price_asc" | "rating" | "delivery">("savings");
+  const [maxDeliveryHours, setMaxDeliveryHours] = useState<number>(72);
+  const [onlyCredit, setOnlyCredit] = useState<boolean>(false);
+  const [onlyVerified, setOnlyVerified] = useState<boolean>(false);
+
   const filteredSupplies = MARKET_SUPPLIES.filter(
     (s) =>
       (supplyCategory === "Todos" || s.category === supplyCategory) &&
       (s.name.toLowerCase().includes(search.toLowerCase()) || s.currentSupplier.toLowerCase().includes(search.toLowerCase()))
-  );
+  ).map((item) => {
+    // Filtrar y ordenar las alternativas según los parámetros del dueño
+    const filteredAlts = item.alternatives
+      .filter((alt) => {
+        if (alt.isCurrent) return true; // Siempre mantener el proveedor actual como referencia
+        if (alt.deliveryHours > maxDeliveryHours) return false;
+        if (onlyCredit && alt.creditDays <= 0) return false;
+        if (onlyVerified && !alt.verified) return false;
+        return true;
+      })
+      .sort((a, b) => {
+        if (a.isCurrent) return -1;
+        if (b.isCurrent) return 1;
+        if (sortBy === "price_asc") return a.priceUsd - b.priceUsd;
+        if (sortBy === "rating") return b.rating - a.rating;
+        if (sortBy === "delivery") return a.deliveryHours - b.deliveryHours;
+        return (b.savingsPct ?? 0) - (a.savingsPct ?? 0);
+      });
+
+    return { ...item, alternatives: filteredAlts };
+  });
 
   function handleOrderFromAlternative(supplyName: string, alt: { supplier: string; priceUsd: number }) {
     setPoForm({
@@ -284,12 +309,15 @@ export function SuppliersModule() {
         <div className="space-y-4">
           <div className="rounded-xl border border-primary/25 bg-primary/10 p-4 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 className="text-sm font-bold text-foreground">💡 Buscador Inteligente de Oportunidades de Compra</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-foreground">💡 Buscador Inteligente de Oportunidades de Compra</h3>
+                <span className="rounded bg-primary/20 text-primary text-[10px] font-bold px-2 py-0.5">Control del Dueño</span>
+              </div>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Compara precios en tiempo real entre tus proveedores habituales y el mercado mayorista venezolano para ahorrar en insumos críticos.
               </p>
             </div>
-            <div className="flex gap-1">
+            <div className="flex flex-wrap gap-1">
               {["Todos", "Harinas", "Lácteos", "Aceites", "Carnes", "Empaques"].map((cat) => (
                 <button
                   key={cat}
@@ -303,6 +331,71 @@ export function SuppliersModule() {
                   {cat}
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* Parámetros Elegibles por el Dueño */}
+          <div className="rounded-xl border border-border bg-card p-3.5 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-1.5 font-semibold text-foreground">
+                <SlidersHorizontal className="h-4 w-4 text-primary" />
+                <span>Parámetros de Búsqueda:</span>
+              </div>
+
+              {/* Ordenar por */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-muted-foreground">Priorizar:</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                  className="rounded-lg border border-input bg-background px-2.5 py-1 text-xs font-medium text-foreground outline-none focus:border-primary"
+                >
+                  <option value="savings">Mayor % de Ahorro</option>
+                  <option value="price_asc">Menor Precio en USD ($)</option>
+                  <option value="rating">Mejor Calificación (Score)</option>
+                  <option value="delivery">Despacho más Rápido</option>
+                </select>
+              </div>
+
+              {/* Tiempo máx de entrega */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-muted-foreground">Entrega máx:</span>
+                <select
+                  value={maxDeliveryHours}
+                  onChange={(e) => setMaxDeliveryHours(Number(e.target.value))}
+                  className="rounded-lg border border-input bg-background px-2.5 py-1 text-xs font-medium text-foreground outline-none focus:border-primary"
+                >
+                  <option value={24}>Express 24 Horas</option>
+                  <option value={48}>Hasta 48 Horas</option>
+                  <option value={72}>Hasta 72 Horas (Todas)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Checkboxes de condiciones */}
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-1.5 cursor-pointer select-none font-medium text-foreground">
+                <input
+                  type="checkbox"
+                  checked={onlyCredit}
+                  onChange={(e) => setOnlyCredit(e.target.checked)}
+                  className="rounded border-input text-primary focus:ring-primary"
+                />
+                <span>Solo con Crédito (Días)</span>
+              </label>
+
+              <label className="flex items-center gap-1.5 cursor-pointer select-none font-medium text-foreground">
+                <input
+                  type="checkbox"
+                  checked={onlyVerified}
+                  onChange={(e) => setOnlyVerified(e.target.checked)}
+                  className="rounded border-input text-primary focus:ring-primary"
+                />
+                <span className="flex items-center gap-1">
+                  <Award className="h-3.5 w-3.5 text-amber-500" />
+                  Solo Verificados
+                </span>
+              </label>
             </div>
           </div>
 

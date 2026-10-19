@@ -273,12 +273,15 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         <div className="p-3 border-t border-sidebar-border">
           {!collapsed ? (
-            <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-              <span className="font-mono">{pos.companySettings.rif}</span>
-              <span>v2.0 Suite</span>
+            <div className="flex flex-col gap-1 text-[11px] text-muted-foreground">
+              <div className="flex items-center justify-between">
+                <span className="font-mono font-semibold">{pos.companySettings.rif}</span>
+                <span className="rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold px-1.5 py-0.2 text-[10px]">v1.0 SENIAT</span>
+              </div>
+              <span className="text-[10px] text-muted-foreground/80">Edición Venezuela · 1ª Versión</span>
             </div>
           ) : (
-            <div className="text-center text-[10px] font-mono text-muted-foreground">v2</div>
+            <div className="text-center text-[10px] font-mono text-emerald-500 font-bold" title="v1.0 SENIAT Venezuela">v1.0</div>
           )}
         </div>
       </aside>
