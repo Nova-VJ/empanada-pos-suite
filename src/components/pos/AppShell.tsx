@@ -261,14 +261,12 @@ export function AppShell({ children }: { children: ReactNode }) {
           </button>
           {!collapsed && (
             <div className="min-w-0 flex-1 leading-tight">
-              <div className="flex items-center gap-1.5">
-                <h1 className="text-sm font-bold text-foreground tracking-tight truncate">
-                  NovaSystem
-                </h1>
-                <span className="text-xs">🥟</span>
-              </div>
-              <p className="text-[11px] text-muted-foreground truncate">
-                {pos.companySettings.name}
+              <h1 className="text-sm font-bold text-foreground tracking-tight truncate">
+                NovaSystem
+              </h1>
+              <p className="text-[11px] text-muted-foreground truncate flex items-center gap-1">
+                <span>🥟</span>
+                <span>{pos.companySettings.name}</span>
               </p>
             </div>
           )}

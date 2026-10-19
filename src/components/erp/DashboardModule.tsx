@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   AlertTriangle,
   ArrowDownRight,
@@ -6,15 +7,18 @@ import {
   FileText,
   Landmark,
   ShoppingCart,
+  Share2,
 } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { usePos } from "@/context/PosContext";
 import { fmtBs, fmtUsd } from "@/lib/money";
 import type { ModuleId } from "@/types/pos";
+import { SocialPromotionsModal } from "../pos/SocialPromotionsModal";
 
 export function DashboardModule() {
   const pos = usePos();
   const { orders, products, supplierInvoices, shift, rate } = pos;
+  const [showPromos, setShowPromos] = useState(false);
 
   const activeOrders = orders.filter((o) => o.status !== "anulada");
   const todayTotalBs = activeOrders.reduce((s, o) => s + o.totalBs, 0);
@@ -90,7 +94,7 @@ export function DashboardModule() {
     <div className="space-y-4 sm:space-y-6 p-3 sm:p-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Bienvenido a NovaSystem · Dr. Empanadas</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Bienvenido a NovaSystem · Dr. Empanadas 🥟</h1>
           <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
             Resumen ejecutivo —{" "}
             {new Date().toLocaleDateString("es-VE", {
@@ -237,8 +241,19 @@ export function DashboardModule() {
               {action.label}
             </button>
           ))}
+
+          <button
+            onClick={() => setShowPromos(true)}
+            className="rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:opacity-95 text-white px-4 py-2.5 text-xs font-bold transition-all shadow-xs flex items-center gap-1.5"
+            title="Generar packs y promociones con foto para WhatsApp e Instagram Stories"
+          >
+            <Share2 className="h-3.5 w-3.5" />
+            <span>📱 Publicar Promoción / Redes</span>
+          </button>
         </div>
       </div>
+
+      {showPromos && <SocialPromotionsModal onClose={() => setShowPromos(false)} />}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { usePos } from "@/context/PosContext";
 import { fmtBs, fmtUsd } from "@/lib/money";
 import type { POStatus, Supplier } from "@/types/pos";
 import { Modal, btnGhost, btnPrimary, inputCls } from "../pos/Modal";
+import { matchesSearch } from "@/lib/search";
 
 const poStatusColors: Record<POStatus, string> = {
   borrador: "bg-secondary text-muted-foreground",
@@ -441,9 +442,9 @@ export function SuppliersModule() {
 
   const filteredSuppliers = suppliers.filter(
     (s) =>
-      s.name.toLowerCase().includes(search.toLowerCase()) ||
-      s.rif.toLowerCase().includes(search.toLowerCase()) ||
-      s.category.toLowerCase().includes(search.toLowerCase())
+      matchesSearch(s.name, search) ||
+      matchesSearch(s.rif, search) ||
+      matchesSearch(s.category, search)
   );
 
   const [sortBy, setSortBy] = useState<"savings" | "price_asc" | "rating" | "delivery">("savings");
@@ -455,7 +456,7 @@ export function SuppliersModule() {
   const filteredSupplies = MARKET_SUPPLIES.filter(
     (s) =>
       (supplyCategory === "Todos" || s.category === supplyCategory) &&
-      (s.name.toLowerCase().includes(search.toLowerCase()) || s.currentSupplier.toLowerCase().includes(search.toLowerCase()))
+      (matchesSearch(s.name, search) || matchesSearch(s.currentSupplier, search))
   ).map((item) => {
     // Filtrar y ordenar las alternativas según los parámetros del dueño
     const filteredAlts = item.alternatives

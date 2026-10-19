@@ -6,6 +6,7 @@ import { CATEGORIES } from "@/data/mockProducts";
 import { fmtBs, fmtUsd } from "@/lib/money";
 import type { Category, Product } from "@/types/pos";
 import { Modal, btnGhost, btnPrimary, inputCls } from "../pos/Modal";
+import { matchesSearch } from "@/lib/search";
 
 const VALID_CATS: Category[] = ["Empanadas", "Pastelitos", "Horneados", "Bebidas", "Salsas & Extras", "Combos"];
 
@@ -34,9 +35,9 @@ export function ProductsModule() {
   const filtered = products.filter(
     (p) =>
       (catFilter === "Todos" || p.category === catFilter) &&
-      (p.name.toLowerCase().includes(search.toLowerCase()) ||
-        p.sku.toLowerCase().includes(search.toLowerCase()) ||
-        p.short.toLowerCase().includes(search.toLowerCase()))
+      (matchesSearch(p.name, search) ||
+        matchesSearch(p.sku, search) ||
+        matchesSearch(p.short, search))
   );
 
   function openCreate() {

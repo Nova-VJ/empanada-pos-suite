@@ -5,6 +5,7 @@ import { usePos } from "@/context/PosContext";
 import { fmtBs, fmtUsd } from "@/lib/money";
 import type { CustomerRecord } from "@/types/pos";
 import { Modal, btnGhost, btnPrimary, inputCls } from "../pos/Modal";
+import { matchesSearch } from "@/lib/search";
 
 const segmentColors: Record<string, string> = {
   VIP: "bg-module-cash-light text-module-cash",
@@ -44,9 +45,9 @@ export function CustomersModule() {
 
   const filtered = (tab === "debtors" ? debtors : customers).filter(
     (c) =>
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.rif.toLowerCase().includes(search.toLowerCase()) ||
-      c.email.toLowerCase().includes(search.toLowerCase())
+      matchesSearch(c.name, search) ||
+      matchesSearch(c.rif, search) ||
+      matchesSearch(c.email, search)
   );
 
   function openCreate() {

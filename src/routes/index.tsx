@@ -1,11 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Search, Barcode } from "lucide-react";
+import { Search, Barcode, Share2, Sparkles } from "lucide-react";
 import { usePos } from "@/context/PosContext";
 import { CATEGORIES } from "@/data/mockProducts";
 import { ProductCard } from "@/components/pos/ProductCard";
 import { CartPanel } from "@/components/pos/CartPanel";
 import { SEARCH_ID } from "@/components/pos/AppShell";
+import { matchesSearch } from "@/lib/search";
+import { SocialPromotionsModal } from "@/components/pos/SocialPromotionsModal";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -23,36 +25,51 @@ export function PosTerminal() {
   const pos = usePos();
   const [cat, setCat] = useState<(typeof CATEGORIES)[number]>("Todos");
   const [q, setQ] = useState("");
+  const [showPromos, setShowPromos] = useState(false);
+
+  // Búsqueda inteligente insensible a mayúsculas y acentos (ej: "pabellon" encuentra "Pabellón")
   const list = pos.products.filter(
     (p) =>
       p.active !== false &&
       (cat === "Todos" || p.category === cat) &&
-      (p.name.toLowerCase().includes(q.toLowerCase()) ||
-        p.sku.toLowerCase().includes(q.toLowerCase()) ||
+      (matchesSearch(p.name, q) ||
+        matchesSearch(p.sku, q) ||
         (p.barcode && p.barcode.includes(q)))
   );
 
   return (
     <div className="grid h-[calc(100vh-56px)] grid-cols-1 gap-4 p-4 lg:grid-cols-[65fr_35fr] bg-background">
       <section className="flex min-h-0 flex-col">
-        {/* Modern Search bar */}
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            id={SEARCH_ID}
-            autoFocus
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && list[0]) {
-                pos.addToCart(list[0]);
-                setQ("");
-              }
-            }}
-            placeholder="Buscar sabor, SKU o escanear código de barras… (/ o F5)"
-            className="w-full rounded-2xl border border-border/80 bg-card py-3 pl-11 pr-11 text-sm font-medium text-foreground placeholder:text-muted-foreground outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/15 shadow-xs"
-          />
-          <Barcode className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/50" />
+        {/* Modern Search bar + Publicar en Redes Button */}
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              id={SEARCH_ID}
+              autoFocus
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && list[0]) {
+                  pos.addToCart(list[0]);
+                  setQ("");
+                }
+              }}
+              placeholder="Buscar sabor, SKU o escanear código de barras… (/ o F5)"
+              className="w-full rounded-2xl border border-border/80 bg-card py-3 pl-11 pr-11 text-sm font-medium text-foreground placeholder:text-muted-foreground outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/15 shadow-xs"
+            />
+            <Barcode className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/50" />
+          </div>
+
+          <button
+            onClick={() => setShowPromos(true)}
+            className="rounded-2xl border border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary py-3 px-3.5 sm:px-4 text-xs font-bold transition flex items-center gap-1.5 shrink-0 shadow-xs active:scale-95"
+            title="Publicar Packs y Promociones en WhatsApp e Instagram Stories"
+          >
+            <Share2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Publicar en Redes</span>
+            <span className="sm:hidden">Redes</span>
+          </button>
         </div>
 
         {/* Modern Category Pills */}
@@ -87,6 +104,9 @@ export function PosTerminal() {
         </div>
       </section>
       <CartPanel />
+
+      {/* Social Media & WhatsApp Promotions Studio */}
+      {showPromos && <SocialPromotionsModal onClose={() => setShowPromos(false)} />}
     </div>
   );
 }
