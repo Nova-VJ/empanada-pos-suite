@@ -100,12 +100,18 @@ export function SocialPromotionsModal({ onClose }: SocialPromotionsModalProps) {
   const [packs, setPacks] = useState<PromoPack[]>(BASE_MARACAY_PACKS);
   const [selectedPack, setSelectedPack] = useState<PromoPack>(BASE_MARACAY_PACKS[0]);
   const [activeTab, setActiveTab] = useState<"whatsapp" | "story">("whatsapp");
-  const [storyTheme, setStoryTheme] = useState<"dark_luxury" | "sunset_criollo">("dark_luxury");
+  const [storyTheme, setStoryTheme] = useState<"dark_luxury" | "sunset_criollo" | "emerald_gourmet">("dark_luxury");
   const [copied, setCopied] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [customDiscount, setCustomDiscount] = useState<number>(15);
   const [phoneForDelivery, setPhoneForDelivery] = useState<string>(pos.companySettings.phone || "0412-1234567");
   const [zoneName, setZoneName] = useState<string>(pos.companySettings.city || "San Jacinto, Maracay");
+
+  // Editable custom copy
+  const [isCustomizing, setIsCustomizing] = useState(false);
+  const [customName, setCustomName] = useState("");
+  const [customTagline, setCustomTagline] = useState("");
+  const [customBadge, setCustomBadge] = useState("");
 
   const storyCardRef = useRef<HTMLDivElement>(null);
 
@@ -117,25 +123,26 @@ export function SocialPromotionsModal({ onClose }: SocialPromotionsModalProps) {
       return;
     }
 
-    // Pick top empanadas
+    // Pick categories
     const empanadas = prods.filter((p) => p.category === "Empanadas");
     const pastelitos = prods.filter((p) => p.category === "Pastelitos");
     const bebidas = prods.filter((p) => p.category === "Bebidas");
 
     const e1 = empanadas[0] || prods[0];
     const e2 = empanadas[1] || prods[1] || e1;
-    const p1 = pastelitos[0] || prods[2] || e1;
-    const b1 = bebidas[0] || { name: "Malta Polar fría", priceUsd: 1.5 };
+    const e3 = empanadas[2] || prods[2] || e2;
+    const p1 = pastelitos[0] || prods[3] || e1;
+    const b1 = bebidas[0] || { name: "Malta Polar bien fría", priceUsd: 1.5 };
 
     const gen1: PromoPack = {
       id: "gen-trio-" + Date.now(),
       name: `Trío San Jacinto (${e1.name.replace("Empanada ", "")} & ${e2.name.replace("Empanada ", "")})`,
       tagline: "¡Lo más pedido de la cocina en San Jacinto hoy!",
       items: [
-        `2 ${e1.name}`,
-        `1 ${e2.name}`,
-        `1 ${b1.name}`,
-        "Guasacaca y Salsa Tártara casera de cortesía",
+        `2 ${e1.name} recién fritas`,
+        `1 ${e2.name} crujiente`,
+        `1 ${b1.name} (355ml)`,
+        "Guasacaca aragüeña y tártara casera gratis",
       ],
       regularPriceUsd: Number((e1.priceUsd * 2 + e2.priceUsd + b1.priceUsd).toFixed(2)),
       promoPriceUsd: Number(((e1.priceUsd * 2 + e2.priceUsd + b1.priceUsd) * 0.82).toFixed(2)),
@@ -147,7 +154,7 @@ export function SocialPromotionsModal({ onClose }: SocialPromotionsModalProps) {
     const gen2: PromoPack = {
       id: "gen-merienda-" + Date.now(),
       name: `Combo Merienda Aragüeña (${p1.name})`,
-      tagline: "Crujiente hojaldre recién salido para la media tarde.",
+      tagline: "Hojaldre dorado crujiente para la media tarde en San Jacinto.",
       items: [`3 ${p1.name}`, `1 ${e1.name}`, "2 Bebidas refrescantes a elección"],
       regularPriceUsd: Number((p1.priceUsd * 3 + e1.priceUsd + 3.0).toFixed(2)),
       promoPriceUsd: Number(((p1.priceUsd * 3 + e1.priceUsd + 3.0) * 0.8).toFixed(2)),
@@ -160,7 +167,7 @@ export function SocialPromotionsModal({ onClose }: SocialPromotionsModalProps) {
       id: "gen-flash-" + Date.now(),
       name: `Promo Flash: Especial ${e1.name}`,
       tagline: "¡Mayor inventario del día con descuento especial para disfrutar ya!",
-      items: [`3 ${e1.name} bien tostadas`, "Doble ración de salsa gratis"],
+      items: [`3 ${e1.name} bien tostadas`, "Doble ración de salsas de la casa"],
       regularPriceUsd: Number((e1.priceUsd * 3).toFixed(2)),
       promoPriceUsd: Number((e1.priceUsd * 3 * 0.75).toFixed(2)),
       discountPct: 25,
@@ -168,17 +175,36 @@ export function SocialPromotionsModal({ onClose }: SocialPromotionsModalProps) {
       icon: "🔥",
     };
 
-    const newPacks = [gen1, gen2, gen3, ...BASE_MARACAY_PACKS.slice(0, 1)];
+    const gen4: PromoPack = {
+      id: "gen-degustacion-" + Date.now(),
+      name: "Súper Degustación Criolla (5 Sabores)",
+      tagline: "Un paseo gastronómico por los mejores rellenos de la casa.",
+      items: [
+        `1 ${e1.name}`,
+        `1 ${e2.name}`,
+        `1 ${e3.name}`,
+        "1 Empanada de Queso Fundido",
+        "1 Malta Polar o Jugo Natural",
+      ],
+      regularPriceUsd: Number((e1.priceUsd + e2.priceUsd + e3.priceUsd + 3.5).toFixed(2)),
+      promoPriceUsd: Number(((e1.priceUsd + e2.priceUsd + e3.priceUsd + 3.5) * 0.78).toFixed(2)),
+      discountPct: 22,
+      badge: "SELECCIÓN DEL CHEF ⭐",
+      icon: "👑",
+    };
+
+    const newPacks = [gen1, gen2, gen3, gen4, ...BASE_MARACAY_PACKS];
     setPacks(newPacks);
     setSelectedPack(gen1);
     setSelectedProductId("");
+    setIsCustomizing(false);
     toast.success("✨ ¡Nuevas promociones generadas desde el inventario de Maracay!");
   }
 
   // Active product selection if chosen manually
   const activeProduct = pos.products.find((p) => p.id === selectedProductId);
 
-  const displayPromo = activeProduct
+  const baseDisplay = activeProduct
     ? {
         name: `Especial: ${activeProduct.name}`,
         tagline: `¡Recién hechas y crujientes en San Jacinto, Maracay!`,
@@ -194,6 +220,13 @@ export function SocialPromotionsModal({ onClose }: SocialPromotionsModalProps) {
         icon: "🥟",
       }
     : selectedPack;
+
+  const displayPromo = {
+    ...baseDisplay,
+    name: isCustomizing && customName.trim() ? customName : baseDisplay.name,
+    tagline: isCustomizing && customTagline.trim() ? customTagline : baseDisplay.tagline,
+    badge: isCustomizing && customBadge.trim() ? customBadge : baseDisplay.badge,
+  };
 
   const priceBs = displayPromo.promoPriceUsd * rate;
   const regularPriceBs = displayPromo.regularPriceUsd * rate;
@@ -280,70 +313,91 @@ ${displayPromo.items.map((i) => `✔ ${i}`).join("\n")}
 
       // Gold Glow
       const radGrad = ctx.createRadialGradient(540, 700, 40, 540, 700, 520);
-      radGrad.addColorStop(0, "rgba(229, 168, 59, 0.22)");
+      radGrad.addColorStop(0, "rgba(229, 168, 59, 0.25)");
       radGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
       ctx.fillStyle = radGrad;
       ctx.fillRect(0, 200, 1080, 1000);
 
-      // Outer Gold Frame
+      // Outer Gold Frame with Double Line
       ctx.strokeStyle = "#E5A83B";
       ctx.lineWidth = 4;
       ctx.beginPath();
       ctx.roundRect(40, 40, 1000, 1840, 40);
       ctx.stroke();
 
+      ctx.strokeStyle = "rgba(229, 168, 59, 0.3)";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(52, 52, 976, 1816, 32);
+      ctx.stroke();
+
+      // Top Quality Badges
+      ctx.fillStyle = "rgba(229, 168, 59, 0.15)";
+      ctx.strokeStyle = "rgba(229, 168, 59, 0.4)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(140, 70, 380, 45, 22);
+      ctx.roundRect(560, 70, 380, 45, 22);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#F3BA54";
+      ctx.font = "bold 20px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("🥟 100% MAÍZ SELECCIONADO", 330, 100);
+      ctx.fillText("🛵 DELIVERY SAN JACINTO", 750, 100);
+
       // Top Brand
       ctx.fillStyle = "#E5A83B";
-      ctx.font = "bold 40px sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText(pos.companySettings.name.toUpperCase(), 540, 150);
+      ctx.font = "bold 44px sans-serif";
+      ctx.fillText(pos.companySettings.name.toUpperCase(), 540, 180);
 
       ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
       ctx.font = "28px sans-serif";
-      ctx.fillText("San Jacinto · Maracay, Edo. Aragua", 540, 205);
+      ctx.fillText("San Jacinto · Maracay, Edo. Aragua", 540, 225);
 
-      // Badge
+      // Promo Badge
       ctx.fillStyle = "#E5A83B";
       ctx.beginPath();
-      ctx.roundRect(290, 260, 500, 70, 35);
+      ctx.roundRect(260, 275, 560, 74, 37);
       ctx.fill();
 
       ctx.fillStyle = "#090D16";
-      ctx.font = "bold 30px sans-serif";
-      ctx.fillText(displayPromo.badge, 540, 307);
+      ctx.font = "bold 32px sans-serif";
+      ctx.fillText(displayPromo.badge, 540, 324);
 
-      // Emoji
+      // Icon
       ctx.font = "180px sans-serif";
-      ctx.fillText(displayPromo.icon, 540, 530);
+      ctx.fillText(displayPromo.icon, 540, 545);
 
       // Title
       ctx.fillStyle = "#FFFFFF";
       ctx.font = "bold 60px sans-serif";
-      ctx.fillText(displayPromo.name, 540, 640);
+      ctx.fillText(displayPromo.name, 540, 650);
 
       // Tagline
       ctx.fillStyle = "#E5A83B";
       ctx.font = "32px sans-serif";
-      ctx.fillText(displayPromo.tagline, 540, 705);
+      ctx.fillText(displayPromo.tagline, 540, 715);
 
       // Items Box
       ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
       ctx.strokeStyle = "rgba(229, 168, 59, 0.4)";
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.roundRect(140, 770, 800, 380, 30);
+      ctx.roundRect(140, 775, 800, 380, 30);
       ctx.fill();
       ctx.stroke();
 
       ctx.fillStyle = "#E5A83B";
       ctx.font = "bold 34px sans-serif";
       ctx.textAlign = "left";
-      ctx.fillText("ESTA PROMOCIÓN INCLUYE:", 190, 840);
+      ctx.fillText("ESTA PROMOCIÓN INCLUYE:", 190, 845);
 
       ctx.fillStyle = "#F3F4F6";
       ctx.font = "30px sans-serif";
       displayPromo.items.forEach((item, idx) => {
-        ctx.fillText(`✓  ${item}`, 190, 910 + idx * 60);
+        ctx.fillText(`✓  ${item}`, 190, 915 + idx * 60);
       });
 
       // Price Box
@@ -352,31 +406,202 @@ ${displayPromo.items.map((i) => `✔ ${i}`).join("\n")}
       ctx.strokeStyle = "rgba(16, 185, 129, 0.6)";
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.roundRect(140, 1200, 800, 270, 30);
+      ctx.roundRect(140, 1195, 800, 270, 30);
       ctx.fill();
       ctx.stroke();
 
       ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
       ctx.font = "28px sans-serif";
-      ctx.fillText(`Antes: $${displayPromo.regularPriceUsd.toFixed(2)} USD`, 540, 1255);
+      ctx.fillText(`Antes: $${displayPromo.regularPriceUsd.toFixed(2)} USD`, 540, 1250);
 
       ctx.fillStyle = "#34D399";
       ctx.font = "bold 82px sans-serif";
-      ctx.fillText(`$${displayPromo.promoPriceUsd.toFixed(2)} USD`, 540, 1345);
+      ctx.fillText(`$${displayPromo.promoPriceUsd.toFixed(2)} USD`, 540, 1340);
 
       ctx.fillStyle = "#FFFFFF";
       ctx.font = "bold 36px monospace";
-      ctx.fillText(`Bs. ${fmtBs(priceBs)} (Tasa Oficial BCV)`, 540, 1415);
+      ctx.fillText(`Bs. ${fmtBs(priceBs)} (Tasa Oficial BCV)`, 540, 1410);
 
-      // Call to Action Button
+      // Call to Action Button + Simulated QR Scan Box
       ctx.fillStyle = "#E5A83B";
       ctx.beginPath();
-      ctx.roundRect(180, 1520, 720, 100, 50);
+      ctx.roundRect(140, 1500, 620, 110, 35);
       ctx.fill();
 
       ctx.fillStyle = "#090D16";
       ctx.font = "bold 36px sans-serif";
-      ctx.fillText("📲 ¡PIDE AHORA POR WHATSAPP!", 540, 1585);
+      ctx.fillText("📲 ¡PIDE POR WHATSAPP!", 450, 1570);
+
+      // QR Code Box on right
+      const qrX = 800;
+      const qrY = 1500;
+      ctx.fillStyle = "#FFFFFF";
+      ctx.beginPath();
+      ctx.roundRect(qrX, qrY, 140, 110, 20);
+      ctx.fill();
+
+      ctx.fillStyle = "#090D16";
+      ctx.font = "bold 16px sans-serif";
+      ctx.fillText("ESCANEA", qrX + 70, qrY + 30);
+      ctx.font = "32px sans-serif";
+      ctx.fillText("📱", qrX + 70, qrY + 70);
+      ctx.font = "14px sans-serif";
+      ctx.fillText("PIDE AQUÍ", qrX + 70, qrY + 95);
+
+      // Footer
+      ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+      ctx.font = "30px sans-serif";
+      ctx.fillText(`WhatsApp: ${phoneForDelivery} · Delivery en San Jacinto`, 540, 1690);
+
+      ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+      ctx.font = "24px sans-serif";
+      ctx.fillText("NovaSystem × Dr. Empanadas Marketing Suite", 540, 1760);
+
+    } else if (storyTheme === "sunset_criollo") {
+      // Sunset Criollo Theme
+      const bgGrad = ctx.createLinearGradient(0, 0, 1080, 1920);
+      bgGrad.addColorStop(0, "#1F0A02");
+      bgGrad.addColorStop(0.4, "#451A03");
+      bgGrad.addColorStop(0.8, "#7C2D12");
+      bgGrad.addColorStop(1, "#180602");
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, 1080, 1920);
+
+      // Orange Warm Glow
+      const radGrad = ctx.createRadialGradient(540, 650, 40, 540, 650, 520);
+      radGrad.addColorStop(0, "rgba(249, 115, 22, 0.35)");
+      radGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+      ctx.fillStyle = radGrad;
+      ctx.fillRect(0, 150, 1080, 1000);
+
+      // Outer Orange Frame
+      ctx.strokeStyle = "#F97316";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.roundRect(40, 40, 1000, 1840, 40);
+      ctx.stroke();
+
+      ctx.strokeStyle = "rgba(249, 115, 22, 0.3)";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(52, 52, 976, 1816, 32);
+      ctx.stroke();
+
+      // Top Quality Badges
+      ctx.fillStyle = "rgba(249, 115, 22, 0.2)";
+      ctx.strokeStyle = "rgba(249, 115, 22, 0.5)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(140, 70, 380, 45, 22);
+      ctx.roundRect(560, 70, 380, 45, 22);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#FED7AA";
+      ctx.font = "bold 20px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("🔥 CRUJIENTES & CALIENTITAS", 330, 100);
+      ctx.fillText("🛵 DELIVERY SAN JACINTO", 750, 100);
+
+      // Top Brand
+      ctx.fillStyle = "#FDBA74";
+      ctx.font = "bold 44px sans-serif";
+      ctx.fillText(pos.companySettings.name.toUpperCase(), 540, 180);
+
+      ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+      ctx.font = "28px sans-serif";
+      ctx.fillText("San Jacinto · Maracay, Edo. Aragua", 540, 225);
+
+      // Badge
+      ctx.fillStyle = "#F97316";
+      ctx.beginPath();
+      ctx.roundRect(260, 275, 560, 74, 37);
+      ctx.fill();
+
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "bold 32px sans-serif";
+      ctx.fillText(displayPromo.badge, 540, 324);
+
+      // Emoji
+      ctx.font = "180px sans-serif";
+      ctx.fillText(displayPromo.icon, 540, 545);
+
+      // Title
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "bold 60px sans-serif";
+      ctx.fillText(displayPromo.name, 540, 650);
+
+      // Tagline
+      ctx.fillStyle = "#FED7AA";
+      ctx.font = "32px sans-serif";
+      ctx.fillText(displayPromo.tagline, 540, 715);
+
+      // Items Box
+      ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+      ctx.strokeStyle = "rgba(249, 115, 22, 0.5)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.roundRect(140, 775, 800, 380, 30);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#FDBA74";
+      ctx.font = "bold 34px sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText("ESTA PROMOCIÓN INCLUYE:", 190, 845);
+
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "30px sans-serif";
+      displayPromo.items.forEach((item, idx) => {
+        ctx.fillText(`✓  ${item}`, 190, 915 + idx * 60);
+      });
+
+      // Price Box
+      ctx.textAlign = "center";
+      ctx.fillStyle = "rgba(16, 185, 129, 0.2)";
+      ctx.strokeStyle = "#10B981";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.roundRect(140, 1195, 800, 270, 30);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(255, 255, 255, 0.65)";
+      ctx.font = "28px sans-serif";
+      ctx.fillText(`Antes: $${displayPromo.regularPriceUsd.toFixed(2)} USD`, 540, 1250);
+
+      ctx.fillStyle = "#34D399";
+      ctx.font = "bold 82px sans-serif";
+      ctx.fillText(`$${displayPromo.promoPriceUsd.toFixed(2)} USD`, 540, 1340);
+
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "bold 36px monospace";
+      ctx.fillText(`Bs. ${fmtBs(priceBs)} (Tasa Oficial BCV)`, 540, 1410);
+
+      // Call to Action Button + QR Scan
+      ctx.fillStyle = "#F97316";
+      ctx.beginPath();
+      ctx.roundRect(140, 1500, 620, 110, 35);
+      ctx.fill();
+
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "bold 36px sans-serif";
+      ctx.fillText("📲 ¡PIDE POR WHATSAPP!", 450, 1570);
+
+      const qrX = 800;
+      const qrY = 1500;
+      ctx.fillStyle = "#FFFFFF";
+      ctx.beginPath();
+      ctx.roundRect(qrX, qrY, 140, 110, 20);
+      ctx.fill();
+
+      ctx.fillStyle = "#7C2D12";
+      ctx.font = "bold 16px sans-serif";
+      ctx.fillText("ESCANEA", qrX + 70, qrY + 30);
+      ctx.font = "32px sans-serif";
+      ctx.fillText("📱", qrX + 70, qrY + 70);
+      ctx.font = "14px sans-serif";
+      ctx.fillText("PIDE AQUÍ", qrX + 70, qrY + 95);
 
       // Footer
       ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
@@ -388,114 +613,150 @@ ${displayPromo.items.map((i) => `✔ ${i}`).join("\n")}
       ctx.fillText("NovaSystem × Dr. Empanadas Marketing Suite", 540, 1760);
 
     } else {
-      // Sunset Criollo Theme
+      // Emerald Gourmet Theme
       const bgGrad = ctx.createLinearGradient(0, 0, 1080, 1920);
-      bgGrad.addColorStop(0, "#1F0A02");
-      bgGrad.addColorStop(0.4, "#451A03");
-      bgGrad.addColorStop(0.8, "#7C2D12");
-      bgGrad.addColorStop(1, "#180602");
+      bgGrad.addColorStop(0, "#031E15");
+      bgGrad.addColorStop(0.35, "#063A29");
+      bgGrad.addColorStop(0.7, "#092D21");
+      bgGrad.addColorStop(1, "#02150E");
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, 1080, 1920);
 
-      // Orange/Amber Warm Glow
+      // Mint Emerald Glow
       const radGrad = ctx.createRadialGradient(540, 650, 40, 540, 650, 520);
-      radGrad.addColorStop(0, "rgba(249, 115, 22, 0.3)");
+      radGrad.addColorStop(0, "rgba(52, 211, 153, 0.28)");
       radGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
       ctx.fillStyle = radGrad;
       ctx.fillRect(0, 150, 1080, 1000);
 
-      // Border Frame
-      ctx.strokeStyle = "#F97316";
+      // Outer Mint/Emerald Frame
+      ctx.strokeStyle = "#34D399";
       ctx.lineWidth = 4;
       ctx.beginPath();
       ctx.roundRect(40, 40, 1000, 1840, 40);
       ctx.stroke();
 
-      // Top Brand
-      ctx.fillStyle = "#FDBA74";
-      ctx.font = "bold 40px sans-serif";
+      ctx.strokeStyle = "rgba(52, 211, 153, 0.3)";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(52, 52, 976, 1816, 32);
+      ctx.stroke();
+
+      // Top Quality Badges
+      ctx.fillStyle = "rgba(52, 211, 153, 0.15)";
+      ctx.strokeStyle = "rgba(52, 211, 153, 0.4)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(140, 70, 380, 45, 22);
+      ctx.roundRect(560, 70, 380, 45, 22);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#A7F3D0";
+      ctx.font = "bold 20px sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText(pos.companySettings.name.toUpperCase(), 540, 150);
+      ctx.fillText("🌿 CALIDAD GOURMET PREMIUM", 330, 100);
+      ctx.fillText("🛵 DELIVERY SAN JACINTO", 750, 100);
+
+      // Top Brand
+      ctx.fillStyle = "#34D399";
+      ctx.font = "bold 44px sans-serif";
+      ctx.fillText(pos.companySettings.name.toUpperCase(), 540, 180);
 
       ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
       ctx.font = "28px sans-serif";
-      ctx.fillText("San Jacinto · Maracay, Edo. Aragua", 540, 205);
+      ctx.fillText("San Jacinto · Maracay, Edo. Aragua", 540, 225);
 
-      // Badge
-      ctx.fillStyle = "#F97316";
+      // Promo Badge
+      ctx.fillStyle = "#34D399";
       ctx.beginPath();
-      ctx.roundRect(290, 260, 500, 70, 35);
+      ctx.roundRect(260, 275, 560, 74, 37);
       ctx.fill();
 
-      ctx.fillStyle = "#FFFFFF";
-      ctx.font = "bold 30px sans-serif";
-      ctx.fillText(displayPromo.badge, 540, 307);
+      ctx.fillStyle = "#031E15";
+      ctx.font = "bold 32px sans-serif";
+      ctx.fillText(displayPromo.badge, 540, 324);
 
-      // Emoji
+      // Icon
       ctx.font = "180px sans-serif";
-      ctx.fillText(displayPromo.icon, 540, 530);
+      ctx.fillText(displayPromo.icon, 540, 545);
 
       // Title
       ctx.fillStyle = "#FFFFFF";
       ctx.font = "bold 60px sans-serif";
-      ctx.fillText(displayPromo.name, 540, 640);
+      ctx.fillText(displayPromo.name, 540, 650);
 
       // Tagline
-      ctx.fillStyle = "#FED7AA";
+      ctx.fillStyle = "#6EE7B7";
       ctx.font = "32px sans-serif";
-      ctx.fillText(displayPromo.tagline, 540, 705);
+      ctx.fillText(displayPromo.tagline, 540, 715);
 
       // Items Box
-      ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
-      ctx.strokeStyle = "rgba(249, 115, 22, 0.5)";
+      ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
+      ctx.strokeStyle = "rgba(52, 211, 153, 0.4)";
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.roundRect(140, 770, 800, 380, 30);
+      ctx.roundRect(140, 775, 800, 380, 30);
       ctx.fill();
       ctx.stroke();
 
-      ctx.fillStyle = "#FDBA74";
+      ctx.fillStyle = "#6EE7B7";
       ctx.font = "bold 34px sans-serif";
       ctx.textAlign = "left";
-      ctx.fillText("ESTA PROMOCIÓN INCLUYE:", 190, 840);
+      ctx.fillText("ESTA PROMOCIÓN INCLUYE:", 190, 845);
 
-      ctx.fillStyle = "#FFFFFF";
+      ctx.fillStyle = "#F3F4F6";
       ctx.font = "30px sans-serif";
       displayPromo.items.forEach((item, idx) => {
-        ctx.fillText(`✓  ${item}`, 190, 910 + idx * 60);
+        ctx.fillText(`✓  ${item}`, 190, 915 + idx * 60);
       });
 
       // Price Box
       ctx.textAlign = "center";
-      ctx.fillStyle = "rgba(16, 185, 129, 0.2)";
-      ctx.strokeStyle = "#10B981";
+      ctx.fillStyle = "rgba(52, 211, 153, 0.15)";
+      ctx.strokeStyle = "#34D399";
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.roundRect(140, 1200, 800, 270, 30);
+      ctx.roundRect(140, 1195, 800, 270, 30);
       ctx.fill();
       ctx.stroke();
 
       ctx.fillStyle = "rgba(255, 255, 255, 0.65)";
       ctx.font = "28px sans-serif";
-      ctx.fillText(`Antes: $${displayPromo.regularPriceUsd.toFixed(2)} USD`, 540, 1255);
+      ctx.fillText(`Antes: $${displayPromo.regularPriceUsd.toFixed(2)} USD`, 540, 1250);
 
-      ctx.fillStyle = "#34D399";
+      ctx.fillStyle = "#6EE7B7";
       ctx.font = "bold 82px sans-serif";
-      ctx.fillText(`$${displayPromo.promoPriceUsd.toFixed(2)} USD`, 540, 1345);
+      ctx.fillText(`$${displayPromo.promoPriceUsd.toFixed(2)} USD`, 540, 1340);
 
       ctx.fillStyle = "#FFFFFF";
       ctx.font = "bold 36px monospace";
-      ctx.fillText(`Bs. ${fmtBs(priceBs)} (Tasa Oficial BCV)`, 540, 1415);
+      ctx.fillText(`Bs. ${fmtBs(priceBs)} (Tasa Oficial BCV)`, 540, 1410);
 
-      // Call to Action Button
-      ctx.fillStyle = "#F97316";
+      // Call to Action Button + QR Scan
+      ctx.fillStyle = "#10B981";
       ctx.beginPath();
-      ctx.roundRect(180, 1520, 720, 100, 50);
+      ctx.roundRect(140, 1500, 620, 110, 35);
       ctx.fill();
 
       ctx.fillStyle = "#FFFFFF";
       ctx.font = "bold 36px sans-serif";
-      ctx.fillText("📲 ¡PIDE AHORA POR WHATSAPP!", 540, 1585);
+      ctx.fillText("📲 ¡PIDE POR WHATSAPP!", 450, 1570);
+
+      const qrX = 800;
+      const qrY = 1500;
+      ctx.fillStyle = "#FFFFFF";
+      ctx.beginPath();
+      ctx.roundRect(qrX, qrY, 140, 110, 20);
+      ctx.fill();
+
+      ctx.fillStyle = "#064E3B";
+      ctx.font = "bold 16px sans-serif";
+      ctx.fillText("ESCANEA", qrX + 70, qrY + 30);
+      ctx.font = "32px sans-serif";
+      ctx.fillText("📱", qrX + 70, qrY + 70);
+      ctx.font = "14px sans-serif";
+      ctx.fillText("PIDE AQUÍ", qrX + 70, qrY + 95);
 
       // Footer
       ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
@@ -630,6 +891,64 @@ ${displayPromo.items.map((i) => `✔ ${i}`).join("\n")}
           </div>
         </div>
 
+        {/* Quick Customization Toolbar */}
+        <div className="flex items-center justify-between bg-card p-2.5 rounded-xl border border-border text-xs">
+          <div className="flex items-center gap-2">
+            <Tag className="h-4 w-4 text-primary" />
+            <span className="font-semibold text-foreground">
+              {isCustomizing ? "Modo Personalización Activo:" : "Combo Seleccionado:"}
+            </span>
+            <span className="text-muted-foreground font-medium truncate max-w-[200px] sm:max-w-xs">
+              {displayPromo.name}
+            </span>
+          </div>
+          <button
+            onClick={() => {
+              if (!isCustomizing) {
+                setCustomName(displayPromo.name);
+                setCustomTagline(displayPromo.tagline);
+                setCustomBadge(displayPromo.badge);
+              }
+              setIsCustomizing(!isCustomizing);
+            }}
+            className="text-xs font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer"
+          >
+            {isCustomizing ? "✕ Cerrar Edición" : "✏️ Editar Textos del Flyer"}
+          </button>
+        </div>
+
+        {isCustomizing && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 bg-primary/5 p-3 rounded-xl border border-primary/20 text-xs">
+            <div>
+              <label className="text-[10px] font-bold text-muted-foreground uppercase">Título de la Promo:</label>
+              <input
+                value={customName}
+                onChange={(e) => setCustomName(e.target.value)}
+                placeholder={displayPromo.name}
+                className={`${inputCls} text-xs py-1 mt-1`}
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-muted-foreground uppercase">Frase / Eslogan:</label>
+              <input
+                value={customTagline}
+                onChange={(e) => setCustomTagline(e.target.value)}
+                placeholder={displayPromo.tagline}
+                className={`${inputCls} text-xs py-1 mt-1`}
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-muted-foreground uppercase">Etiqueta / Badge:</label>
+              <input
+                value={customBadge}
+                onChange={(e) => setCustomBadge(e.target.value)}
+                placeholder={displayPromo.badge}
+                className={`${inputCls} text-xs py-1 mt-1`}
+              />
+            </div>
+          </div>
+        )}
+
         {/* Tab switcher: WhatsApp Text vs Instagram Story Canvas */}
         <div className="flex items-center justify-between border-b border-border pb-2 flex-wrap gap-2">
           <div className="flex gap-2">
@@ -728,29 +1047,39 @@ ${displayPromo.items.map((i) => `✔ ${i}`).join("\n")}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Visual Card (Live 9:16 preview) with Theme Switcher */}
             <div className="flex flex-col items-center space-y-2">
-              {/* Theme Selector */}
-              <div className="flex items-center gap-2 text-xs font-semibold">
+              {/* Theme Selector: 3 Options */}
+              <div className="flex items-center gap-1.5 text-xs font-semibold flex-wrap justify-center">
                 <Palette className="h-3.5 w-3.5 text-primary" />
-                <span>Estilo Visual:</span>
+                <span className="text-[11px]">Tema:</span>
                 <button
                   onClick={() => setStoryTheme("dark_luxury")}
-                  className={`rounded-lg px-2.5 py-1 text-xs font-bold transition ${
+                  className={`rounded-lg px-2 py-1 text-[11px] font-bold transition ${
                     storyTheme === "dark_luxury"
                       ? "bg-slate-900 text-amber-400 border border-amber-500 shadow-xs"
                       : "bg-secondary text-muted-foreground border border-border"
                   }`}
                 >
-                  1. Dark Luxury & Gold
+                  1. Dark Gold
                 </button>
                 <button
                   onClick={() => setStoryTheme("sunset_criollo")}
-                  className={`rounded-lg px-2.5 py-1 text-xs font-bold transition ${
+                  className={`rounded-lg px-2 py-1 text-[11px] font-bold transition ${
                     storyTheme === "sunset_criollo"
                       ? "bg-orange-950 text-orange-400 border border-orange-500 shadow-xs"
                       : "bg-secondary text-muted-foreground border border-border"
                   }`}
                 >
-                  2. Sunset Criollo
+                  2. Sunset Neón
+                </button>
+                <button
+                  onClick={() => setStoryTheme("emerald_gourmet")}
+                  className={`rounded-lg px-2 py-1 text-[11px] font-bold transition ${
+                    storyTheme === "emerald_gourmet"
+                      ? "bg-emerald-950 text-emerald-400 border border-emerald-500 shadow-xs"
+                      : "bg-secondary text-muted-foreground border border-border"
+                  }`}
+                >
+                  3. Esmeralda Gourmet
                 </button>
               </div>
 
@@ -760,27 +1089,44 @@ ${displayPromo.items.map((i) => `✔ ${i}`).join("\n")}
                 className={`w-full max-w-[280px] aspect-[9/16] rounded-3xl p-5 shadow-2xl relative overflow-hidden flex flex-col justify-between text-white border select-none transition-all ${
                   storyTheme === "dark_luxury"
                     ? "border-amber-500/40"
-                    : "border-orange-500/50"
+                    : storyTheme === "sunset_criollo"
+                    ? "border-orange-500/50"
+                    : "border-emerald-500/50"
                 }`}
                 style={{
                   background:
                     storyTheme === "dark_luxury"
                       ? "linear-gradient(145deg, #090D16 0%, #131B2E 50%, #070A12 100%)"
-                      : "linear-gradient(145deg, #1F0A02 0%, #451A03 50%, #7C2D12 100%)",
+                      : storyTheme === "sunset_criollo"
+                      ? "linear-gradient(145deg, #1F0A02 0%, #451A03 50%, #7C2D12 100%)"
+                      : "linear-gradient(145deg, #031E15 0%, #063A29 50%, #02150E 100%)",
                 }}
               >
                 {/* Glow */}
                 <div
                   className={`absolute top-0 right-0 w-36 h-36 rounded-full blur-2xl pointer-events-none ${
-                    storyTheme === "dark_luxury" ? "bg-amber-500/20" : "bg-orange-500/30"
+                    storyTheme === "dark_luxury"
+                      ? "bg-amber-500/20"
+                      : storyTheme === "sunset_criollo"
+                      ? "bg-orange-500/30"
+                      : "bg-emerald-500/25"
                   }`}
                 />
 
                 {/* Top header */}
                 <div className="relative text-center space-y-1">
+                  {/* Top Badges */}
+                  <div className="flex justify-between items-center text-[7px] font-bold opacity-80 pb-1">
+                    <span className="bg-white/10 px-1.5 py-0.5 rounded-full">🥟 100% MAÍZ</span>
+                    <span className="bg-white/10 px-1.5 py-0.5 rounded-full">🛵 DELIVERY</span>
+                  </div>
                   <div
                     className={`text-[11px] font-black tracking-widest uppercase ${
-                      storyTheme === "dark_luxury" ? "text-amber-400" : "text-orange-300"
+                      storyTheme === "dark_luxury"
+                        ? "text-amber-400"
+                        : storyTheme === "sunset_criollo"
+                        ? "text-orange-300"
+                        : "text-emerald-300"
                     }`}
                   >
                     {pos.companySettings.name}
@@ -790,7 +1136,9 @@ ${displayPromo.items.map((i) => `✔ ${i}`).join("\n")}
                     className={`mt-1.5 inline-block rounded-full px-3 py-0.5 text-[9px] font-black uppercase shadow-md ${
                       storyTheme === "dark_luxury"
                         ? "bg-amber-500 text-slate-950"
-                        : "bg-orange-500 text-white"
+                        : storyTheme === "sunset_criollo"
+                        ? "bg-orange-500 text-white"
+                        : "bg-emerald-400 text-slate-950"
                     }`}
                   >
                     {displayPromo.badge}
@@ -831,16 +1179,25 @@ ${displayPromo.items.map((i) => `✔ ${i}`).join("\n")}
                     </div>
                   </div>
 
-                  <div
-                    className={`rounded-xl py-1.5 text-[11px] font-black tracking-wide uppercase shadow-lg ${
-                      storyTheme === "dark_luxury"
-                        ? "bg-amber-400 text-slate-950"
-                        : "bg-orange-500 text-white"
-                    }`}
-                  >
-                    📲 ¡Pide por WhatsApp!
+                  <div className="flex items-center gap-1.5">
+                    <div
+                      className={`flex-1 rounded-xl py-2 text-[10px] font-black tracking-wide uppercase shadow-lg ${
+                        storyTheme === "dark_luxury"
+                          ? "bg-amber-400 text-slate-950"
+                          : storyTheme === "sunset_criollo"
+                          ? "bg-orange-500 text-white"
+                          : "bg-emerald-400 text-slate-950"
+                      }`}
+                    >
+                      📲 Pide al WhatsApp
+                    </div>
+                    <div className="bg-white rounded-lg p-1 text-[9px] font-bold text-slate-950 flex flex-col items-center leading-none">
+                      <span>📱</span>
+                      <span className="text-[6px] uppercase tracking-tighter">QR Pide</span>
+                    </div>
                   </div>
-                  <div className="text-[9px] text-slate-300">
+
+                  <div className="text-[8px] text-slate-300">
                     {phoneForDelivery} · Delivery en San Jacinto
                   </div>
                 </div>
@@ -886,7 +1243,9 @@ ${displayPromo.items.map((i) => `✔ ${i}`).join("\n")}
                   className="w-full rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:opacity-90 text-white font-bold py-2.5 px-4 text-xs transition flex items-center justify-center gap-2 shadow-md"
                 >
                   <Download className="h-4 w-4" />
-                  <span>Descargar Imagen de Story ({storyTheme === "dark_luxury" ? "Dark Luxury" : "Sunset Criollo"})</span>
+                  <span>
+                    Descargar Flyer Story ({storyTheme === "dark_luxury" ? "Dark Gold" : storyTheme === "sunset_criollo" ? "Sunset Neón" : "Esmeralda Gourmet"})
+                  </span>
                 </button>
 
                 <button
