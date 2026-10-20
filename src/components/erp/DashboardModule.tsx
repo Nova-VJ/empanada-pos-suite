@@ -27,7 +27,9 @@ export function DashboardModule() {
   const activeOrders = orders.filter((o) => o.status !== "anulada");
   const todayTotalBs = activeOrders.reduce((s, o) => s + o.totalBs, 0);
   const todayTotalUsd = activeOrders.reduce((s, o) => s + o.totalBs / o.rate, 0);
-  const lowStock = products.filter((p) => p.stockBar < (p.stockMin ?? 25));
+  const lowStock = pos.companySettings.lowStockAlertsEnabled !== false
+    ? products.filter((p) => p.stockBar < (p.stockMin ?? 25))
+    : [];
   const pendingSI = supplierInvoices.filter((si) => !si.paid).length;
   const pendingKds = orders.filter((o) => o.kdsStatus === "fryer").length;
 
@@ -100,7 +102,7 @@ export function DashboardModule() {
         <div>
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2.5">
-              Bienvenido a NovaSystem · Dr. Empanadas
+              Bienvenido a NovaStock · Dr. Empanadas
             </h1>
             <Emoji3D
               name="empanada"

@@ -52,7 +52,7 @@ export function SupportMenuModal() {
         <div className="flex items-center justify-between gap-3 w-full">
           <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
             <ShieldCheck className="h-4 w-4" />
-            <span>Membresía Soporte VIP Activa · NovaSystem</span>
+            <span>Membresía Soporte VIP Activa · NovaStock</span>
           </div>
           <button className={btnGhost} onClick={() => pos.setModal(null)}>
             Cerrar Menú
@@ -107,7 +107,7 @@ export function SupportMenuModal() {
         {activeTab === "remote" && (
           <div className="space-y-3">
             <p className="text-muted-foreground">
-              Proporciona estos datos al técnico asignado de NovaSystem para que tome el control de la PC y resuelva cualquier problema en minutos:
+              Proporciona estos datos al técnico asignado de NovaStock para que tome el control de la PC y resuelva cualquier problema en minutos:
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

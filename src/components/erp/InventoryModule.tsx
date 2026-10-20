@@ -28,7 +28,9 @@ export function InventoryModule() {
     reason: "Producción de lote en cocina Chacao",
   });
 
-  const lowStock = products.filter((p) => p.stockBar < (p.stockMin ?? 25));
+  const lowStock = pos.companySettings.lowStockAlertsEnabled !== false
+    ? products.filter((p) => p.stockBar < (p.stockMin ?? 25))
+    : [];
 
   function handleAdjust() {
     const qty = parseInt(adjForm.quantity, 10);

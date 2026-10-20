@@ -39,13 +39,13 @@ export const queryGeminiAiServerFn = createServerFn({ method: "POST" })
     const { apiKey, userPrompt, context, history = [] } = data;
 
     // Build the system prompt with complete Venezuelan business context
-    const systemPrompt = `Eres el Asistente de Inteligencia Artificial de "NovaSystem Suite v1.0", la solución TPV y ERP comercial diseñada específicamente para Venezuela bajo la normativa SENIAT y la realidad bimonetaria (Bs. y USD).
+    const systemPrompt = `Eres el Asistente de Inteligencia Artificial de "NovaStock Suite v1.0", la solución TPV y ERP comercial diseñada específicamente para Venezuela bajo la normativa SENIAT y la realidad bimonetaria (Bs. y USD).
 
 Estás operando en vivo dentro de la empresa:
 - Razón Social: ${context.storeName}
 - RIF Fiscal: ${context.rif}
 - Sucursal: ${context.branch}
-- Versión del software: NovaSystem v1.0 Venezuela (SENIAT Edition - Primera Versión Oficial)
+- Versión del software: NovaStock v1.0 Venezuela (SENIAT Edition - Primera Versión Oficial)
 
 DATOS EN VIVO DEL NEGOCIO (SINERGIA Y RETROALIMENTACIÓN TOTAL ENTRE MÓDULOS):
 1. TASA DE CAMBIO ACTIVA: Bs. ${context.activeRate.toFixed(2)} por USD (${context.rateVariantName}).
@@ -76,7 +76,7 @@ TU ROL ACTUAL ES: ${
 DIRECTRICES DE RESPUESTA:
 - Responde siempre en español claro, profesional y cercano, ideal para el dueño del negocio y encargados de tienda en Venezuela.
 - Utiliza formato Markdown con viñetas elegantes, negritas y datos precisos con cifras bimoneda ($ y Bs.).
-- Destaca que esta es la versión oficial de NovaSystem adaptada a Venezuela y al SENIAT.
+- Destaca que esta es la versión oficial de NovaStock adaptada a Venezuela y al SENIAT.
 - Fomenta la sinergia: si preguntan por compras, menciona cómo afecta al inventario o al flujo de caja; si preguntan por ventas, menciona la freidora o los combos sugeridos.`;
 
     // If an API key is provided, query Google Gemini REST API directly
@@ -126,7 +126,7 @@ DIRECTRICES DE RESPUESTA:
 
     if (context.assistantId === "eco-coach") {
       if (q.includes("matutino") || q.includes("brief") || q.includes("whatsapp")) {
-        reply = `📱 *Resumen Matutino NovaSystem (WhatsApp Morning Brief - 8:00 AM)*\n\n` +
+        reply = `📱 *Resumen Matutino NovaStock (WhatsApp Morning Brief - 8:00 AM)*\n\n` +
           `Buenos días, equipo de *${context.storeName}* 🥟\n\n` +
           `📊 *Ventas en Vivo:* ${context.totalOrdersToday} comandas facturadas ($${context.salesTotalUsd.toFixed(2)} USD / Bs. ${context.salesTotalBs.toFixed(2)})\n` +
           `💵 *Tasa Oficial BCV:* Bs. ${context.activeRate.toFixed(2)} / USD (${context.rateVariantName})\n` +
@@ -138,13 +138,13 @@ DIRECTRICES DE RESPUESTA:
           `\n\n🚚 *Cuentas por Pagar:* ${context.unpaidSupplierInvoicesCount} facturas ($${context.unpaidSupplierInvoicesUsd.toFixed(2)} USD)\n` +
           `\n_Escribe en WhatsApp: "ventas", "comprar harina" o "tasa bcv" para más detalles._`;
       } else if (q.includes("combo") || q.includes("promo") || q.includes("ticket") || q.includes("vender")) {
-        reply = `🥟 **Estrategia Comercial de Ventas & Combos (NovaSystem v1.0 Venezuela):**\n\n` +
+        reply = `🥟 **Estrategia Comercial de Ventas & Combos (NovaStock v1.0 Venezuela):**\n\n` +
           `• **Combo Dúo Criollo Sugerido:** Empanada de Pabellón Criollo + Malta Polar 355ml por **$4.80** (Bs. ${(4.8 * context.activeRate).toFixed(2)} a tasa oficial de Bs. ${context.activeRate.toFixed(2)}).\n` +
           `• **Uplift Estimado:** Incrementa el ticket promedio de los actuales **$${(context.salesTotalUsd / Math.max(1, context.totalOrdersToday)).toFixed(2)}** en un **+22%** durante la mañana (7:30 AM - 10:30 AM).\n` +
           `• **Sinergia con Freidora (KDS):** Hay **${context.pendingFryerOrders} comandas** en marcha. La Empanada de Pabellón tiene una rotación de freído de 3.5 minutos, garantizando despacho ultra-rápido sin cuellos de botella.\n` +
           `• **Acción en Caja:** Al tomar el pedido en el TPV, el cajero puede ofrecer directamente la porción extra de Guasacaca o Nata Criolla con 1 solo toque.`;
       } else if (q.includes("merma") || q.includes("stock") || q.includes("falta") || q.includes("inventario")) {
-        reply = `⚠️ **Auditoría de Mermas y Stock en Barra (NovaSystem v1.0 SENIAT):**\n\n` +
+        reply = `⚠️ **Auditoría de Mermas y Stock en Barra (NovaStock v1.0 SENIAT):**\n\n` +
           `• **Alertas de Reposición Inmediata:**\n` +
           (context.lowStockItems.length > 0
             ? context.lowStockItems.map((i) => `  - **${i.name}:** Stock actual **${i.stock} unidades** (Mínimo de seguridad: ${i.min} unidades).`).join("\n")
@@ -157,11 +157,11 @@ DIRECTRICES DE RESPUESTA:
           `• **Ticket Promedio:** **$${(context.salesTotalUsd / Math.max(1, context.totalOrdersToday)).toFixed(2)} USD** / orden.\n` +
           `• **Tasa Oficial Vigente:** Bs. ${context.activeRate.toFixed(2)} por USD (${context.rateVariantName}).\n` +
           `• **Estado de Cocina KDS:** ${context.pendingFryerOrders === 0 ? "Freidoras despejadas y listas para despachos exprés." : `Hay **${context.pendingFryerOrders} comandas** activas friéndose en este momento.`}\n` +
-          `• **Recomendación NovaSystem:** El producto líder del turno sigue siendo la *Empanada de Carne Mechada* y el *Pabellón Criollo*. Mantener pre-armadas en cava 30 unidades para el pico del mediodía.`;
+          `• **Recomendación NovaStock:** El producto líder del turno sigue siendo la *Empanada de Carne Mechada* y el *Pabellón Criollo*. Mantener pre-armadas en cava 30 unidades para el pico del mediodía.`;
       }
     } else if (context.assistantId === "eco-ops") {
       if (q.includes("reorden") || q.includes("semaforo") || q.includes("stockai")) {
-        reply = `🚦 **Semáforo de Punto de Reorden Inteligente (Modelo StockAI + NovaSystem):**\n\n` +
+        reply = `🚦 **Semáforo de Punto de Reorden Inteligente (Modelo StockAI + NovaStock):**\n\n` +
           `Calculado automáticamente: *Punto de Pedido = Stock de Seguridad + (Demanda Promedio × Días de Entrega Proveedor)*.\n\n` +
           `• 🔴 **Zona Crítica (Riesgo Inminente de Quiebre):**\n` +
           (context.lowStockItems.length > 0
@@ -173,7 +173,7 @@ DIRECTRICES DE RESPUESTA:
           `• 🟢 **Zona Óptima:**\n` +
           `  - Queso Llanero y Proteínas con stock suficiente para 7 días de operación regular.`;
       } else if (q.includes("harina") || q.includes("queso") || q.includes("aceite") || q.includes("carne") || q.includes("precio") || q.includes("comprar")) {
-        reply = `🛒 **Comparativa de Insumos Críticos en el Mercado Mayorista (NovaSystem v1.0):**\n\n` +
+        reply = `🛒 **Comparativa de Insumos Críticos en el Mercado Mayorista (NovaStock v1.0):**\n\n` +
           `• **Harina de Maíz Precocida (Bulto 20kg):**\n` +
           `  - Alimentos Polar: **$22.50** (Entrega 24h, 15 días de crédito, Score 98/100).\n` +
           `  - Distribuidora Mayorista Central: **$20.80** (**Ahorro 7.5%**, entrega 48h).\n` +
@@ -184,7 +184,7 @@ DIRECTRICES DE RESPUESTA:
           `  - Oleaginosas Industriales: **$27.50** (**Ahorro 14.0%** frente a Polar $32.00).\n\n` +
           `💡 **Decisión del Dueño:** En la pestaña *"Buscar Mejores Proveedores"*, puedes filtrar por rubro, plazo de entrega y solicitar cotización o emitir la Orden de Compra con 1 clic.`;
       } else {
-        reply = `🚚 **Resumen Ejecutivo de Proveedores & Abastecimiento (NovaSystem v1.0 Venezuela):**\n\n` +
+        reply = `🚚 **Resumen Ejecutivo de Proveedores & Abastecimiento (NovaStock v1.0 Venezuela):**\n\n` +
           `• **Cuentas por Pagar a Proveedores:** Tienes **${context.unpaidSupplierInvoicesCount} facturas pendientes** por un total de **$${context.unpaidSupplierInvoicesUsd.toFixed(2)} USD** (Bs. ${(context.unpaidSupplierInvoicesUsd * context.activeRate).toFixed(2)}).\n` +
           `• **Proveedores con Máximo Score:**\n` +
           context.bestSuppliers.map((s) => `  - **${s.name}:** Score **${s.score}/100** (${s.category})`).join("\n") +
@@ -204,9 +204,9 @@ DIRECTRICES DE RESPUESTA:
         reply = `📋 **Normativa de Cierres de Caja (SENIAT Providencia 0071):**\n\n` +
           `• **Reporte X (Auditoría Parcial):** Se puede emitir en cualquier momento del turno sin alterar los contadores fiscales acumulativos.\n` +
           `• **Reporte Z (Cierre Fiscal Obligatorio Diario):** Cierra el ciclo de facturación, actualiza la memoria fiscal de la impresora **${context.fiscalPrinterModel}** (Último Z: #${context.lastZReport}) y genera el registro en el Libro de Ventas.\n` +
-          `• **Envío por Correo:** NovaSystem envía automáticamente el balance Z con el total en Bolívares y Dólares al correo de administración configurado.`;
+          `• **Envío por Correo:** NovaStock envía automáticamente el balance Z con el total en Bolívares y Dólares al correo de administración configurado.`;
       } else {
-        reply = `🏛️ **Auditoría Fiscal SENIAT en Tiempo Real (NovaSystem v1.0 Venezuela):**\n\n` +
+        reply = `🏛️ **Auditoría Fiscal SENIAT en Tiempo Real (NovaStock v1.0 Venezuela):**\n\n` +
           `• **Contribuyente:** ${context.storeName} (RIF: **${context.rif}**)\n` +
           `• **Tasa Oficial BCV:** Bs. ${context.activeRate.toFixed(2)} / USD (${context.rateVariantName})\n` +
           `• **Alícuota General IVA (16%):** Bs. ${context.ivaCollectedBs.toFixed(2)} devengados en el turno.\n` +

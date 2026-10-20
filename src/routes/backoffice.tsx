@@ -17,9 +17,9 @@ import { SettingsModule } from "@/components/erp/SettingsModule";
 export const Route = createFileRoute("/backoffice")({
   head: () => ({
     meta: [
-      { title: "NovaSystem ERP & Backoffice · Dr. Empanadas C.A." },
+      { title: "NovaStock ERP & Backoffice · Dr. Empanadas C.A." },
       { name: "description", content: "Suite integral ERP, CRM, Inventario, Compras, Contabilidad, IA y Fiscal SENIAT de Dr. Empanadas C.A." },
-      { property: "og:title", content: "NovaSystem ERP & Backoffice · Dr. Empanadas C.A." },
+      { property: "og:title", content: "NovaStock ERP & Backoffice · Dr. Empanadas C.A." },
       { property: "og:description", content: "Gestión empresarial, auditoría fiscal SENIAT, compras, bancos e inteligencia artificial." },
     ],
   }),

@@ -73,14 +73,7 @@ export function PaymentModal() {
       toast.error("Ingresa un monto válido");
       return;
     }
-    if ((tender === "pago_movil" || tender === "pos_card") && !/^\d{4,}$/.test(ref)) {
-      toast.error("Referencia: mínimo 4 dígitos");
-      return;
-    }
-    if (tender === "pago_movil" && !/^0\d{3}-?\d{7}$/.test(phone)) {
-      toast.error("Teléfono inválido (0414-1234567)");
-      return;
-    }
+    // La referencia, lote y teléfono son datos complementarios opcionales para agilidad en caja
     if (tender === "credito" && !clientName.trim() && !selectedCrmId) {
       setHasCustomClient(true);
       toast.error("Selecciona o escribe el nombre del cliente para anotar la cuenta por cobrar (Deudores)");
@@ -94,9 +87,9 @@ export function PaymentModal() {
       amountUsd: isUsdInput ? amt : undefined,
       igtfBs: previewIgtf,
       bank: tender === "pago_movil" ? bank : undefined,
-      phone: tender === "pago_movil" ? phone : undefined,
-      reference: ref ? ref.slice(-4) : undefined,
-      lot: tender === "pos_card" ? lot : undefined,
+      phone: tender === "pago_movil" && phone.trim() ? phone.trim() : undefined,
+      reference: ref.trim() ? ref.trim() : undefined,
+      lot: tender === "pos_card" && lot.trim() ? lot.trim() : undefined,
     };
     setPayments((x) => [...x, p]);
     setAmount("");
@@ -385,13 +378,13 @@ export function PaymentModal() {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value.slice(0, 12))}
                     className={inputCls}
-                    placeholder="0414-1234567"
+                    placeholder="Teléfono 0414-1234567 (Opcional)"
                   />
                   <input
                     value={ref}
                     onChange={(e) => setRef(e.target.value.replace(/\D/g, "").slice(0, 12))}
                     className={`${inputCls} font-mono`}
-                    placeholder="Referencia (últimos 4+)"
+                    placeholder="Nº Referencia (Opcional)"
                   />
                 </div>
               </div>
@@ -403,13 +396,13 @@ export function PaymentModal() {
                   value={ref}
                   onChange={(e) => setRef(e.target.value.replace(/\D/g, "").slice(0, 12))}
                   className={`${inputCls} font-mono`}
-                  placeholder="Nº Referencia"
+                  placeholder="Nº Referencia (Opcional)"
                 />
                 <input
                   value={lot}
                   onChange={(e) => setLot(e.target.value.replace(/\D/g, "").slice(0, 6))}
                   className={`${inputCls} font-mono`}
-                  placeholder="Nº Lote"
+                  placeholder="Nº Lote (Opcional)"
                 />
               </div>
             )}

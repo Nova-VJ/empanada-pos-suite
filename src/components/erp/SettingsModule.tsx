@@ -3,6 +3,7 @@ import { Building2, FileText, Globe, Percent, Printer, Save, Users } from "lucid
 import { toast } from "sonner";
 import { usePos } from "@/context/PosContext";
 import { inputCls } from "../pos/Modal";
+import { UsersManagement } from "./UsersManagement";
 
 export function SettingsModule() {
   const pos = usePos();
@@ -337,39 +338,7 @@ export function SettingsModule() {
       )}
 
       {tab === "users" && (
-        <div className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
-          <table className="w-full text-xs">
-            <thead className="border-b border-border bg-secondary/50 text-left text-muted-foreground">
-              <tr>
-                <th className="px-4 py-3 font-semibold">Nombre Completo</th>
-                <th className="px-4 py-3 font-semibold">Rol / Permisos</th>
-                <th className="px-4 py-3 font-semibold">Estación Asignada</th>
-                <th className="px-4 py-3 font-semibold">Estado</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {[
-                { name: "María Pérez", role: "Cajero Principal", station: "Caja 01 · TPV", active: true },
-                { name: "Carlos Gómez", role: "Maestro Freidor (KDS)", station: "Estación Freidoras 1-3", active: true },
-                { name: "Dr. Empanadas Admin", role: "Gerente General", station: "Todas las Sucursales", active: true },
-                { name: "Lic. Luisana Torres", role: "Contador Público Colegiado", station: "Contabilidad & SENIAT", active: true },
-              ].map((u) => (
-                <tr key={u.name}>
-                  <td className="px-4 py-3 font-semibold text-foreground">{u.name}</td>
-                  <td className="px-4 py-3">
-                    <span className="rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">{u.role}</span>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">{u.station}</td>
-                  <td className="px-4 py-3">
-                    <span className="rounded-md bg-module-inventory-light px-2 py-0.5 text-[11px] font-semibold text-module-inventory">
-                      Activo
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <UsersManagement />
       )}
 
       {tab === "ecommerce" && (
@@ -377,7 +346,7 @@ export function SettingsModule() {
           <div className="border-b border-border px-5 py-3.5 bg-secondary/30">
             <h3 className="text-sm font-semibold text-foreground">Sincronización Omnicanal, Delivery y Webhooks</h3>
             <p className="text-xs text-muted-foreground">
-              NovaSystem es la fuente única de verdad para el stock de empanadas en tienda física, WhatsApp y apps de delivery.
+              NovaStock es la fuente única de verdad para el stock de empanadas en tienda física, WhatsApp y apps de delivery.
             </p>
           </div>
           <table className="w-full text-xs">

@@ -8,9 +8,9 @@ import { playKitchenBell } from "@/services/sound";
 export const Route = createFileRoute("/kds")({
   head: () => ({
     meta: [
-      { title: "Cocina KDS · NovaSystem × Dr. Empanadas" },
+      { title: "Cocina KDS · NovaStock × Dr. Empanadas" },
       { name: "description", content: "Pantalla de cocina y freidoras con temporizadores en vivo." },
-      { property: "og:title", content: "Cocina KDS · NovaSystem × Dr. Empanadas" },
+      { property: "og:title", content: "Cocina KDS · NovaStock × Dr. Empanadas" },
       { property: "og:description", content: "Estación de freidoras con estados y alertas de demora." },
     ],
   }),

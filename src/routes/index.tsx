@@ -13,9 +13,9 @@ import { Emoji3D } from "@/components/common/Emoji3D";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Terminal TPV · NovaSystem × Dr. Empanadas" },
+      { title: "Terminal TPV · NovaStock × Dr. Empanadas" },
       { name: "description", content: "Caja rápida de Dr. Empanadas C.A. con precios en Bs. y USD, IVA 16% e IGTF 3%." },
-      { property: "og:title", content: "Terminal TPV · NovaSystem × Dr. Empanadas" },
+      { property: "og:title", content: "Terminal TPV · NovaStock × Dr. Empanadas" },
       { property: "og:description", content: "Caja rápida con pago mixto, IVA e IGTF para Dr. Empanadas C.A." },
     ],
   }),

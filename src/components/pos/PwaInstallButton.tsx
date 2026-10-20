@@ -106,6 +106,24 @@ export function PwaInstallButton() {
             </div>
 
             <div className="space-y-3 text-xs text-muted-foreground">
+              {/* Windows Desktop Direct Installer Button */}
+              <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-3 space-y-2">
+                <div className="font-bold text-foreground text-xs flex items-center gap-1.5">
+                  <span>💻 ¿Estás en Windows? (Opción Rápida)</span>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Descarga nuestro instalador directo de escritorio para abrir el Punto de Venta a pantalla completa y con soporte sin internet:
+                </p>
+                <a
+                  href="/downloads/Instalar-NovaSystem-Windows.cmd"
+                  download="Instalar-NovaSystem-Windows.cmd"
+                  className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 text-xs transition flex items-center justify-center gap-2 shadow-xs"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>Descargar Instalador Windows (.cmd)</span>
+                </a>
+              </div>
+
               {isIos ? (
                 <ol className="space-y-2 list-decimal pl-4">
                   <li>
@@ -121,14 +139,14 @@ export function PwaInstallButton() {
               ) : (
                 <div className="space-y-2">
                   <p>
-                    Puedes instalar la aplicación directamente desde el navegador:
+                    También puedes instalar la aplicación directamente desde el navegador:
                   </p>
                   <ul className="space-y-1.5 list-disc pl-4">
                     <li>
-                      <strong>En PC (Chrome o Edge):</strong> Pulsa en el icono de <strong>Instalar</strong> que aparece en la barra de direcciones arriba a la derecha (junto a la estrella de favoritos).
+                      <strong>En PC (Chrome o Edge):</strong> Pulsa en el icono de <strong>Instalar</strong> en la barra de direcciones arriba a la derecha.
                     </li>
                     <li>
-                      <strong>En Android:</strong> Pulsa los tres puntos del menú del navegador y elige <strong>"Instalar aplicación"</strong> o <strong>"Añadir a pantalla de inicio"</strong>.
+                      <strong>En Android:</strong> Pulsa los tres puntos del menú del navegador y elige <strong>"Instalar aplicación"</strong>.
                     </li>
                   </ul>
                 </div>

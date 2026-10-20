@@ -67,7 +67,7 @@ interface PosState {
   fiscal: FiscalConfig;
   nextOrder: number;
   zCounter: number;
-  // NovaSystem ERP state
+  // NovaStock ERP state
   customers: CustomerRecord[];
   inventoryMovements: InventoryMovement[];
   suppliers: Supplier[];

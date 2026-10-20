@@ -117,7 +117,7 @@ export function TerminalLockScreen({ onUnlock }: TerminalLockScreenProps) {
       <div className="relative w-full max-w-sm rounded-3xl border border-slate-800 bg-slate-900/90 p-7 shadow-2xl backdrop-blur-xl flex flex-col items-center text-center">
         {/* Logo header */}
         <div className="h-16 w-16 rounded-2xl flex items-center justify-center p-1 mb-3">
-          <img src="/logo.png" alt="NovaSystem Logo" className="h-full w-full object-contain filter drop-shadow-md" />
+          <img src="/logo.png" alt="NovaStock Logo" className="h-full w-full object-contain filter drop-shadow-md" />
         </div>
 
         <h2 className="text-xl font-bold tracking-tight text-white">Terminal Protegido</h2>

@@ -1,9 +1,11 @@
 import type { Product } from "@/types/pos";
 import { fmtBs, fmtUsd } from "@/lib/money";
 import { Emoji3D } from "@/components/common/Emoji3D";
+import { usePos } from "@/context/PosContext";
 
 export function ProductCard({ product, rate, onAdd }: { product: Product; rate: number; onAdd: (p: Product, mod?: string) => void }) {
-  const low = product.stockBar < 25;
+  const pos = usePos();
+  const low = pos.companySettings?.lowStockAlertsEnabled !== false && product.stockBar < 25;
   const isFood = product.kitchen;
 
   return (

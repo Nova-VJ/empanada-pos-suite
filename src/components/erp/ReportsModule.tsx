@@ -1093,7 +1093,7 @@ export function ReportsModule() {
           <div className="flex items-center gap-2">
             <Building2 className="h-4 w-4 text-primary" />
             <span>
-              Generado automáticamente por <b>NovaSystem v1.0 Venezuela</b>
+              Generado automáticamente por <b>NovaStock v1.0 Venezuela</b>
             </span>
           </div>
           <div className="flex items-center gap-4 text-[11px]">

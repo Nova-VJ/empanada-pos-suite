@@ -210,6 +210,41 @@ export interface JournalEntry {
   lines: JournalEntryLine[];
 }
 
+export interface TicketConfig {
+  width: "58mm" | "80mm";
+  density: "compact" | "normal" | "large";
+  showLogo: boolean;
+  showFiscalData: boolean;
+  showTaxBreakdown: boolean;
+  showBcvRate: boolean;
+  footerMessage: string;
+  autoCut: boolean;
+}
+
+export interface SystemUser {
+  id: string;
+  name: string;
+  username: string;
+  email: string;
+  role: "cajero" | "cocinero" | "contador" | "administrador" | "propietario";
+  roleLabel: string;
+  station: string;
+  pin: string;
+  active: boolean;
+  avatarInitials: string;
+  phone?: string;
+  createdAt: string;
+  stats: {
+    totalSalesUsd: number;
+    totalSalesBs: number;
+    ticketsCount: number;
+    ordersCooked: number;
+    avgPrepMinutes: number;
+    shiftsCount: number;
+    lastActive: string;
+  };
+}
+
 export interface CompanySettings {
   name: string;
   rif: string;
@@ -225,6 +260,8 @@ export interface CompanySettings {
   autoEmailCashReport?: boolean;
   teamViewerId?: string;
   printerWidth?: "58mm" | "80mm";
+  lowStockAlertsEnabled?: boolean;
+  ticketConfig?: TicketConfig;
 }
 
 export interface CartItem {

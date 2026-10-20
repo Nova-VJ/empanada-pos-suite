@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
   Share2,
   Sparkles,
@@ -20,7 +20,16 @@ import { toast } from "sonner";
 import { usePos } from "@/context/PosContext";
 import { fmtBs, fmtUsd } from "@/lib/money";
 import { Modal, btnPrimary, btnGhost, inputCls } from "./Modal";
-import { Emoji3D } from "@/components/common/Emoji3D";
+import {
+  renderPromoFlyer,
+  canvasToBlob,
+  stripEmoji,
+  FLYER_THEMES,
+  FLYER_FORMATS,
+  type FlyerData,
+  type FlyerFormat,
+  type FlyerTheme,
+} from "@/lib/promoFlyer";
 
 export interface PromoPack {
   id: string;
@@ -101,7 +110,9 @@ export function SocialPromotionsModal({ onClose }: SocialPromotionsModalProps) {
   const [packs, setPacks] = useState<PromoPack[]>(BASE_MARACAY_PACKS);
   const [selectedPack, setSelectedPack] = useState<PromoPack>(BASE_MARACAY_PACKS[0]);
   const [activeTab, setActiveTab] = useState<"whatsapp" | "story">("whatsapp");
-  const [storyTheme, setStoryTheme] = useState<"dark_luxury" | "sunset_criollo" | "emerald_gourmet">("dark_luxury");
+  const [storyTheme, setStoryTheme] = useState<FlyerTheme>("noche_dorada");
+  const [flyerFormat, setFlyerFormat] = useState<FlyerFormat>("story");
+  const [previewUrl, setPreviewUrl] = useState<string>("");
   const [copied, setCopied] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [customDiscount, setCustomDiscount] = useState<number>(15);
@@ -114,11 +125,12 @@ export function SocialPromotionsModal({ onClose }: SocialPromotionsModalProps) {
   const [customTagline, setCustomTagline] = useState("");
   const [customBadge, setCustomBadge] = useState("");
 
-  const storyCardRef = useRef<HTMLDivElement>(null);
-
   // IA Generator: Analyzes inventory products and creates new promotions
   function handleGenerateFromInventory() {
-    const prods = pos.products.filter((p) => p.active !== false);
+    // Highest stock first: promos push what the business has most of today
+    const prods = pos.products
+      .filter((p) => p.active !== false)
+      .sort((a, b) => b.stockBar + b.stockKitchen - (a.stockBar + a.stockKitchen));
     if (prods.length === 0) {
       toast.error("No hay productos en inventario");
       return;
@@ -142,7 +154,7 @@ export function SocialPromotionsModal({ onClose }: SocialPromotionsModalProps) {
       items: [
         `2 ${e1.name} recién fritas`,
         `1 ${e2.name} crujiente`,
-        `1 ${b1.name} (355ml)`,
+        `1 ${b1.name}`,
         "Guasacaca aragüeña y tártara casera gratis",
       ],
       regularPriceUsd: Number((e1.priceUsd * 2 + e2.priceUsd + b1.priceUsd).toFixed(2)),
@@ -241,8 +253,8 @@ _${displayPromo.tagline}_
 ${displayPromo.items.map((i) => `• ${i}`).join("\n")}
 
 🔥 *PRECIO ESPECIAL:*
-💵 *USD $${displayPromo.promoPriceUsd.toFixed(2)}* (Antes ~~$${displayPromo.regularPriceUsd.toFixed(2)}~~)
-🇻🇪 *Bs. ${fmtBs(priceBs)}* (Tasa Oficial BCV: Bs. ${rate.toFixed(2)})
+💵 *USD $${displayPromo.promoPriceUsd.toFixed(2)}* (Antes ~$${displayPromo.regularPriceUsd.toFixed(2)}~)
+🇻🇪 *${fmtBs(priceBs)}* (Tasa Oficial BCV: Bs. ${rate.toFixed(2)})
 🏷️ *Descuento:* ${displayPromo.discountPct}% de ahorro
 
 🛵 *Delivery disponible en San Jacinto, Montaña Fresca y Maracay*
@@ -257,7 +269,7 @@ Hoy tenemos activo el *${displayPromo.name}* con ${displayPromo.discountPct}% de
 👉 Incluye:
 ${displayPromo.items.map((i) => `✔ ${i}`).join("\n")}
 
-💰 Solo por hoy: $${displayPromo.promoPriceUsd.toFixed(2)} USD (Bs. ${fmtBs(priceBs)} a Tasa Oficial BCV).
+💰 Solo por hoy: $${displayPromo.promoPriceUsd.toFixed(2)} USD (${fmtBs(priceBs)} a Tasa Oficial BCV).
 
 🛵 Pide por WhatsApp al ${phoneForDelivery} o visítanos en San Jacinto.
 📍 ${pos.companySettings.name} · Maracay, Edo. Aragua.
@@ -294,486 +306,71 @@ ${displayPromo.items.map((i) => `✔ ${i}`).join("\n")}
     }
   }
 
-  // Generate & Download PNG Image for Story using HTML Canvas in High-Res (1080x1920)
-  function handleDownloadStoryImage() {
-    const canvas = document.createElement("canvas");
-    canvas.width = 1080;
-    canvas.height = 1920;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    if (storyTheme === "dark_luxury") {
-      // Dark Luxury Gradient Background
-      const bgGrad = ctx.createLinearGradient(0, 0, 1080, 1920);
-      bgGrad.addColorStop(0, "#080C14");
-      bgGrad.addColorStop(0.35, "#101626");
-      bgGrad.addColorStop(0.7, "#1A142E");
-      bgGrad.addColorStop(1, "#070A12");
-      ctx.fillStyle = bgGrad;
-      ctx.fillRect(0, 0, 1080, 1920);
-
-      // Gold Glow
-      const radGrad = ctx.createRadialGradient(540, 700, 40, 540, 700, 520);
-      radGrad.addColorStop(0, "rgba(229, 168, 59, 0.25)");
-      radGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-      ctx.fillStyle = radGrad;
-      ctx.fillRect(0, 200, 1080, 1000);
-
-      // Outer Gold Frame with Double Line
-      ctx.strokeStyle = "#E5A83B";
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.roundRect(40, 40, 1000, 1840, 40);
-      ctx.stroke();
-
-      ctx.strokeStyle = "rgba(229, 168, 59, 0.3)";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.roundRect(52, 52, 976, 1816, 32);
-      ctx.stroke();
-
-      // Top Quality Badges
-      ctx.fillStyle = "rgba(229, 168, 59, 0.15)";
-      ctx.strokeStyle = "rgba(229, 168, 59, 0.4)";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.roundRect(140, 70, 380, 45, 22);
-      ctx.roundRect(560, 70, 380, 45, 22);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = "#F3BA54";
-      ctx.font = "bold 20px sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText("🥟 100% MAÍZ SELECCIONADO", 330, 100);
-      ctx.fillText("🛵 DELIVERY SAN JACINTO", 750, 100);
-
-      // Top Brand
-      ctx.fillStyle = "#E5A83B";
-      ctx.font = "bold 44px sans-serif";
-      ctx.fillText(pos.companySettings.name.toUpperCase(), 540, 180);
-
-      ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
-      ctx.font = "28px sans-serif";
-      ctx.fillText("San Jacinto · Maracay, Edo. Aragua", 540, 225);
-
-      // Promo Badge
-      ctx.fillStyle = "#E5A83B";
-      ctx.beginPath();
-      ctx.roundRect(260, 275, 560, 74, 37);
-      ctx.fill();
-
-      ctx.fillStyle = "#090D16";
-      ctx.font = "bold 32px sans-serif";
-      ctx.fillText(displayPromo.badge, 540, 324);
-
-      // Icon
-      ctx.font = "180px sans-serif";
-      ctx.fillText(displayPromo.icon, 540, 545);
-
-      // Title
-      ctx.fillStyle = "#FFFFFF";
-      ctx.font = "bold 60px sans-serif";
-      ctx.fillText(displayPromo.name, 540, 650);
-
-      // Tagline
-      ctx.fillStyle = "#E5A83B";
-      ctx.font = "32px sans-serif";
-      ctx.fillText(displayPromo.tagline, 540, 715);
-
-      // Items Box
-      ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
-      ctx.strokeStyle = "rgba(229, 168, 59, 0.4)";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.roundRect(140, 775, 800, 380, 30);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = "#E5A83B";
-      ctx.font = "bold 34px sans-serif";
-      ctx.textAlign = "left";
-      ctx.fillText("ESTA PROMOCIÓN INCLUYE:", 190, 845);
-
-      ctx.fillStyle = "#F3F4F6";
-      ctx.font = "30px sans-serif";
-      displayPromo.items.forEach((item, idx) => {
-        ctx.fillText(`✓  ${item}`, 190, 915 + idx * 60);
-      });
-
-      // Price Box
-      ctx.textAlign = "center";
-      ctx.fillStyle = "rgba(16, 185, 129, 0.15)";
-      ctx.strokeStyle = "rgba(16, 185, 129, 0.6)";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.roundRect(140, 1195, 800, 270, 30);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
-      ctx.font = "28px sans-serif";
-      ctx.fillText(`Antes: $${displayPromo.regularPriceUsd.toFixed(2)} USD`, 540, 1250);
-
-      ctx.fillStyle = "#34D399";
-      ctx.font = "bold 82px sans-serif";
-      ctx.fillText(`$${displayPromo.promoPriceUsd.toFixed(2)} USD`, 540, 1340);
-
-      ctx.fillStyle = "#FFFFFF";
-      ctx.font = "bold 36px monospace";
-      ctx.fillText(`Bs. ${fmtBs(priceBs)} (Tasa Oficial BCV)`, 540, 1410);
-
-      // Call to Action Button + Simulated QR Scan Box
-      ctx.fillStyle = "#E5A83B";
-      ctx.beginPath();
-      ctx.roundRect(140, 1500, 620, 110, 35);
-      ctx.fill();
-
-      ctx.fillStyle = "#090D16";
-      ctx.font = "bold 36px sans-serif";
-      ctx.fillText("📲 ¡PIDE POR WHATSAPP!", 450, 1570);
-
-      // QR Code Box on right
-      const qrX = 800;
-      const qrY = 1500;
-      ctx.fillStyle = "#FFFFFF";
-      ctx.beginPath();
-      ctx.roundRect(qrX, qrY, 140, 110, 20);
-      ctx.fill();
-
-      ctx.fillStyle = "#090D16";
-      ctx.font = "bold 16px sans-serif";
-      ctx.fillText("ESCANEA", qrX + 70, qrY + 30);
-      ctx.font = "32px sans-serif";
-      ctx.fillText("📱", qrX + 70, qrY + 70);
-      ctx.font = "14px sans-serif";
-      ctx.fillText("PIDE AQUÍ", qrX + 70, qrY + 95);
-
-      // Footer
-      ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
-      ctx.font = "30px sans-serif";
-      ctx.fillText(`WhatsApp: ${phoneForDelivery} · Delivery en San Jacinto`, 540, 1690);
-
-      ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
-      ctx.font = "24px sans-serif";
-      ctx.fillText("NovaSystem × Dr. Empanadas Marketing Suite", 540, 1760);
-
-    } else if (storyTheme === "sunset_criollo") {
-      // Sunset Criollo Theme
-      const bgGrad = ctx.createLinearGradient(0, 0, 1080, 1920);
-      bgGrad.addColorStop(0, "#1F0A02");
-      bgGrad.addColorStop(0.4, "#451A03");
-      bgGrad.addColorStop(0.8, "#7C2D12");
-      bgGrad.addColorStop(1, "#180602");
-      ctx.fillStyle = bgGrad;
-      ctx.fillRect(0, 0, 1080, 1920);
-
-      // Orange Warm Glow
-      const radGrad = ctx.createRadialGradient(540, 650, 40, 540, 650, 520);
-      radGrad.addColorStop(0, "rgba(249, 115, 22, 0.35)");
-      radGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-      ctx.fillStyle = radGrad;
-      ctx.fillRect(0, 150, 1080, 1000);
-
-      // Outer Orange Frame
-      ctx.strokeStyle = "#F97316";
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.roundRect(40, 40, 1000, 1840, 40);
-      ctx.stroke();
-
-      ctx.strokeStyle = "rgba(249, 115, 22, 0.3)";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.roundRect(52, 52, 976, 1816, 32);
-      ctx.stroke();
-
-      // Top Quality Badges
-      ctx.fillStyle = "rgba(249, 115, 22, 0.2)";
-      ctx.strokeStyle = "rgba(249, 115, 22, 0.5)";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.roundRect(140, 70, 380, 45, 22);
-      ctx.roundRect(560, 70, 380, 45, 22);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = "#FED7AA";
-      ctx.font = "bold 20px sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText("🔥 CRUJIENTES & CALIENTITAS", 330, 100);
-      ctx.fillText("🛵 DELIVERY SAN JACINTO", 750, 100);
-
-      // Top Brand
-      ctx.fillStyle = "#FDBA74";
-      ctx.font = "bold 44px sans-serif";
-      ctx.fillText(pos.companySettings.name.toUpperCase(), 540, 180);
-
-      ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-      ctx.font = "28px sans-serif";
-      ctx.fillText("San Jacinto · Maracay, Edo. Aragua", 540, 225);
-
-      // Badge
-      ctx.fillStyle = "#F97316";
-      ctx.beginPath();
-      ctx.roundRect(260, 275, 560, 74, 37);
-      ctx.fill();
-
-      ctx.fillStyle = "#FFFFFF";
-      ctx.font = "bold 32px sans-serif";
-      ctx.fillText(displayPromo.badge, 540, 324);
-
-      // Emoji
-      ctx.font = "180px sans-serif";
-      ctx.fillText(displayPromo.icon, 540, 545);
-
-      // Title
-      ctx.fillStyle = "#FFFFFF";
-      ctx.font = "bold 60px sans-serif";
-      ctx.fillText(displayPromo.name, 540, 650);
-
-      // Tagline
-      ctx.fillStyle = "#FED7AA";
-      ctx.font = "32px sans-serif";
-      ctx.fillText(displayPromo.tagline, 540, 715);
-
-      // Items Box
-      ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
-      ctx.strokeStyle = "rgba(249, 115, 22, 0.5)";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.roundRect(140, 775, 800, 380, 30);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = "#FDBA74";
-      ctx.font = "bold 34px sans-serif";
-      ctx.textAlign = "left";
-      ctx.fillText("ESTA PROMOCIÓN INCLUYE:", 190, 845);
-
-      ctx.fillStyle = "#FFFFFF";
-      ctx.font = "30px sans-serif";
-      displayPromo.items.forEach((item, idx) => {
-        ctx.fillText(`✓  ${item}`, 190, 915 + idx * 60);
-      });
-
-      // Price Box
-      ctx.textAlign = "center";
-      ctx.fillStyle = "rgba(16, 185, 129, 0.2)";
-      ctx.strokeStyle = "#10B981";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.roundRect(140, 1195, 800, 270, 30);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = "rgba(255, 255, 255, 0.65)";
-      ctx.font = "28px sans-serif";
-      ctx.fillText(`Antes: $${displayPromo.regularPriceUsd.toFixed(2)} USD`, 540, 1250);
-
-      ctx.fillStyle = "#34D399";
-      ctx.font = "bold 82px sans-serif";
-      ctx.fillText(`$${displayPromo.promoPriceUsd.toFixed(2)} USD`, 540, 1340);
-
-      ctx.fillStyle = "#FFFFFF";
-      ctx.font = "bold 36px monospace";
-      ctx.fillText(`Bs. ${fmtBs(priceBs)} (Tasa Oficial BCV)`, 540, 1410);
-
-      // Call to Action Button + QR Scan
-      ctx.fillStyle = "#F97316";
-      ctx.beginPath();
-      ctx.roundRect(140, 1500, 620, 110, 35);
-      ctx.fill();
-
-      ctx.fillStyle = "#FFFFFF";
-      ctx.font = "bold 36px sans-serif";
-      ctx.fillText("📲 ¡PIDE POR WHATSAPP!", 450, 1570);
-
-      const qrX = 800;
-      const qrY = 1500;
-      ctx.fillStyle = "#FFFFFF";
-      ctx.beginPath();
-      ctx.roundRect(qrX, qrY, 140, 110, 20);
-      ctx.fill();
-
-      ctx.fillStyle = "#7C2D12";
-      ctx.font = "bold 16px sans-serif";
-      ctx.fillText("ESCANEA", qrX + 70, qrY + 30);
-      ctx.font = "32px sans-serif";
-      ctx.fillText("📱", qrX + 70, qrY + 70);
-      ctx.font = "14px sans-serif";
-      ctx.fillText("PIDE AQUÍ", qrX + 70, qrY + 95);
-
-      // Footer
-      ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
-      ctx.font = "30px sans-serif";
-      ctx.fillText(`WhatsApp: ${phoneForDelivery} · Delivery en San Jacinto`, 540, 1690);
-
-      ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
-      ctx.font = "24px sans-serif";
-      ctx.fillText("NovaSystem × Dr. Empanadas Marketing Suite", 540, 1760);
-
-    } else {
-      // Emerald Gourmet Theme
-      const bgGrad = ctx.createLinearGradient(0, 0, 1080, 1920);
-      bgGrad.addColorStop(0, "#031E15");
-      bgGrad.addColorStop(0.35, "#063A29");
-      bgGrad.addColorStop(0.7, "#092D21");
-      bgGrad.addColorStop(1, "#02150E");
-      ctx.fillStyle = bgGrad;
-      ctx.fillRect(0, 0, 1080, 1920);
-
-      // Mint Emerald Glow
-      const radGrad = ctx.createRadialGradient(540, 650, 40, 540, 650, 520);
-      radGrad.addColorStop(0, "rgba(52, 211, 153, 0.28)");
-      radGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-      ctx.fillStyle = radGrad;
-      ctx.fillRect(0, 150, 1080, 1000);
-
-      // Outer Mint/Emerald Frame
-      ctx.strokeStyle = "#34D399";
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.roundRect(40, 40, 1000, 1840, 40);
-      ctx.stroke();
-
-      ctx.strokeStyle = "rgba(52, 211, 153, 0.3)";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.roundRect(52, 52, 976, 1816, 32);
-      ctx.stroke();
-
-      // Top Quality Badges
-      ctx.fillStyle = "rgba(52, 211, 153, 0.15)";
-      ctx.strokeStyle = "rgba(52, 211, 153, 0.4)";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.roundRect(140, 70, 380, 45, 22);
-      ctx.roundRect(560, 70, 380, 45, 22);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = "#A7F3D0";
-      ctx.font = "bold 20px sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText("🌿 CALIDAD GOURMET PREMIUM", 330, 100);
-      ctx.fillText("🛵 DELIVERY SAN JACINTO", 750, 100);
-
-      // Top Brand
-      ctx.fillStyle = "#34D399";
-      ctx.font = "bold 44px sans-serif";
-      ctx.fillText(pos.companySettings.name.toUpperCase(), 540, 180);
-
-      ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-      ctx.font = "28px sans-serif";
-      ctx.fillText("San Jacinto · Maracay, Edo. Aragua", 540, 225);
-
-      // Promo Badge
-      ctx.fillStyle = "#34D399";
-      ctx.beginPath();
-      ctx.roundRect(260, 275, 560, 74, 37);
-      ctx.fill();
-
-      ctx.fillStyle = "#031E15";
-      ctx.font = "bold 32px sans-serif";
-      ctx.fillText(displayPromo.badge, 540, 324);
-
-      // Icon
-      ctx.font = "180px sans-serif";
-      ctx.fillText(displayPromo.icon, 540, 545);
-
-      // Title
-      ctx.fillStyle = "#FFFFFF";
-      ctx.font = "bold 60px sans-serif";
-      ctx.fillText(displayPromo.name, 540, 650);
-
-      // Tagline
-      ctx.fillStyle = "#6EE7B7";
-      ctx.font = "32px sans-serif";
-      ctx.fillText(displayPromo.tagline, 540, 715);
-
-      // Items Box
-      ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
-      ctx.strokeStyle = "rgba(52, 211, 153, 0.4)";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.roundRect(140, 775, 800, 380, 30);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = "#6EE7B7";
-      ctx.font = "bold 34px sans-serif";
-      ctx.textAlign = "left";
-      ctx.fillText("ESTA PROMOCIÓN INCLUYE:", 190, 845);
-
-      ctx.fillStyle = "#F3F4F6";
-      ctx.font = "30px sans-serif";
-      displayPromo.items.forEach((item, idx) => {
-        ctx.fillText(`✓  ${item}`, 190, 915 + idx * 60);
-      });
-
-      // Price Box
-      ctx.textAlign = "center";
-      ctx.fillStyle = "rgba(52, 211, 153, 0.15)";
-      ctx.strokeStyle = "#34D399";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.roundRect(140, 1195, 800, 270, 30);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = "rgba(255, 255, 255, 0.65)";
-      ctx.font = "28px sans-serif";
-      ctx.fillText(`Antes: $${displayPromo.regularPriceUsd.toFixed(2)} USD`, 540, 1250);
-
-      ctx.fillStyle = "#6EE7B7";
-      ctx.font = "bold 82px sans-serif";
-      ctx.fillText(`$${displayPromo.promoPriceUsd.toFixed(2)} USD`, 540, 1340);
-
-      ctx.fillStyle = "#FFFFFF";
-      ctx.font = "bold 36px monospace";
-      ctx.fillText(`Bs. ${fmtBs(priceBs)} (Tasa Oficial BCV)`, 540, 1410);
-
-      // Call to Action Button + QR Scan
-      ctx.fillStyle = "#10B981";
-      ctx.beginPath();
-      ctx.roundRect(140, 1500, 620, 110, 35);
-      ctx.fill();
-
-      ctx.fillStyle = "#FFFFFF";
-      ctx.font = "bold 36px sans-serif";
-      ctx.fillText("📲 ¡PIDE POR WHATSAPP!", 450, 1570);
-
-      const qrX = 800;
-      const qrY = 1500;
-      ctx.fillStyle = "#FFFFFF";
-      ctx.beginPath();
-      ctx.roundRect(qrX, qrY, 140, 110, 20);
-      ctx.fill();
-
-      ctx.fillStyle = "#064E3B";
-      ctx.font = "bold 16px sans-serif";
-      ctx.fillText("ESCANEA", qrX + 70, qrY + 30);
-      ctx.font = "32px sans-serif";
-      ctx.fillText("📱", qrX + 70, qrY + 70);
-      ctx.font = "14px sans-serif";
-      ctx.fillText("PIDE AQUÍ", qrX + 70, qrY + 95);
-
-      // Footer
-      ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
-      ctx.font = "30px sans-serif";
-      ctx.fillText(`WhatsApp: ${phoneForDelivery} · Delivery en San Jacinto`, 540, 1690);
-
-      ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
-      ctx.font = "24px sans-serif";
-      ctx.fillText("NovaSystem × Dr. Empanadas Marketing Suite", 540, 1760);
-    }
-
+  const flyerData: FlyerData = {
+    businessName: pos.companySettings.name,
+    city: zoneName,
+    address: pos.companySettings.address || zoneName,
+    phone: phoneForDelivery,
+    name: displayPromo.name,
+    tagline: displayPromo.tagline,
+    badge: displayPromo.badge,
+    items: displayPromo.items,
+    regularPriceUsd: displayPromo.regularPriceUsd,
+    promoPriceUsd: displayPromo.promoPriceUsd,
+    discountPct: displayPromo.discountPct,
+    rate,
+    heroHint: activeProduct?.category ?? "",
+  };
+  const flyerKey = JSON.stringify(flyerData);
+
+  // Live preview: same renderer as the download, so what you see is what you share
+  useEffect(() => {
+    let cancelled = false;
+    renderPromoFlyer(flyerData, storyTheme, flyerFormat).then((canvas) => {
+      if (!cancelled) setPreviewUrl(canvas.toDataURL("image/png"));
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flyerKey, storyTheme, flyerFormat]);
+
+  function flyerFileName() {
+    const slug = stripEmoji(displayPromo.name)
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+    return `promo-${slug}-${flyerFormat}.png`;
+  }
+
+  async function handleDownloadStoryImage() {
+    const canvas = await renderPromoFlyer(flyerData, storyTheme, flyerFormat);
+    const blob = await canvasToBlob(canvas);
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.download = `story-${storyTheme}-${displayPromo.name.toLowerCase().replace(/\s+/g, "-")}.png`;
-    link.href = canvas.toDataURL("image/png");
+    link.download = flyerFileName();
+    link.href = url;
     link.click();
-    toast.success("📥 Imagen de Story descargada en calidad profesional (1080×1920)");
+    URL.revokeObjectURL(url);
+    toast.success("Imagen descargada en alta calidad");
+  }
+
+  // Shares the image + text in one go (WhatsApp, Instagram…) on phones that support it
+  async function handleShareImage() {
+    try {
+      const canvas = await renderPromoFlyer(flyerData, storyTheme, flyerFormat);
+      const file = new File([await canvasToBlob(canvas)], flyerFileName(), { type: "image/png" });
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], text: whatsappMessage });
+        return;
+      }
+    } catch (err) {
+      if ((err as Error).name === "AbortError") return;
+    }
+    await handleDownloadStoryImage();
+    toast.info("Este equipo no permite compartir imágenes directo: adjunta la imagen descargada en WhatsApp.");
   }
 
   return (
@@ -973,7 +570,7 @@ ${displayPromo.items.map((i) => `✔ ${i}`).join("\n")}
               }`}
             >
               <Camera className="h-4 w-4" />
-              <span>Instagram Story / Flyer (9:16)</span>
+              <span>Imagen para Redes</span>
             </button>
           </div>
 
@@ -1048,168 +645,49 @@ ${displayPromo.items.map((i) => `✔ ${i}`).join("\n")}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Visual Card (Live 9:16 preview) with Theme Switcher */}
             <div className="flex flex-col items-center space-y-2">
-              {/* Theme Selector: 3 Options */}
-              <div className="flex items-center gap-1.5 text-xs font-semibold flex-wrap justify-center">
-                <Palette className="h-3.5 w-3.5 text-primary" />
-                <span className="text-[11px]">Tema:</span>
-                <button
-                  onClick={() => setStoryTheme("dark_luxury")}
-                  className={`rounded-lg px-2 py-1 text-[11px] font-bold transition ${
-                    storyTheme === "dark_luxury"
-                      ? "bg-slate-900 text-amber-400 border border-amber-500 shadow-xs"
-                      : "bg-secondary text-muted-foreground border border-border"
-                  }`}
-                >
-                  1. Dark Gold
-                </button>
-                <button
-                  onClick={() => setStoryTheme("sunset_criollo")}
-                  className={`rounded-lg px-2 py-1 text-[11px] font-bold transition ${
-                    storyTheme === "sunset_criollo"
-                      ? "bg-orange-950 text-orange-400 border border-orange-500 shadow-xs"
-                      : "bg-secondary text-muted-foreground border border-border"
-                  }`}
-                >
-                  2. Sunset Neón
-                </button>
-                <button
-                  onClick={() => setStoryTheme("emerald_gourmet")}
-                  className={`rounded-lg px-2 py-1 text-[11px] font-bold transition ${
-                    storyTheme === "emerald_gourmet"
-                      ? "bg-emerald-950 text-emerald-400 border border-emerald-500 shadow-xs"
-                      : "bg-secondary text-muted-foreground border border-border"
-                  }`}
-                >
-                  3. Esmeralda Gourmet
-                </button>
+              {/* Format selector */}
+              <div className="flex items-center gap-1 rounded-xl bg-secondary p-1 text-[11px] font-bold">
+                {FLYER_FORMATS.map((f) => (
+                  <button
+                    key={f.id}
+                    onClick={() => setFlyerFormat(f.id)}
+                    className={`rounded-lg px-2.5 py-1 transition ${
+                      flyerFormat === f.id ? "bg-card text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {f.label} <span className="font-mono font-medium opacity-60">{f.size}</span>
+                  </button>
+                ))}
               </div>
 
-              {/* Story Visual Card */}
+              {/* Theme selector */}
+              <div className="flex items-center gap-1.5 flex-wrap justify-center">
+                {FLYER_THEMES.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setStoryTheme(t.id)}
+                    className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold transition ${
+                      storyTheme === t.id ? "border-primary bg-primary/10 text-foreground" : "border-border text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <span
+                      className="h-3.5 w-3.5 rounded-full ring-1 ring-black/10"
+                      style={{ background: `linear-gradient(135deg, ${t.swatch[0]} 50%, ${t.swatch[1]} 50%)` }}
+                    />
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Live preview (exact image that will be shared) */}
               <div
-                ref={storyCardRef}
-                className={`w-full max-w-[280px] aspect-[9/16] rounded-3xl p-5 shadow-2xl relative overflow-hidden flex flex-col justify-between text-white border select-none transition-all ${
-                  storyTheme === "dark_luxury"
-                    ? "border-amber-500/40"
-                    : storyTheme === "sunset_criollo"
-                    ? "border-orange-500/50"
-                    : "border-emerald-500/50"
-                }`}
-                style={{
-                  background:
-                    storyTheme === "dark_luxury"
-                      ? "linear-gradient(145deg, #090D16 0%, #131B2E 50%, #070A12 100%)"
-                      : storyTheme === "sunset_criollo"
-                      ? "linear-gradient(145deg, #1F0A02 0%, #451A03 50%, #7C2D12 100%)"
-                      : "linear-gradient(145deg, #031E15 0%, #063A29 50%, #02150E 100%)",
-                }}
+                className={`w-full ${flyerFormat === "story" ? "max-w-[270px] aspect-[9/16]" : "max-w-[320px] aspect-[4/5]"} rounded-2xl overflow-hidden shadow-2xl ring-1 ring-black/10 bg-secondary`}
               >
-                {/* Glow */}
-                <div
-                  className={`absolute top-0 right-0 w-36 h-36 rounded-full blur-2xl pointer-events-none ${
-                    storyTheme === "dark_luxury"
-                      ? "bg-amber-500/20"
-                      : storyTheme === "sunset_criollo"
-                      ? "bg-orange-500/30"
-                      : "bg-emerald-500/25"
-                  }`}
-                />
-
-                {/* Top header */}
-                <div className="relative text-center space-y-1">
-                  {/* Top Badges */}
-                  <div className="flex justify-between items-center text-[7px] font-bold opacity-80 pb-1">
-                    <span className="bg-white/10 px-1.5 py-0.5 rounded-full">🥟 100% MAÍZ</span>
-                    <span className="bg-white/10 px-1.5 py-0.5 rounded-full">🛵 DELIVERY</span>
-                  </div>
-                  <div
-                    className={`text-[11px] font-black tracking-widest uppercase ${
-                      storyTheme === "dark_luxury"
-                        ? "text-amber-400"
-                        : storyTheme === "sunset_criollo"
-                        ? "text-orange-300"
-                        : "text-emerald-300"
-                    }`}
-                  >
-                    {pos.companySettings.name}
-                  </div>
-                  <div className="text-[9px] text-slate-300">San Jacinto · Maracay, Edo. Aragua</div>
-                  <div
-                    className={`mt-1.5 inline-block rounded-full px-3 py-0.5 text-[9px] font-black uppercase shadow-md ${
-                      storyTheme === "dark_luxury"
-                        ? "bg-amber-500 text-slate-950"
-                        : storyTheme === "sunset_criollo"
-                        ? "bg-orange-500 text-white"
-                        : "bg-emerald-400 text-slate-950"
-                    }`}
-                  >
-                    {displayPromo.badge}
-                  </div>
-                </div>
-
-                {/* Middle content */}
-                <div className="relative text-center space-y-2 py-1">
-                  <div className="flex justify-center py-1">
-                    {displayPromo.icon === "🥟" ? (
-                      <Emoji3D name="empanada" size={68} className="animate-bounce" />
-                    ) : displayPromo.icon === "🥪" ? (
-                      <Emoji3D name="pastelito" size={68} className="animate-bounce" />
-                    ) : (
-                      <span className="text-5xl animate-bounce">{displayPromo.icon}</span>
-                    )}
-                  </div>
-                  <div className="text-base font-black tracking-tight text-white leading-tight">
-                    {displayPromo.name}
-                  </div>
-                  <div className="text-[10px] text-slate-300 leading-snug px-1">
-                    {displayPromo.tagline}
-                  </div>
-
-                  <div className="rounded-xl bg-white/10 backdrop-blur-xs p-2 text-left space-y-1 text-[10px] border border-white/10">
-                    {displayPromo.items.map((it, idx) => (
-                      <div key={idx} className="flex items-center gap-1 text-slate-200">
-                        <span className="text-emerald-400 font-bold">✓</span>
-                        <span className="truncate">{it}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Bottom price and call to action */}
-                <div className="relative text-center space-y-2">
-                  <div className="rounded-2xl bg-emerald-500/20 border border-emerald-500/40 p-2 text-center">
-                    <div className="text-[9px] text-slate-400 line-through">
-                      Antes: ${displayPromo.regularPriceUsd.toFixed(2)} USD
-                    </div>
-                    <div className="text-xl font-black text-emerald-400 font-mono">
-                      ${displayPromo.promoPriceUsd.toFixed(2)} USD
-                    </div>
-                    <div className="text-[10px] font-mono font-bold text-slate-200">
-                      Bs. {fmtBs(priceBs)}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-1.5">
-                    <div
-                      className={`flex-1 rounded-xl py-2 text-[10px] font-black tracking-wide uppercase shadow-lg ${
-                        storyTheme === "dark_luxury"
-                          ? "bg-amber-400 text-slate-950"
-                          : storyTheme === "sunset_criollo"
-                          ? "bg-orange-500 text-white"
-                          : "bg-emerald-400 text-slate-950"
-                      }`}
-                    >
-                      📲 Pide al WhatsApp
-                    </div>
-                    <div className="bg-white rounded-lg p-1 text-[9px] font-bold text-slate-950 flex flex-col items-center leading-none">
-                      <span>📱</span>
-                      <span className="text-[6px] uppercase tracking-tighter">QR Pide</span>
-                    </div>
-                  </div>
-
-                  <div className="text-[8px] text-slate-300">
-                    {phoneForDelivery} · Delivery en San Jacinto
-                  </div>
-                </div>
+                {previewUrl ? (
+                  <img src={previewUrl} alt={`Vista previa: ${displayPromo.name}`} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="h-full w-full animate-pulse" />
+                )}
               </div>
             </div>
 
@@ -1219,12 +697,12 @@ ${displayPromo.items.map((i) => `✔ ${i}`).join("\n")}
                 <div className="rounded-xl border border-border bg-card p-3.5 space-y-2">
                   <div className="font-bold text-xs text-foreground flex items-center gap-1.5">
                     <Camera className="h-4 w-4 text-purple-500" />
-                    <span>Diseño para Instagram Stories & Estados (1080×1920)</span>
+                    <span>Imagen lista para redes y WhatsApp</span>
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Al pulsar en <strong>Descargar Imagen</strong>, el sistema genera automáticamente un
-                    flyer en resolución 1080×1920 listo para subir a tus Stories de Instagram, estados de
-                    WhatsApp, TikTok o Facebook con el estilo visual que elijas.
+                    Elige formato y estilo: la vista previa es exactamente la imagen que se comparte.
+                    <strong> Historia</strong> sirve para Estados de WhatsApp e Historias de Instagram;
+                    <strong> Publicación</strong> para el muro de Instagram/Facebook y chats o grupos de WhatsApp.
                   </p>
                 </div>
 
@@ -1248,13 +726,19 @@ ${displayPromo.items.map((i) => `✔ ${i}`).join("\n")}
 
               <div className="space-y-2 pt-2">
                 <button
+                  onClick={handleShareImage}
+                  className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 text-xs transition flex items-center justify-center gap-2 shadow-sm"
+                >
+                  <Share2 className="h-4 w-4" />
+                  <span>Compartir imagen + texto (WhatsApp, Instagram…)</span>
+                </button>
+
+                <button
                   onClick={handleDownloadStoryImage}
-                  className="w-full rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:opacity-90 text-white font-bold py-2.5 px-4 text-xs transition flex items-center justify-center gap-2 shadow-md"
+                  className="w-full rounded-xl bg-foreground hover:opacity-90 text-background font-bold py-2.5 px-4 text-xs transition flex items-center justify-center gap-2 shadow-sm"
                 >
                   <Download className="h-4 w-4" />
-                  <span>
-                    Descargar Flyer Story ({storyTheme === "dark_luxury" ? "Dark Gold" : storyTheme === "sunset_criollo" ? "Sunset Neón" : "Esmeralda Gourmet"})
-                  </span>
+                  <span>Descargar imagen ({FLYER_FORMATS.find((f) => f.id === flyerFormat)?.size})</span>
                 </button>
 
                 <button

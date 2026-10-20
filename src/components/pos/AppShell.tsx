@@ -98,7 +98,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const pendingFryer = pos.orders.filter((o) => o.kdsStatus === "fryer").length;
-  const lowStockCount = pos.products.filter((p) => p.stockBar + p.stockKitchen <= (p.minStock ?? 10)).length;
+  const lowStockCount = pos.companySettings.lowStockAlertsEnabled !== false
+    ? pos.products.filter((p) => p.stockBar + p.stockKitchen <= (p.minStock ?? 10)).length
+    : 0;
 
   const currentModule: ModuleId =
     path === "/"
@@ -111,6 +113,30 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setIsOnline(navigator.onLine);
+    const handleOnline = () => {
+      setIsOnline(true);
+      toast.success("🟢 Conexión a Internet Restablecida", {
+        description: "El sistema está sincronizado en tiempo real.",
+      });
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      toast.warning("🟡 Conexión a Internet Perdida (Modo Fuera de Línea Activo)", {
+        description: "El TPV continúa operando con normalidad. Las ventas se guardan localmente.",
+      });
+    };
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
   const selectModule = (id: ModuleId) => {
     pos.setActiveModule(id);
@@ -246,7 +272,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen flex w-full bg-background text-foreground">
-      {/* Left Collapsible NovaSystem Sidebar (Desktop) */}
+      {/* Left Collapsible NovaStock Sidebar (Desktop) */}
       <aside
         className={`no-print shrink-0 border-r border-sidebar-border bg-sidebar hidden md:flex flex-col transition-all duration-200 sticky top-0 h-screen z-40 ${
           collapsed ? "w-16" : "w-60"
@@ -258,12 +284,12 @@ export function AppShell({ children }: { children: ReactNode }) {
             className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0 hover:scale-105 transition p-0.5"
             title="Ir al Dashboard"
           >
-            <img src="/logo.png" alt="NovaSystem Logo" className="h-full w-full object-contain filter drop-shadow-xs" />
+            <img src="/logo.png" alt="NovaStock Logo" className="h-full w-full object-contain filter drop-shadow-xs" />
           </button>
           {!collapsed && (
             <div className="min-w-0 flex-1 leading-tight">
               <h1 className="text-sm font-bold text-foreground tracking-tight truncate">
-                NovaSystem
+                NovaStock
               </h1>
               <p className="text-[11px] text-muted-foreground truncate">
                 {pos.companySettings.name}
@@ -285,7 +311,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <span className="font-mono font-semibold">{pos.companySettings.rif}</span>
                 <span className="rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold px-1.5 py-0.2 text-[10px]">v1.0 SENIAT</span>
               </div>
-              <span className="text-[10px] text-muted-foreground/80">Edición Venezuela · 1ª Versión</span>
+              <span className="text-[10px] text-muted-foreground/80">by NovaSystems · Edición Venezuela</span>
             </div>
           ) : (
             <div className="text-center text-[10px] font-mono text-emerald-500 font-bold" title="v1.0 SENIAT Venezuela">v1.0</div>
@@ -307,10 +333,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className="p-3.5 border-b border-sidebar-border flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0 p-0.5">
-                  <img src="/logo.png" alt="NovaSystem Logo" className="h-full w-full object-contain filter drop-shadow-xs" />
+                  <img src="/logo.png" alt="NovaStock Logo" className="h-full w-full object-contain filter drop-shadow-xs" />
                 </div>
                 <div className="leading-tight">
-                  <div className="text-sm font-bold text-foreground">NovaSystem</div>
+                  <div className="text-sm font-bold text-foreground">NovaStock</div>
                   <div className="text-[10px] text-muted-foreground truncate max-w-[140px]">{pos.companySettings.name}</div>
                 </div>
               </div>
@@ -369,6 +395,16 @@ export function AppShell({ children }: { children: ReactNode }) {
 
           {/* Right section: Clean, Responsive Pills & Always Reachable Controls */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-auto">
+            {/* Offline Status Pill */}
+            {!isOnline && (
+              <div
+                className="inline-flex items-center gap-1 rounded-lg border border-amber-500/40 bg-amber-500/15 px-2 py-1 text-[11px] font-bold text-amber-700 dark:text-amber-300 shrink-0 animate-pulse"
+                title="Modo Sin Conexión activo. Las ventas se procesan y guardan localmente."
+              >
+                <span>🟡 Modo Offline</span>
+              </div>
+            )}
+
             {/* Live Rate Pill */}
             <button
               onClick={() => pos.setModal("bcv")}

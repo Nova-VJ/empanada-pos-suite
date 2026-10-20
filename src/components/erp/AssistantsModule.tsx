@@ -138,7 +138,7 @@ export function AssistantsModule() {
   const [waSimMessages, setWaSimMessages] = useState<Array<{ from: "user" | "bot"; text: string; time: string }>>([
     {
       from: "bot",
-      text: "👋 ¡Hola! Soy el Asistente NovaSystem de Dr. Empanadas C.A. 🥟\nPuedes consultarme en cualquier momento sobre ventas en vivo, stock de insumos, freidoras o tasa BCV.",
+      text: "👋 ¡Hola! Soy el Asistente NovaStock de Dr. Empanadas C.A. 🥟\nPuedes consultarme en cualquier momento sobre ventas en vivo, stock de insumos, freidoras o tasa BCV.",
       time: "08:00 AM",
     },
   ]);
@@ -658,7 +658,7 @@ export function AssistantsModule() {
                       ¿Cómo funciona el Asistente por WhatsApp de StockAI?
                     </p>
                     <p className="leading-relaxed">
-                      StockAI permite a los dueños de negocios vincular su número móvil para consultar en lenguaje natural su inventario, pedidos y compras. En NovaSystem lo hemos integrado y potenciado con la realidad venezolana: cálculo bimoneda en tiempo real (Bs./USD), normativa fiscal SENIAT, KDS de freidoras y semáforo de punto de reorden inteligente.
+                      StockAI permite a los dueños de negocios vincular su número móvil para consultar en lenguaje natural su inventario, pedidos y compras. En NovaStock lo hemos integrado y potenciado con la realidad venezolana: cálculo bimoneda en tiempo real (Bs./USD), normativa fiscal SENIAT, KDS de freidoras y semáforo de punto de reorden inteligente.
                     </p>
                   </div>
 
@@ -826,12 +826,12 @@ export function AssistantsModule() {
                         WA
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-foreground">Bot Oficial NovaSystem</p>
+                        <p className="text-xs font-bold text-foreground">Bot Oficial NovaStock</p>
                         <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">En línea 24/7 • Respuestas instantáneas</p>
                       </div>
                     </div>
                     <a
-                      href={`https://wa.me/584128765432?text=${encodeURIComponent("Hola NovaSystem, resumen de hoy")}`}
+                      href={`https://wa.me/584128765432?text=${encodeURIComponent("Hola NovaStock, resumen de hoy")}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 text-[11px] font-semibold transition shadow-2xs"
@@ -881,7 +881,7 @@ export function AssistantsModule() {
                     {waSimLoading && (
                       <div className="mr-auto bg-slate-900 border border-slate-800 rounded-2xl p-2.5 text-xs text-muted-foreground flex items-center gap-2">
                         <RefreshCw className="h-3.5 w-3.5 animate-spin text-emerald-500" />
-                        <span>NovaSystem escribiendo en WhatsApp…</span>
+                        <span>NovaStock escribiendo en WhatsApp…</span>
                       </div>
                     )}
                   </div>
