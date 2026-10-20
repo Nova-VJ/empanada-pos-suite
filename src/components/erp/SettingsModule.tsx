@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Building2, FileText, Globe, Percent, Printer, Save, Users, Bell, MessageSquare, Smartphone, CheckCircle2, Send, Share2, Volume2 } from "lucide-react";
+import { Building2, FileText, Globe, Percent, Printer, Save, Users, Bell, MessageSquare, Smartphone, CheckCircle2, Send, Share2, Volume2, Download, UploadCloud, RefreshCw, Database } from "lucide-react";
 import { openWhatsApp, normalizeWhatsAppPhone } from "@/lib/whatsapp";
 import { playCashChime } from "@/services/sound";
 import { toast } from "sonner";
@@ -10,7 +10,7 @@ import { UsersManagement } from "./UsersManagement";
 export function SettingsModule() {
   const pos = usePos();
   const { companySettings, fiscal, rate } = pos;
-  const [tab, setTab] = useState<"company" | "tax" | "series" | "printer" | "users" | "ecommerce" | "whatsapp">("company");
+  const [tab, setTab] = useState<"company" | "tax" | "series" | "printer" | "users" | "ecommerce" | "whatsapp" | "backup">("company");
   const [simMessage, setSimMessage] = useState<string>("order");
   const [testPhone, setTestPhone] = useState(form.ownerPhone || form.phone || "0412-1234567");
   const [notifyOnPhone, setNotifyOnPhone] = useState(form.notifyOrdersOnPhone ?? true);
@@ -51,6 +51,7 @@ export function SettingsModule() {
           { id: "users", label: "Usuarios y Roles", icon: Users },
           { id: "ecommerce", label: "Delivery & Webhooks", icon: Globe },
           { id: "whatsapp", label: "WhatsApp & Notificaciones al Teléfono", icon: Smartphone },
+          { id: "backup", label: "Copias de Seguridad (Backup & Restaurar)", icon: Download },
         ].map((t) => (
           <button
             key={t.id}
@@ -668,6 +669,151 @@ export function SettingsModule() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {tab === "backup" && (
+        <div className="space-y-6 max-w-4xl animate-in fade-in-50">
+          <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-card via-card to-primary/5 p-5 shadow-xs space-y-2">
+            <div className="flex items-center gap-2.5">
+              <span className="text-2xl">💾</span>
+              <div>
+                <h3 className="text-base font-bold text-foreground">
+                  Centro de Copias de Seguridad (Backup & Restauración)
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Protege todo tu trabajo: productos, precios, recetas, clientes, deudores, proveedores y configuración. Descarga un archivo de respaldo o restaura uno anterior con un solo clic.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* Tarjeta 1: Descargar Backup */}
+            <div className="rounded-2xl border border-border bg-card p-5 space-y-3.5 shadow-xs flex flex-col justify-between">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold">
+                    <Download className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">
+                      Descargar Copia de Seguridad
+                    </h4>
+                    <span className="text-[10px] text-muted-foreground">Archivo .JSON completo</span>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Genera y descarga en tu computadora o teléfono un archivo con el 100% de tus datos actuales ({pos.products.length} productos, {pos.categories.length} categorías, {pos.suppliers.length} proveedores y {pos.customers.length} clientes).
+                </p>
+              </div>
+
+              <div className="pt-3 border-t border-border">
+                <button
+                  type="button"
+                  onClick={() => {
+                    pos.downloadBackup();
+                    toast.success("✅ Copia de seguridad descargada exitosamente", {
+                      description: "Guarda este archivo en tu pendrive, correo o Google Drive.",
+                    });
+                  }}
+                  className="w-full rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground py-2.5 text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-xs active:scale-95"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>Descargar Backup Ahora (.json)</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Tarjeta 2: Subir y Restaurar Backup */}
+            <div className="rounded-2xl border border-border bg-card p-5 space-y-3.5 shadow-xs flex flex-col justify-between">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold">
+                    <UploadCloud className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">
+                      Restaurar desde Archivo
+                    </h4>
+                    <span className="text-[10px] text-muted-foreground">Recuperar datos de archivo previo</span>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Si cambias de computadora, reinstalas el navegador o deseas recuperar productos que tenías antes, selecciona tu archivo .json descargado.
+                </p>
+              </div>
+
+              <div className="pt-3 border-t border-border">
+                <label className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-xs active:scale-95 text-center">
+                  <UploadCloud className="h-4 w-4" />
+                  <span>Seleccionar Archivo de Respaldo (.json)</span>
+                  <input
+                    type="file"
+                    accept=".json"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = (event) => {
+                        const content = event.target?.result as string;
+                        if (content) {
+                          const res = pos.importBackup(content);
+                          if (res.success) {
+                            toast.success("🎉 " + res.message);
+                          } else {
+                            toast.error("❌ " + res.message);
+                          }
+                        }
+                      };
+                      reader.readAsText(file);
+                    }}
+                  />
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* Tarjeta 3: Respaldo Automático Sombra */}
+          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 sm:p-5 space-y-3">
+            <div className="flex items-start justify-between gap-3 flex-wrap">
+              <div className="flex items-start gap-3">
+                <span className="text-xl">🔄</span>
+                <div>
+                  <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">
+                    Copia Sombra Automática en este Dispositivo
+                  </h4>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                    El sistema guarda automáticamente una copia de respaldo oculta en la memoria interna cada vez que creas o editas productos, precios o proveedores. Si en algún momento sientes que algo se borró, pulsa el botón para restaurar la copia sombra.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const autoBackup =
+                    localStorage.getItem("novasystem-backup-auto") ||
+                    localStorage.getItem("novasystem-drempanadas-v2") ||
+                    localStorage.getItem("novasystem-drempanadas-v1");
+                  if (autoBackup) {
+                    const res = pos.importBackup(autoBackup);
+                    if (res.success) {
+                      toast.success("✅ Restaurado desde la copia sombra automática con éxito");
+                    } else {
+                      toast.error("Error al procesar copia sombra: " + res.message);
+                    }
+                  } else {
+                    toast.info("No se encontró copia sombra previa en este navegador");
+                  }
+                }}
+                className="rounded-xl border border-amber-500/40 bg-amber-500/15 hover:bg-amber-500/25 text-amber-800 dark:text-amber-200 px-4 py-2 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                <span>Restaurar Copia Sombra Automática</span>
+              </button>
             </div>
           </div>
         </div>

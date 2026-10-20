@@ -167,3 +167,73 @@ Por favor, requerimos cotización actualizada y disponibilidad de entrega para l
 Quedamos atentos a sus precios vigentes al mayor y condiciones de pago.
 ¡Muchas gracias!`;
 }
+
+/**
+ * Plantilla oficial para solicitar datos al cliente que escribe por WhatsApp
+ */
+export function buildCustomerDeliveryRequestTemplate(): string {
+  return `Hola, hablas con Dr. Empanadas Delivery, me confirmas
+
+Nombre:
+Dirección GPS:
+Pedido:
+
+Estamos atentos!!!`;
+}
+
+/**
+ * Construye la comanda formal para el grupo de motorizados de WhatsApp
+ */
+export function buildRidersGroupDeliveryMessage(delivery: {
+  orderNumber: number;
+  clientName: string;
+  clientPhone: string;
+  addressGps: string;
+  mapsUrl?: string;
+  itemsText: string;
+  totalUsd: number;
+  totalBs: number;
+  paymentMethod: string;
+  paymentReference?: string;
+  riderName: string;
+}): string {
+  return `🛵 *NUEVO DELIVERY - DR. EMPANADAS*
+📋 *Comanda #${delivery.orderNumber}*
+━━━━━━━━━━━━━━━━━━━━
+👤 *Cliente:* ${delivery.clientName}
+📱 *Teléfono:* ${delivery.clientPhone}
+📍 *Dirección GPS:* ${delivery.addressGps}
+${delivery.mapsUrl ? `🗺️ *Abrir en Google Maps:* ${delivery.mapsUrl}\n` : ""}━━━━━━━━━━━━━━━━━━━━
+📦 *PEDIDO A ENTREGAR:*
+${delivery.itemsText}
+━━━━━━━━━━━━━━━━━━━━
+💵 *TOTAL COBRADO:* $${delivery.totalUsd.toFixed(2)} USD (Bs. ${delivery.totalBs.toFixed(2)})
+💳 *Forma de Pago:* ${delivery.paymentMethod} ${delivery.paymentReference ? `(Ref: ${delivery.paymentReference})` : ""}
+🛵 *Motorizado Asignado:* *${delivery.riderName}*
+🚨 *¡MOTORIZADO EN CAMINO!*`;
+}
+
+/**
+ * Notificación automática a la cajera ("Va vía el delivery")
+ */
+export function buildCashierNotificationMessage(delivery: {
+  orderNumber: number;
+  clientName: string;
+  riderName: string;
+}): string {
+  return `🛵 *¡Va vía el delivery!*
+El pedido #${delivery.orderNumber} para *${delivery.clientName}* ya salió en camino con *${delivery.riderName}*.`;
+}
+
+/**
+ * Confirmación de entrega para el cliente y chat gerencial
+ */
+export function buildDeliveredCustomerMessage(delivery: {
+  orderNumber: number;
+  clientName: string;
+  riderName: string;
+}): string {
+  return `🎉 *¡PEDIDO ENTREGADO CON ÉXITO!*
+Hola *${delivery.clientName}*, tu comanda #${delivery.orderNumber} fue entregada por nuestro motorizado *${delivery.riderName}*.
+¡Buen provecho y un millón de gracias por preferir Dr. Empanadas! 🥟✨`;
+}

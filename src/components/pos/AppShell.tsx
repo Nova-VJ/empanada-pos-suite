@@ -26,6 +26,9 @@ import {
   Menu,
   X,
   ShoppingBag,
+  Bike,
+  Monitor,
+  Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import { usePos } from "@/context/PosContext";
@@ -56,6 +59,7 @@ const MAIN_NAV: NavItem[] = [
   { id: "dashboard", title: "Dashboard", icon: LayoutDashboard, color: "text-module-sales", bgColor: "bg-module-sales-light" },
   { id: "pos", title: "TPV / Ventas", icon: ShoppingCart, color: "text-module-sales", bgColor: "bg-module-sales-light", shortcut: "F1" },
   { id: "sales", title: "Ventas Realizadas", icon: ShoppingBag, color: "text-emerald-500", bgColor: "bg-emerald-500/10", shortcut: "F3" },
+  { id: "delivery", title: "Delivery WhatsApp", icon: Bike, color: "text-amber-500", bgColor: "bg-amber-500/10", shortcut: "F4" },
   { id: "kds", title: "Cocina KDS", icon: Flame, color: "text-module-inventory", bgColor: "bg-module-inventory-light", shortcut: "F2" },
   { id: "products", title: "Productos", icon: Package, color: "text-module-products", bgColor: "bg-module-products-light" },
   { id: "inventory", title: "Inventario", icon: Warehouse, color: "text-module-inventory", bgColor: "bg-module-inventory-light" },
@@ -81,6 +85,7 @@ const MODULE_TITLES: Record<ModuleId, string> = {
   dashboard: "Dashboard Ejecutivo",
   pos: "Terminal TPV / Ventas",
   sales: "Ventas Realizadas & Historial de Pedidos",
+  delivery: "Delivery WhatsApp & Despacho a Motorizados",
   kds: "Cocina KDS & Freidoras",
   products: "Catálogo de Productos",
   inventory: "Inventario & Kardex",
@@ -454,6 +459,15 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 pl-1.5 sm:pl-2 border-l border-border/60">
               {/* PWA Install Button */}
               <PwaInstallButton />
+
+              {/* TeamViewer & Remote Support Button */}
+              <button
+                onClick={() => pos.setModal("support")}
+                className="h-8 w-8 rounded-lg border border-border bg-secondary/60 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition shrink-0 cursor-pointer"
+                title="TeamViewer / Control Remoto a Distancia y Soporte Técnico"
+              >
+                <Monitor className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              </button>
 
               {/* Theme Toggle (Light / Dark) */}
               <button

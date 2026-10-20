@@ -30,6 +30,7 @@ import type {
   CompanySettings,
   CustomerInfo,
   CustomerRecord,
+  DeliveryOrder,
   ExpenseRecord,
   FiscalConfig,
   InventoryMovement,
@@ -81,6 +82,7 @@ interface PosState {
   journalEntries: JournalEntry[];
   companySettings: CompanySettings;
   categories: string[];
+  deliveries: DeliveryOrder[];
   lastMobileSync?: number;
 }
 
@@ -107,6 +109,46 @@ const initialRatesData: MultiSourceRatesData = {
     promedio: { id: "promedio", name: "Promedio General", symbol: "USD", price: 941.4, source: "monitordolarve", sourceUrl: "https://monitordolarve.com/", updatedAt: "Hoy" },
   },
 };
+
+const initialDeliveries: DeliveryOrder[] = [
+  {
+    id: "del-101",
+    orderNumber: 101,
+    clientName: "Alfonzo Bolaños",
+    clientPhone: "+58 412-1499838",
+    addressGps: "6FF3+MJ4, Avenida Dr. Francisco Montoya, Turmero 2107, Aragua",
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=6FF3%2BMJ4%2C+Avenida+Dr.+Francisco+Montoya%2C+Turmero+2107%2C+Aragua",
+    itemsText: "2x Empanada Mechada, 1x Empanada Queso Llanero, 1x Malta Polar",
+    totalUsd: 6.50,
+    totalBs: 5720.00,
+    paymentMethod: "Pago Móvil Banesco",
+    paymentReference: "7541",
+    riderName: "Ezequiel",
+    status: "en_camino",
+    createdAt: Date.now() - 25 * 60000,
+    dispatchedAt: Date.now() - 15 * 60000,
+    notes: "Entregar en portón negro, timbre derecho.",
+  },
+  {
+    id: "del-100",
+    orderNumber: 100,
+    clientName: "Sra. Maryorit (San Jacinto)",
+    clientPhone: "+58 414-4969484",
+    addressGps: "Urb. San Jacinto, Sector 2, Manzana D, Casa 14, Maracay",
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=San+Jacinto+Maracay+Sector+2",
+    itemsText: "4x Empanada Pollo con Queso, 2x Jugo Natural Naranja",
+    totalUsd: 10.80,
+    totalBs: 9504.00,
+    paymentMethod: "Efectivo USD $40 (Vuelto entregado $29.20)",
+    paymentReference: "Efectivo",
+    riderName: "Alfonzo Bolaños",
+    status: "entregado",
+    createdAt: Date.now() - 75 * 60000,
+    dispatchedAt: Date.now() - 55 * 60000,
+    deliveredAt: Date.now() - 30 * 60000,
+    notes: "Ya le dio los $40 a la señora Maryorit. Entregado con éxito.",
+  },
+];
 
 const initial = (): PosState => ({
   theme: "light",
@@ -153,6 +195,7 @@ const initial = (): PosState => ({
   journalEntries: [],
   companySettings: defaultCompanySettings,
   categories: ["Empanadas", "Bebidas", "Combos", "Cafetería", "Adicionales", "Promociones"],
+  deliveries: initialDeliveries,
   lastMobileSync: Date.now(),
 });
 
@@ -223,6 +266,15 @@ interface Ctx extends PosState {
   updateCompanySettings: (c: Partial<CompanySettings>) => void;
   clearDemoOrders: () => void;
   resetProductionData: () => void;
+  // Delivery orders & Dispatch
+  deliveries: DeliveryOrder[];
+  createDelivery: (d: Omit<DeliveryOrder, "id" | "orderNumber" | "createdAt" | "status">) => DeliveryOrder;
+  updateDelivery: (id: string, patch: Partial<DeliveryOrder>) => void;
+  deleteDelivery: (id: string) => void;
+  // Backup & Restore
+  exportBackup: () => string;
+  downloadBackup: (filename?: string) => void;
+  importBackup: (jsonString: string) => { success: boolean; message: string; itemCount?: number };
 }
 
 const PosCtx = createContext<Ctx | null>(null);
@@ -311,10 +363,58 @@ export function PosProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(KEY);
+      let raw = localStorage.getItem(KEY);
+      let parsedFromOldKey: any = null;
+
+      // Buscar si el usuario tenía productos personalizados en claves anteriores (novasystem-drempanadas-v2, v1, auto-backup)
+      const candidateKeys = [
+        "novasystem-drempanadas-v2",
+        "novasystem-drempanadas-v1",
+        "novasystem-backup-auto",
+        "drempanadas-pos-state",
+      ];
+      for (const k of candidateKeys) {
+        const val = localStorage.getItem(k);
+        if (val) {
+          try {
+            const p = JSON.parse(val);
+            if (p && Array.isArray(p.products) && p.products.length > 0) {
+              parsedFromOldKey = p;
+              break;
+            }
+          } catch {
+            /* ignore */
+          }
+        }
+      }
+
       if (raw) {
         const parsed = JSON.parse(raw);
+        // Si el estado guardado tiene los productos iniciales pero la versión previa tenía productos creados por el usuario, recuperarlos
+        if (parsedFromOldKey && Array.isArray(parsedFromOldKey.products)) {
+          const hasCustom = parsedFromOldKey.products.some(
+            (op: any) =>
+              !mockProducts.find((mp) => mp.id === op.id) ||
+              mockProducts.find((mp) => mp.id === op.id && (mp.priceUsd !== op.priceUsd || mp.name !== op.name || mp.costUsd !== op.costUsd))
+          );
+          if (hasCustom && (!parsed.products || parsed.products.length <= mockProducts.length)) {
+            parsed.products = parsedFromOldKey.products;
+            if (parsedFromOldKey.categories) parsed.categories = parsedFromOldKey.categories;
+            if (parsedFromOldKey.customers && parsedFromOldKey.customers.length > 0) parsed.customers = parsedFromOldKey.customers;
+            if (parsedFromOldKey.suppliers && parsedFromOldKey.suppliers.length > 0) parsed.suppliers = parsedFromOldKey.suppliers;
+          }
+        }
         setS({ ...initial(), ...parsed });
+      } else if (parsedFromOldKey) {
+        // Migración transparente desde clave previa
+        setS({
+          ...initial(),
+          products: parsedFromOldKey.products || mockProducts,
+          categories: parsedFromOldKey.categories || initial().categories,
+          customers: parsedFromOldKey.customers || [],
+          suppliers: parsedFromOldKey.suppliers || initial().suppliers,
+          companySettings: { ...initial().companySettings, ...parsedFromOldKey.companySettings },
+        });
       }
     } catch {
       /* ignore */
@@ -326,7 +426,27 @@ export function PosProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (hydrated) localStorage.setItem(KEY, JSON.stringify(s));
+    if (hydrated) {
+      localStorage.setItem(KEY, JSON.stringify(s));
+      try {
+        localStorage.setItem(
+          "novasystem-backup-auto",
+          JSON.stringify({
+            timestamp: Date.now(),
+            products: s.products,
+            categories: s.categories,
+            customers: s.customers,
+            suppliers: s.suppliers,
+            companySettings: s.companySettings,
+            orders: s.orders,
+            shiftHistory: s.shiftHistory,
+            deliveries: s.deliveries,
+          })
+        );
+      } catch {
+        /* ignore */
+      }
+    }
   }, [s, hydrated]);
 
   useEffect(() => {
@@ -1082,6 +1202,130 @@ export function PosProvider({ children }: { children: ReactNode }) {
         }
         return fresh;
       });
+    },
+    // Deliveries
+    deliveries: s.deliveries,
+    createDelivery: (d) => {
+      const nextNum = Math.max(100, ...s.deliveries.map((x) => x.orderNumber)) + 1;
+      const rec: DeliveryOrder = {
+        ...d,
+        id: `del-${Date.now()}`,
+        orderNumber: nextNum,
+        status: "pendiente",
+        createdAt: Date.now(),
+      };
+      setS((x) => ({ ...x, deliveries: [rec, ...x.deliveries] }));
+      return rec;
+    },
+    updateDelivery: (id, patch) => {
+      setS((x) => ({
+        ...x,
+        deliveries: x.deliveries.map((d) => (d.id === id ? { ...d, ...patch } : d)),
+      }));
+    },
+    deleteDelivery: (id) => {
+      setS((x) => ({
+        ...x,
+        deliveries: x.deliveries.filter((d) => d.id !== id),
+      }));
+    },
+    // Backup & Restore
+    exportBackup: () => {
+      const backupData = {
+        app: "NovaStock - Dr. Empanadas",
+        version: "2.5.0",
+        exportedAt: new Date().toISOString(),
+        timestamp: Date.now(),
+        products: s.products,
+        categories: s.categories,
+        customers: s.customers,
+        suppliers: s.suppliers,
+        companySettings: s.companySettings,
+        shift: s.shift,
+        shiftHistory: s.shiftHistory,
+        orders: s.orders,
+        cashMovements: s.cashMovements,
+        bankAccounts: s.bankAccounts,
+        bankMovements: s.bankMovements,
+        expenses: s.expenses,
+        accountingAccounts: s.accountingAccounts,
+        journalEntries: s.journalEntries,
+        deliveries: s.deliveries,
+      };
+      return JSON.stringify(backupData, null, 2);
+    },
+    downloadBackup: (filename) => {
+      const backupData = {
+        app: "NovaStock - Dr. Empanadas",
+        version: "2.5.0",
+        exportedAt: new Date().toISOString(),
+        timestamp: Date.now(),
+        products: s.products,
+        categories: s.categories,
+        customers: s.customers,
+        suppliers: s.suppliers,
+        companySettings: s.companySettings,
+        shift: s.shift,
+        shiftHistory: s.shiftHistory,
+        orders: s.orders,
+        cashMovements: s.cashMovements,
+        bankAccounts: s.bankAccounts,
+        bankMovements: s.bankMovements,
+        expenses: s.expenses,
+        accountingAccounts: s.accountingAccounts,
+        journalEntries: s.journalEntries,
+        deliveries: s.deliveries,
+      };
+      const json = JSON.stringify(backupData, null, 2);
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const dateStr = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = filename || `backup-dr-empanadas-${dateStr}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    },
+    importBackup: (jsonString) => {
+      try {
+        const parsed = JSON.parse(jsonString);
+        if (!parsed || (!parsed.products && !parsed.companySettings)) {
+          return { success: false, message: "El archivo no contiene una copia de seguridad válida de NovaStock." };
+        }
+        setS((prev) => {
+          const updated: PosState = {
+            ...prev,
+            products: Array.isArray(parsed.products) ? parsed.products : prev.products,
+            categories: Array.isArray(parsed.categories) ? parsed.categories : prev.categories,
+            customers: Array.isArray(parsed.customers) ? parsed.customers : prev.customers,
+            suppliers: Array.isArray(parsed.suppliers) ? parsed.suppliers : prev.suppliers,
+            companySettings: parsed.companySettings ? { ...prev.companySettings, ...parsed.companySettings } : prev.companySettings,
+            orders: Array.isArray(parsed.orders) ? parsed.orders : prev.orders,
+            shiftHistory: Array.isArray(parsed.shiftHistory) ? parsed.shiftHistory : prev.shiftHistory,
+            cashMovements: Array.isArray(parsed.cashMovements) ? parsed.cashMovements : prev.cashMovements,
+            bankAccounts: Array.isArray(parsed.bankAccounts) ? parsed.bankAccounts : prev.bankAccounts,
+            bankMovements: Array.isArray(parsed.bankMovements) ? parsed.bankMovements : prev.bankMovements,
+            expenses: Array.isArray(parsed.expenses) ? parsed.expenses : prev.expenses,
+            deliveries: Array.isArray(parsed.deliveries) ? parsed.deliveries : prev.deliveries,
+          };
+          try {
+            localStorage.setItem(KEY, JSON.stringify(updated));
+            localStorage.setItem("novasystem-backup-auto", JSON.stringify(updated));
+          } catch {
+            /* ignore */
+          }
+          return updated;
+        });
+        return {
+          success: true,
+          message: `Backup restaurado con éxito. Se recuperaron ${parsed.products?.length ?? 0} productos del menú, precios y configuraciones.`,
+          itemCount: (parsed.products?.length ?? 0) + (parsed.customers?.length ?? 0),
+        };
+      } catch (e: any) {
+        return { success: false, message: `Error al leer archivo JSON: ${e?.message || "Formato no válido"}` };
+      }
     },
   };
 

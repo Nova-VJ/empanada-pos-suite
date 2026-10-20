@@ -4,6 +4,7 @@ export type ModuleId =
   | "dashboard"
   | "pos"
   | "sales"
+  | "delivery"
   | "kds"
   | "products"
   | "inventory"
@@ -17,6 +18,27 @@ export type ModuleId =
   | "assistants"
   | "recommendations"
   | "settings";
+
+export interface DeliveryOrder {
+  id: string;
+  orderNumber: number;
+  clientName: string;
+  clientPhone: string;
+  addressGps: string;
+  mapsUrl?: string;
+  itemsText: string;
+  totalUsd: number;
+  totalBs: number;
+  paymentMethod: string;
+  paymentReference?: string;
+  paymentCaptureUrl?: string;
+  riderName: string;
+  status: "pendiente" | "en_camino" | "entregado" | "cancelado";
+  createdAt: number;
+  dispatchedAt?: number;
+  deliveredAt?: number;
+  notes?: string;
+}
 
 export interface CustomerInfo {
   docType: "V" | "J" | "E" | "G";
@@ -266,6 +288,10 @@ export interface CompanySettings {
   ownerPhone?: string;
   notifyOrdersOnPhone?: boolean;
   customCategories?: string[];
+  deliveryGroupPhone?: string;
+  deliveryGroupName?: string;
+  cashierPhone?: string;
+  activeRiders?: string[];
 }
 
 export interface CartItem {

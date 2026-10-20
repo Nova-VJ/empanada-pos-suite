@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Wrench, RefreshCw, Monitor, Wifi, CheckCircle2, Copy, AlertTriangle, ShieldCheck } from "lucide-react";
+import { Wrench, RefreshCw, Monitor, Wifi, CheckCircle2, Copy, AlertTriangle, ShieldCheck, Download, Send, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { usePos } from "@/context/PosContext";
 import { Modal, btnGhost, btnPrimary, inputCls } from "./Modal";
+import { openWhatsApp } from "@/lib/whatsapp";
 
 export function SupportMenuModal() {
   const pos = usePos();
@@ -155,14 +156,44 @@ export function SupportMenuModal() {
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/60">
               <button
-                onClick={launchTeamViewer}
-                className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 font-bold text-white shadow-xs hover:bg-blue-700 transition"
+                type="button"
+                onClick={() => pos.downloadBackup()}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary px-3.5 py-2 text-xs font-bold transition cursor-pointer"
+                title="Descargar una copia de seguridad completa con todos los productos y datos"
               >
-                <Monitor className="h-4 w-4" />
-                Abrir TeamViewer en esta PC
+                <Download className="h-4 w-4" />
+                <span>Descargar Backup (JSON)</span>
               </button>
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const msg = `🖥️ *ACCESO DE CONTROL REMOTO (TEAMVIEWER)*\n🏪 ${pos.companySettings.name}\n🔑 ID: *${teamViewerId}*\n🔒 Clave: *${remotePassword}*\n\nPor favor conéctate para ayudarme a configurar el sistema.`;
+                    openWhatsApp({
+                      phone: pos.companySettings.ownerPhone || "0412-1234567",
+                      message: msg,
+                    });
+                    toast.success("Enviando ID y contraseña por WhatsApp...");
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 text-xs font-bold transition cursor-pointer shadow-2xs"
+                  title="Enviar datos de TeamViewer por WhatsApp al dueño o técnico"
+                >
+                  <Send className="h-3.5 w-3.5" />
+                  <span>Enviar al Dueño (WhatsApp)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={launchTeamViewer}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-blue-700 transition cursor-pointer"
+                >
+                  <Monitor className="h-4 w-4" />
+                  <span>Abrir TeamViewer</span>
+                </button>
+              </div>
             </div>
           </div>
         )}
