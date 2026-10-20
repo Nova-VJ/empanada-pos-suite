@@ -117,14 +117,14 @@ const initial = (): PosState => ({
   orderType: "takeout",
   discount: 0,
   rate: 876.8,
-  orders: mockSeededOrders,
+  orders: [],
   shift: {
-    cashier: "María P.",
+    cashier: "Cajero Principal",
     register: "Caja 01",
-    openedAt: Date.now() - (3 * 60 + 24) * 60000,
-    openingBs: 1825,
-    openingUsd: 50,
-    isOpen: true,
+    openedAt: Date.now(),
+    openingBs: 0,
+    openingUsd: 0,
+    isOpen: false,
   },
   shiftHistory: [],
   fiscal: {
@@ -133,29 +133,30 @@ const initial = (): PosState => ({
     baud: 9600,
     model: "The Factory HKA80",
     connected: true,
-    lastInvoice: 1041,
-    lastZ: 318,
+    lastInvoice: 0,
+    lastZ: 0,
     paperOk: true,
     memoryOk: true,
   },
-  nextOrder: 1042,
-  zCounter: 319,
-  customers: mockCustomers,
-  inventoryMovements: mockInventoryMovements,
+  nextOrder: 1,
+  zCounter: 1,
+  customers: [],
+  inventoryMovements: [],
   suppliers: mockSuppliers,
-  purchaseOrders: mockPurchaseOrders,
-  supplierInvoices: mockSupplierInvoices,
-  cashMovements: mockCashMovements,
+  purchaseOrders: [],
+  supplierInvoices: [],
+  cashMovements: [],
   bankAccounts: mockBankAccounts,
-  bankMovements: mockBankMovements,
-  expenses: mockExpenses,
+  bankMovements: [],
+  expenses: [],
   accountingAccounts: mockAccountingAccounts,
-  journalEntries: mockJournalEntries,
+  journalEntries: [],
   companySettings: defaultCompanySettings,
-  lastMobileSync: Date.now() - 12 * 60000,
+  categories: ["Empanadas", "Bebidas", "Combos", "Cafetería", "Adicionales", "Promociones"],
+  lastMobileSync: Date.now(),
 });
 
-const KEY = "novasystem-drempanadas-v2";
+const KEY = "novasystem-drempanadas-prod-v1";
 
 interface Ctx extends PosState {
   hydrated: boolean;
@@ -221,6 +222,7 @@ interface Ctx extends PosState {
   unlockTerminal: () => void;
   updateCompanySettings: (c: Partial<CompanySettings>) => void;
   clearDemoOrders: () => void;
+  resetProductionData: () => void;
 }
 
 const PosCtx = createContext<Ctx | null>(null);
@@ -1042,6 +1044,45 @@ export function PosProvider({ children }: { children: ReactNode }) {
           zigtfTax: 0,
         },
       })),
+    resetProductionData: () => {
+      setS((x) => {
+        const fresh: PosState = {
+          ...x,
+          orders: [],
+          cart: [],
+          shift: {
+            cashier: "Cajero Principal",
+            register: "Caja 01",
+            openedAt: Date.now(),
+            openingBs: 0,
+            openingUsd: 0,
+            isOpen: false,
+          },
+          shiftHistory: [],
+          nextOrder: 1,
+          zCounter: 1,
+          customers: [],
+          inventoryMovements: [],
+          purchaseOrders: [],
+          supplierInvoices: [],
+          cashMovements: [],
+          bankMovements: [],
+          expenses: [],
+          journalEntries: [],
+          fiscal: {
+            ...x.fiscal,
+            lastInvoice: 0,
+            lastZ: 0,
+          },
+        };
+        try {
+          localStorage.setItem(KEY, JSON.stringify(fresh));
+        } catch {
+          /* ignore */
+        }
+        return fresh;
+      });
+    },
   };
 
   return <PosCtx.Provider value={value}>{children}</PosCtx.Provider>;

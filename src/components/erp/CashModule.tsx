@@ -88,13 +88,23 @@ export function CashModule() {
             <Plus className="h-4 w-4" />
             Registrar movimiento
           </button>
-          <button
-            onClick={() => pos.setModal("shift")}
-            className="inline-flex items-center gap-2 rounded-xl bg-module-cash px-4 py-2 text-xs font-semibold text-white shadow-xs hover:opacity-90 transition"
-          >
-            <Lock className="h-4 w-4" />
-            Arqueo Ciego · Corte X / Z
-          </button>
+          {shift.isOpen ? (
+            <button
+              onClick={() => pos.setModal("shift")}
+              className="inline-flex items-center gap-2 rounded-xl bg-rose-600 hover:bg-rose-700 px-4 py-2 text-xs font-bold text-white shadow-xs transition cursor-pointer"
+            >
+              <Lock className="h-4 w-4" />
+              Cerrar Caja (Cierre Z) / Arqueo
+            </button>
+          ) : (
+            <button
+              onClick={() => pos.setModal("shift")}
+              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-4 py-2 text-xs font-bold text-white shadow-xs transition cursor-pointer animate-pulse"
+            >
+              <Sun className="h-4 w-4" />
+              Abrir Caja (Fondo Inicial)
+            </button>
+          )}
         </div>
       </div>
 

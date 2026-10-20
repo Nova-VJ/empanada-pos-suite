@@ -433,19 +433,19 @@ export function AppShell({ children }: { children: ReactNode }) {
                   </span>
                   <button
                     onClick={() => pos.setModal("shift")}
-                    className="inline-flex items-center gap-1 rounded-md bg-card border border-border px-1.5 py-0.5 text-[11px] font-semibold text-foreground hover:bg-destructive hover:text-destructive-foreground hover:border-destructive transition cursor-pointer"
-                    title="Corte X / Cierre Z"
+                    className="inline-flex items-center gap-1 rounded-md bg-rose-500/15 border border-rose-500/30 text-rose-600 dark:text-rose-400 px-2 py-0.5 text-[11px] font-bold hover:bg-rose-500 hover:text-white transition cursor-pointer"
+                    title="Cerrar la Caja del Día (Cierre Z) / Arqueo"
                   >
-                    <Lock className="h-2.5 w-2.5" /> Arqueo / Cierre
+                    <Lock className="h-2.5 w-2.5" /> Cerrar Caja (Z)
                   </button>
                 </>
               ) : (
                 <button
                   onClick={() => pos.setModal("shift")}
                   className="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 text-white px-2.5 py-1 text-[11px] font-bold shadow-xs hover:bg-emerald-700 transition cursor-pointer animate-pulse"
-                  title="Abrir la caja del día con monto inicial"
+                  title="Abrir la caja del día ingresando el fondo en Bolívares"
                 >
-                  <Sun className="h-3.5 w-3.5" /> Abrir Caja
+                  <Sun className="h-3.5 w-3.5" /> Abrir Caja (Fondo Bs.)
                 </button>
               )}
             </div>

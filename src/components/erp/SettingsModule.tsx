@@ -146,6 +146,40 @@ export function SettingsModule() {
               </button>
             </div>
           </div>
+
+          {/* Tarjeta de Gestión de Datos de Producción / Modo Real */}
+          <div className="mt-6 pt-6 border-t border-border">
+            <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <span className="text-xl">🧹</span>
+                <div>
+                  <h4 className="text-sm font-bold text-foreground">
+                    Modo Producción Real & Limpieza de Datos
+                  </h4>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                    El sistema está configurado para operar en <strong>modo 100% real</strong>. Si deseas reiniciar todas las ventas de prueba, turnos y arqueos para arrancar tu restaurante desde cero (con Ticket #1 y Caja cerrada lista para abrir con el fondo del día), pulsa este botón. Tus productos del menú y proveedores registrados se conservarán intactos.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirm("¿Estás seguro de que deseas limpiar todos los datos de prueba y comenzar en CERO modo producción real?\n\n• Se borrarán las ventas de prueba previas.\n• El contador de tickets volverá al #1.\n• La caja quedará cerrada lista para el fondo inicial en Bs.\n• Tus productos y proveedores NO se borrarán.")) {
+                      pos.resetProductionData();
+                      toast.success("✅ Base de datos reiniciada a CERO", {
+                        description: "Sistema listo para operaciones reales. Inicia el día abriendo caja.",
+                      });
+                    }
+                  }}
+                  className="rounded-xl bg-destructive hover:bg-destructive/90 text-destructive-foreground px-4 py-2 text-xs font-bold transition shadow-xs flex items-center gap-1.5 cursor-pointer"
+                >
+                  <span>🧹 Iniciar en 0 Modo Producción Real</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

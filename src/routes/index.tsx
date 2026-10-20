@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Search, Barcode, Share2, Sparkles, Sun } from "lucide-react";
+import { Search, Barcode, Share2, Sparkles, Sun, Lock } from "lucide-react";
 import { usePos } from "@/context/PosContext";
 import { CATEGORIES } from "@/data/mockProducts";
 import { ProductCard } from "@/components/pos/ProductCard";
@@ -90,6 +90,29 @@ export function PosTerminal() {
             <span className="hidden sm:inline">Publicar en Redes</span>
             <span className="sm:hidden">Redes</span>
           </button>
+
+          {/* Botón Prominente Directo de Abrir Caja / Cerrar Caja */}
+          {pos.shift.isOpen ? (
+            <button
+              onClick={() => pos.setModal("shift")}
+              className="rounded-2xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 py-3 px-3.5 sm:px-4 text-xs font-bold transition flex items-center gap-1.5 shrink-0 shadow-xs cursor-pointer active:scale-95"
+              title="Cerrar la Caja del Día (Cierre Z / Arqueo Ciego)"
+            >
+              <Lock className="h-4 w-4" />
+              <span className="hidden sm:inline">Cerrar Caja (Z)</span>
+              <span className="sm:hidden">Cerrar</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => pos.setModal("shift")}
+              className="rounded-2xl border border-emerald-500/30 bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-3.5 sm:px-4 text-xs font-bold transition flex items-center gap-1.5 shrink-0 shadow-xs cursor-pointer active:scale-95 animate-pulse"
+              title="Abrir la Caja del Día ingresando el fondo en Bolívares"
+            >
+              <Sun className="h-4 w-4" />
+              <span className="hidden sm:inline">Abrir Caja (Fondo)</span>
+              <span className="sm:hidden">Abrir</span>
+            </button>
+          )}
         </div>
 
         {/* Modern Category Pills with 3D Icons */}
