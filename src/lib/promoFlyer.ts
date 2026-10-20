@@ -5,7 +5,17 @@
  */
 import { fmtBs } from "./money";
 
-export type FlyerTheme = "noche_dorada" | "atardecer_criollo" | "mercado_fresco";
+export type FlyerTheme =
+  | "noche_dorada"
+  | "atardecer_criollo"
+  | "mercado_fresco"
+  | "halloween"
+  | "navidad"
+  | "dia_del_padre"
+  | "dia_de_la_mujer"
+  | "mega_promo"
+  | "fin_de_semana";
+
 export type FlyerFormat = "story" | "post";
 
 export interface FlyerData {
@@ -23,6 +33,10 @@ export interface FlyerData {
   rate: number;
   /** Extra text used to pick the hero image (e.g. product category). */
   heroHint?: string;
+  /** Optional custom uploaded photo (data URL / image URL) */
+  customImage?: string;
+  /** Optional manual hero icon selection */
+  heroIcon?: "empanada" | "pastelito" | "malta" | "cafe" | "trio";
 }
 
 interface Palette {
@@ -47,7 +61,7 @@ interface Palette {
 
 const PALETTES: Record<FlyerTheme, Palette> = {
   noche_dorada: {
-    label: "Noche Dorada",
+    label: "Noche Dorada (Gourmet)",
     swatch: ["#120d08", "#d9a55b"],
     ink: "#f7ecdc",
     muted: "rgba(247,236,220,.62)",
@@ -66,7 +80,7 @@ const PALETTES: Record<FlyerTheme, Palette> = {
     frame: "rgba(217,165,91,.55)",
   },
   atardecer_criollo: {
-    label: "Atardecer Criollo",
+    label: "Atardecer Criollo (Naranja)",
     swatch: ["#ea580c", "#fde047"],
     ink: "#ffffff",
     muted: "rgba(255,247,237,.85)",
@@ -84,7 +98,7 @@ const PALETTES: Record<FlyerTheme, Palette> = {
     ctaInk: "#9a3412",
   },
   mercado_fresco: {
-    label: "Mercado Fresco",
+    label: "Mercado Fresco (Verde)",
     swatch: ["#fbf5ea", "#1f5135"],
     ink: "#1d3a2a",
     muted: "rgba(29,58,42,.66)",
@@ -100,6 +114,118 @@ const PALETTES: Record<FlyerTheme, Palette> = {
     stickerInk: "#ffffff",
     ctaBg: "#1f7a43",
     ctaInk: "#ffffff",
+  },
+  halloween: {
+    label: "🎃 Halloween / Noche de Miedo",
+    swatch: ["#180829", "#f97316"],
+    ink: "#ffffff",
+    muted: "rgba(241,245,249,.75)",
+    accent: "#f97316",
+    accentInk: "#180829",
+    panelFill: "rgba(30,12,50,.85)",
+    panelStroke: "rgba(249,115,22,.5)",
+    panelInk: "#f3e8ff",
+    check: "#a855f7",
+    checkInk: "#ffffff",
+    price: "#fb923c",
+    stickerBg: "#f97316",
+    stickerInk: "#180829",
+    ctaBg: "#f97316",
+    ctaInk: "#180829",
+    frame: "rgba(249,115,22,.65)",
+  },
+  navidad: {
+    label: "🎄 Navidad & Fin de Año",
+    swatch: ["#881337", "#facc15"],
+    ink: "#ffffff",
+    muted: "rgba(254,242,242,.85)",
+    accent: "#facc15",
+    accentInk: "#4c0519",
+    panelFill: "rgba(255,255,255,.95)",
+    panelStroke: "rgba(250,204,21,.5)",
+    panelInk: "#881337",
+    check: "#15803d",
+    checkInk: "#ffffff",
+    price: "#fde047",
+    stickerBg: "#15803d",
+    stickerInk: "#ffffff",
+    ctaBg: "#facc15",
+    ctaInk: "#881337",
+    frame: "rgba(250,204,21,.65)",
+  },
+  dia_del_padre: {
+    label: "👨‍👧 Día del Padre (Campeón)",
+    swatch: ["#0f172a", "#38bdf8"],
+    ink: "#ffffff",
+    muted: "rgba(241,245,249,.8)",
+    accent: "#38bdf8",
+    accentInk: "#0f172a",
+    panelFill: "#ffffff",
+    panelStroke: "rgba(56,189,248,.35)",
+    panelInk: "#0f172a",
+    check: "#0284c7",
+    checkInk: "#ffffff",
+    price: "#38bdf8",
+    stickerBg: "#0284c7",
+    stickerInk: "#ffffff",
+    ctaBg: "#38bdf8",
+    ctaInk: "#0f172a",
+    frame: "rgba(56,189,248,.5)",
+  },
+  dia_de_la_mujer: {
+    label: "👩‍👧 Día de la Mujer & Madre",
+    swatch: ["#701a75", "#f472b6"],
+    ink: "#ffffff",
+    muted: "rgba(253,242,248,.85)",
+    accent: "#fbcfe8",
+    accentInk: "#701a75",
+    panelFill: "rgba(255,255,255,.96)",
+    panelStroke: "rgba(244,114,182,.4)",
+    panelInk: "#701a75",
+    check: "#db2777",
+    checkInk: "#ffffff",
+    price: "#fbcfe8",
+    stickerBg: "#db2777",
+    stickerInk: "#ffffff",
+    ctaBg: "#f472b6",
+    ctaInk: "#701a75",
+    frame: "rgba(244,114,182,.6)",
+  },
+  mega_promo: {
+    label: "⚡ Mega Promo / Impacto",
+    swatch: ["#dc2626", "#facc15"],
+    ink: "#ffffff",
+    muted: "rgba(254,242,242,.85)",
+    accent: "#facc15",
+    accentInk: "#450a0a",
+    panelFill: "#ffffff",
+    panelStroke: "rgba(220,38,38,.25)",
+    panelInk: "#450a0a",
+    check: "#dc2626",
+    checkInk: "#ffffff",
+    price: "#facc15",
+    stickerBg: "#facc15",
+    stickerInk: "#450a0a",
+    ctaBg: "#ffffff",
+    ctaInk: "#dc2626",
+  },
+  fin_de_semana: {
+    label: "🌴 Fin de Semana Criollo",
+    swatch: ["#0d9488", "#fbbf24"],
+    ink: "#ffffff",
+    muted: "rgba(240,253,250,.85)",
+    accent: "#fbbf24",
+    accentInk: "#134e4a",
+    panelFill: "#ffffff",
+    panelStroke: "rgba(13,148,136,.3)",
+    panelInk: "#134e4a",
+    check: "#0d9488",
+    checkInk: "#ffffff",
+    price: "#fbbf24",
+    stickerBg: "#fbbf24",
+    stickerInk: "#134e4a",
+    ctaBg: "#fbbf24",
+    ctaInk: "#134e4a",
   },
 };
 
@@ -171,8 +297,16 @@ function loadImage(src: string) {
   if (!p) {
     p = new Promise((resolve) => {
       const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = () => resolve(null);
+      let finished = false;
+      const done = (res: HTMLImageElement | null) => {
+        if (!finished) {
+          finished = true;
+          resolve(res);
+        }
+      };
+      img.onload = () => done(img);
+      img.onerror = () => done(null);
+      setTimeout(() => done(null), 2000);
       img.src = src;
     });
     imageCache.set(src, p);
@@ -183,6 +317,10 @@ function loadImage(src: string) {
 let fontsReady: Promise<unknown> | null = null;
 function ensureFonts() {
   if (!fontsReady) {
+    if (typeof document === "undefined" || !document?.fonts?.load) {
+      fontsReady = Promise.resolve();
+      return fontsReady;
+    }
     const sample = "ÁÉÍÓÚáéíóúÑñ$0123456789%";
     fontsReady = Promise.all(
       [
@@ -191,7 +329,7 @@ function ensureFonts() {
         '400 80px "Anton"',
         '500 30px "Inter"',
         '800 30px "Inter"',
-      ].map((f) => document.fonts.load(f, sample).catch(() => null)),
+      ].map((f) => (document.fonts ? document.fonts.load(f, sample).catch(() => null) : Promise.resolve(null))),
     );
   }
   return fontsReady;
@@ -313,7 +451,6 @@ function paintBackground(
     g.addColorStop(1, "#7c2d12");
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, W, H);
-    // Sunburst behind the food
     ctx.save();
     ctx.translate(heroCx, heroCy);
     const rays = 28;
@@ -337,24 +474,119 @@ function paintBackground(
     grain(ctx, W, H, 0.03);
     return;
   }
-  // mercado_fresco
-  ctx.fillStyle = "#fbf5ea";
+  if (theme === "mercado_fresco") {
+    ctx.fillStyle = "#fbf5ea";
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = "#1f5135";
+    ctx.fillRect(0, 0, W, 18);
+    ctx.beginPath();
+    ctx.arc(heroCx, heroCy, heroR, 0, Math.PI * 2);
+    ctx.fillStyle = "#e6efe2";
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(heroCx, heroCy, heroR + 22, 0, Math.PI * 2);
+    ctx.setLineDash([3, 14]);
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "rgba(31,81,53,.35)";
+    ctx.lineWidth = 4;
+    ctx.stroke();
+    ctx.setLineDash([]);
+    grain(ctx, W, H, 0.02);
+    return;
+  }
+  if (theme === "halloween") {
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, "#220938");
+    g.addColorStop(0.5, "#140424");
+    g.addColorStop(1, "#08010f");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+    // Pumpkin aura
+    const r = ctx.createRadialGradient(heroCx, heroCy, 0, heroCx, heroCy, heroR * 1.5);
+    r.addColorStop(0, "rgba(249,115,22,.45)");
+    r.addColorStop(0.6, "rgba(217,70,239,.15)");
+    r.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = r;
+    ctx.fillRect(0, 0, W, H);
+    grain(ctx, W, H, 0.04);
+    return;
+  }
+  if (theme === "navidad") {
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, "#831843");
+    g.addColorStop(0.6, "#500724");
+    g.addColorStop(1, "#270311");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+    const r = ctx.createRadialGradient(heroCx, heroCy, 0, heroCx, heroCy, heroR * 1.5);
+    r.addColorStop(0, "rgba(250,204,21,.35)");
+    r.addColorStop(0.6, "rgba(21,128,61,.2)");
+    r.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = r;
+    ctx.fillRect(0, 0, W, H);
+    grain(ctx, W, H, 0.035);
+    return;
+  }
+  if (theme === "dia_del_padre") {
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, "#0c1b33");
+    g.addColorStop(0.5, "#081120");
+    g.addColorStop(1, "#03060a");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+    const r = ctx.createRadialGradient(heroCx, heroCy, 0, heroCx, heroCy, heroR * 1.4);
+    r.addColorStop(0, "rgba(56,189,248,.35)");
+    r.addColorStop(0.6, "rgba(2,132,199,.1)");
+    r.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = r;
+    ctx.fillRect(0, 0, W, H);
+    grain(ctx, W, H, 0.03);
+    return;
+  }
+  if (theme === "dia_de_la_mujer") {
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, "#701a75");
+    g.addColorStop(0.55, "#4a044e");
+    g.addColorStop(1, "#28022b");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+    const r = ctx.createRadialGradient(heroCx, heroCy, 0, heroCx, heroCy, heroR * 1.4);
+    r.addColorStop(0, "rgba(244,114,182,.38)");
+    r.addColorStop(0.6, "rgba(251,207,232,.12)");
+    r.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = r;
+    ctx.fillRect(0, 0, W, H);
+    grain(ctx, W, H, 0.03);
+    return;
+  }
+  if (theme === "mega_promo") {
+    const g = ctx.createLinearGradient(0, 0, W, H);
+    g.addColorStop(0, "#dc2626");
+    g.addColorStop(0.5, "#991b1b");
+    g.addColorStop(1, "#450a0a");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+    const r = ctx.createRadialGradient(heroCx, heroCy, 0, heroCx, heroCy, heroR * 1.35);
+    r.addColorStop(0, "rgba(250,204,21,.55)");
+    r.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = r;
+    ctx.fillRect(0, 0, W, H);
+    grain(ctx, W, H, 0.035);
+    return;
+  }
+  // fin_de_semana
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, "#0f766e");
+  g.addColorStop(0.5, "#115e59");
+  g.addColorStop(1, "#042f2e");
+  ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = "#1f5135";
-  ctx.fillRect(0, 0, W, 18);
-  ctx.beginPath();
-  ctx.arc(heroCx, heroCy, heroR, 0, Math.PI * 2);
-  ctx.fillStyle = "#e6efe2";
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(heroCx, heroCy, heroR + 22, 0, Math.PI * 2);
-  ctx.setLineDash([3, 14]);
-  ctx.lineCap = "round";
-  ctx.strokeStyle = "rgba(31,81,53,.35)";
-  ctx.lineWidth = 4;
-  ctx.stroke();
-  ctx.setLineDash([]);
-  grain(ctx, W, H, 0.02);
+  const r = ctx.createRadialGradient(heroCx, heroCy, 0, heroCx, heroCy, heroR * 1.4);
+  r.addColorStop(0, "rgba(251,191,36,.4)");
+  r.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = r;
+  ctx.fillRect(0, 0, W, H);
+  grain(ctx, W, H, 0.03);
 }
 
 async function drawHero(
@@ -364,7 +596,38 @@ async function drawHero(
   cy: number,
   h: number,
 ) {
+  // Check if user uploaded a custom real photo
+  if (d.customImage) {
+    const customImg = await loadImage(d.customImage);
+    if (customImg) {
+      const w = Math.round(h * 1.35);
+      const x = cx - w / 2;
+      const y = cy - h / 2;
+      ctx.save();
+      ctx.shadowColor = "rgba(0,0,0,0.5)";
+      ctx.shadowBlur = 32;
+      ctx.shadowOffsetY = 15;
+      roundRect(ctx, x, y, w, h, 28);
+      ctx.fillStyle = "#1e1e1e";
+      ctx.fill();
+      ctx.clip();
+      ctx.drawImage(customImg, x, y, w, h);
+      ctx.restore();
+
+      ctx.save();
+      ctx.strokeStyle = "rgba(255,255,255,0.7)";
+      ctx.lineWidth = 4;
+      roundRect(ctx, x, y, w, h, 28);
+      ctx.stroke();
+      ctx.restore();
+      return;
+    }
+  }
+
   const hero = pickHero(d);
+  if (d.heroIcon === "trio") hero.trio = true;
+  else if (d.heroIcon && HERO_SRC[d.heroIcon as keyof typeof HERO_SRC]) hero.main = d.heroIcon as any;
+
   const [main, side] = await Promise.all([
     loadImage(HERO_SRC[hero.main]),
     hero.side ? loadImage(HERO_SRC[hero.side]) : null,
@@ -469,7 +732,7 @@ export async function renderPromoFlyer(
 ): Promise<HTMLCanvasElement> {
   await ensureFonts();
   const F = FORMATS[format];
-  const p = PALETTES[theme];
+  const p = PALETTES[theme] || PALETTES.noche_dorada;
   const { W, H, pad } = F;
   const inner = W - pad * 2;
 
@@ -484,7 +747,7 @@ export async function renderPromoFlyer(
   const badge = stripEmoji(d.badge).toUpperCase();
   const business = stripEmoji(d.businessName);
 
-  // ---- Measure the flexible middle block (title, tagline, items, price) ----
+  // Measure tagline
   setFont(ctx, `italic 500 ${F.tagline}px ${FONT_TITLE}`);
   const tagLines = clampLines(ctx, wrap(ctx, tagline, inner - 40), 2, inner - 40);
   const tagLH = F.tagline * 1.3;
@@ -507,8 +770,8 @@ export async function renderPromoFlyer(
   };
 
   const priceBlockH = F.tagline * 0.8 + 12 + F.price * 0.88 + 18 + F.tagline * 0.8 + 14;
-  const topH = pad + 60 + F.gap * 0.9 + 62 + F.gap * 0.5; // header + badge
-  const bottomH = F.cta + 30 + 64 + pad * 0.55 + F.gap; // CTA + footer
+  const topH = pad + 60 + F.gap * 0.9 + 62 + F.gap * 0.5;
+  const bottomH = F.cta + 30 + 64 + pad * 0.55 + F.gap;
   const avail = H - topH - bottomH;
 
   const layoutFor = (size: number, list: string[]) => {
@@ -519,7 +782,6 @@ export async function renderPromoFlyer(
     return { size, lines, itemsM, mid };
   };
 
-  // Keep the hero big enough: shrink the title a bit, then trim items, then shrink more
   let items = d.items.slice(0, F.maxItems);
   let L = layoutFor(F.title, items);
   const fits = () => avail - L.mid >= F.heroMin;
@@ -535,7 +797,7 @@ export async function renderPromoFlyer(
   const heroTop = topH + slack * 0.4;
   const heroCy = heroTop + heroH / 2;
 
-  // ---- Background ----
+  // Background
   paintBackground(ctx, theme, W, H, W / 2, heroCy, heroH * 0.5);
   if (p.frame) {
     ctx.strokeStyle = p.frame;
@@ -544,7 +806,7 @@ export async function renderPromoFlyer(
     ctx.stroke();
   }
 
-  // ---- Header: business + city ----
+  // Header: business + city
   let y = pad + 34;
   ctx.fillStyle = p.ink;
   ctx.textAlign = "left";
@@ -558,161 +820,149 @@ export async function renderPromoFlyer(
   ctx.fillText(city, W - pad, y);
   drawIcon(ctx, ICONS.pin, W - pad - cityW - 34, y - 25, 28, p.muted, 2.4);
   y += 26;
-  ctx.fillStyle = p.muted;
-  ctx.globalAlpha = 0.35;
-  ctx.fillRect(pad, y, inner, 2);
-  ctx.globalAlpha = 1;
 
-  // ---- Badge pill ----
+  // Top pill badge
   y += F.gap * 0.9;
-  setFont(ctx, `800 ${format === "story" ? 28 : 25}px ${FONT_BODY}`, 4);
-  const badgeW = Math.min(inner, ctx.measureText(badge).width + 64);
+  setFont(ctx, `800 24px ${FONT_BODY}`, 4);
+  const badgeTextW = ctx.measureText(badge).width;
+  const badgeW = badgeTextW + 56;
+  ctx.save();
   ctx.fillStyle = p.accent;
   roundRect(ctx, W / 2 - badgeW / 2, y, badgeW, 62, 31);
   ctx.fill();
   ctx.fillStyle = p.accentInk;
   ctx.textAlign = "center";
-  ctx.fillText(badge, W / 2, y + 41, inner - 40);
+  ctx.fillText(badge, W / 2, y + 40);
+  ctx.restore();
 
-  // ---- Hero ----
+  // Draw hero (custom uploaded photo or 3D visual)
   await drawHero(ctx, d, W / 2, heroCy, heroH);
-  if (d.discountPct > 0) {
-    const r = format === "story" ? 112 : 88;
-    drawSticker(ctx, p, Math.round(d.discountPct), W - pad - r * 0.75, heroTop + r * 0.9, r);
+
+  // Discount sticker
+  if (d.discountPct >= 5) {
+    const stickerR = format === "story" ? 116 : 94;
+    const stickerX = W - pad - stickerR * 0.9;
+    const stickerY = heroTop + heroH * 0.22;
+    drawSticker(ctx, p, d.discountPct, stickerX, stickerY, stickerR);
   }
 
-  // ---- Title + tagline ----
+  // Title
   y = heroTop + heroH + F.gap;
-  ctx.textAlign = "center";
   ctx.fillStyle = p.ink;
-  setFont(ctx, `800 ${titleSize}px ${FONT_TITLE}`, -1);
+  ctx.textAlign = "center";
+  setFont(ctx, `800 ${titleSize}px ${FONT_TITLE}`);
   for (const line of titleLines) {
-    y += titleLH * 0.86;
+    y += titleLH;
     ctx.fillText(line, W / 2, y);
-    y += titleLH * 0.14;
   }
+
+  // Tagline
   if (tagLines.length) {
     y += 18;
-    ctx.fillStyle = theme === "noche_dorada" ? p.price : p.muted;
+    ctx.fillStyle = p.muted;
     setFont(ctx, `italic 500 ${F.tagline}px ${FONT_TITLE}`);
     for (const line of tagLines) {
-      y += tagLH * 0.82;
+      y += tagLH;
       ctx.fillText(line, W / 2, y);
-      y += tagLH * 0.18;
     }
   }
 
-  // ---- Items panel ----
-  y += F.gap;
+  // Items panel
+  y += F.gap * 0.9;
+  ctx.save();
   ctx.fillStyle = p.panelFill;
   roundRect(ctx, pad, y, inner, itemsM.h, 28);
   ctx.fill();
-  if (p.panelStroke) {
+  if (p.panelStroke !== "rgba(255,255,255,0)") {
     ctx.strokeStyle = p.panelStroke;
     ctx.lineWidth = 2;
     ctx.stroke();
   }
-  let iy = y + panelPad;
-  ctx.textAlign = "left";
+  ctx.restore();
+
+  let itemY = y + panelPad;
   setFont(ctx, `500 ${F.item}px ${FONT_BODY}`);
-  const dot = F.item * 1.05;
-  for (const lines of itemsM.wrapped) {
-    const cx = pad + 32 + dot / 2;
-    const cy = iy + itemLH / 2;
-    ctx.beginPath();
-    ctx.arc(cx, cy, dot / 2, 0, Math.PI * 2);
-    ctx.fillStyle = p.check;
-    ctx.fill();
-    drawIcon(ctx, ICONS.check, cx - dot * 0.3, cy - dot * 0.3, dot * 0.6, p.checkInk, 3.6);
-    ctx.fillStyle = p.panelInk;
-    lines.forEach((ln, i) =>
-      ctx.fillText(ln, pad + 32 + dot + 22, iy + itemLH * 0.74 + i * itemLH),
-    );
-    iy += lines.length * itemLH + itemGap;
-  }
-  y += itemsM.h + F.gap;
-
-  // ---- Price ----
-  ctx.textAlign = "center";
-  const before = `Antes $${d.regularPriceUsd.toFixed(2)}`;
-  setFont(ctx, `600 ${Math.round(F.tagline * 0.85)}px ${FONT_BODY}`);
-  ctx.fillStyle = p.muted;
-  y += F.tagline * 0.8;
-  ctx.fillText(before, W / 2, y);
-  const bw = ctx.measureText(before).width;
-  ctx.fillRect(W / 2 - bw / 2 - 6, y - F.tagline * 0.3, bw + 12, 3);
-  y += 12 + F.price * 0.88;
-  const priceTxt = `$${d.promoPriceUsd.toFixed(2)}`;
-  setFont(ctx, `400 ${F.price}px ${FONT_PRICE}`, 1);
-  const pw = ctx.measureText(priceTxt).width;
-  setFont(ctx, `800 ${Math.round(F.price * 0.24)}px ${FONT_BODY}`, 3);
-  const uw = ctx.measureText("USD").width;
-  const startX = W / 2 - (pw + 16 + uw) / 2;
   ctx.textAlign = "left";
-  ctx.fillStyle = p.price;
-  setFont(ctx, `400 ${F.price}px ${FONT_PRICE}`, 1);
-  ctx.fillText(priceTxt, startX, y);
-  setFont(ctx, `800 ${Math.round(F.price * 0.24)}px ${FONT_BODY}`, 3);
-  ctx.fillText("USD", startX + pw + 16, y - F.price * 0.52);
-  y += 18 + F.tagline * 0.8;
-  ctx.textAlign = "center";
-  ctx.fillStyle = p.ink;
-  setFont(ctx, `700 ${Math.round(F.tagline * 0.82)}px ${FONT_BODY}`);
-  ctx.fillText(`${fmtBs(d.promoPriceUsd * d.rate)}  ·  Tasa BCV ${d.rate.toFixed(2)}`, W / 2, y);
+  for (const wrapped of itemsM.wrapped) {
+    itemY += F.item;
+    const iconSize = Math.round(F.item * 0.95);
+    const iconX = pad + 32;
+    const iconY = itemY - iconSize * 0.88;
 
-  // ---- CTA (anchored to the bottom) ----
-  const ctaY = H - pad * 0.55 - 64 - 30 - F.cta;
+    ctx.save();
+    ctx.fillStyle = p.check;
+    ctx.beginPath();
+    ctx.arc(iconX + iconSize / 2, iconY + iconSize / 2, iconSize * 0.65, 0, Math.PI * 2);
+    ctx.fill();
+    drawIcon(ctx, ICONS.check, iconX + iconSize * 0.12, iconY + iconSize * 0.12, iconSize * 0.76, p.checkInk, 3.2);
+    ctx.restore();
+
+    ctx.fillStyle = p.panelInk;
+    const textX = pad + 32 + iconSize + 18;
+    for (let li = 0; li < wrapped.length; li++) {
+      ctx.fillText(wrapped[li], textX, itemY + li * itemLH);
+    }
+    itemY += (wrapped.length - 1) * itemLH + itemGap;
+  }
+  y += itemsM.h;
+
+  // Price block
+  y += F.gap;
+  ctx.textAlign = "center";
+  if (d.regularPriceUsd > d.promoPriceUsd) {
+    setFont(ctx, `600 ${Math.round(F.tagline * 0.75)}px ${FONT_BODY}`, 2);
+    ctx.fillStyle = p.muted;
+    const regText = `PRECIO REGULAR $${d.regularPriceUsd.toFixed(2)} USD`;
+    ctx.fillText(regText, W / 2, y);
+    const regW = ctx.measureText(regText).width;
+    ctx.strokeStyle = p.muted;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(W / 2 - regW / 2 - 6, y - F.tagline * 0.24);
+    ctx.lineTo(W / 2 + regW / 2 + 6, y - F.tagline * 0.24);
+    ctx.stroke();
+    y += 14;
+  }
+
+  y += F.price * 0.88;
+  ctx.fillStyle = p.price;
+  setFont(ctx, `400 ${F.price}px ${FONT_PRICE}`);
+  ctx.fillText(`$${d.promoPriceUsd.toFixed(2)}`, W / 2, y);
+
+  y += 20;
+  setFont(ctx, `800 ${Math.round(F.tagline * 0.8)}px ${FONT_BODY}`, 2);
+  ctx.fillStyle = p.ink;
+  const bsText = `BS. ${fmtBs(d.promoPriceUsd * d.rate)} (TASA BCV)`;
+  ctx.fillText(bsText, W / 2, y);
+
+  // Bottom CTA Button
+  const ctaY = H - pad - F.cta - 54;
+  ctx.save();
   ctx.fillStyle = p.ctaBg;
-  ctx.shadowColor = "rgba(0,0,0,.25)";
-  ctx.shadowBlur = 30;
-  ctx.shadowOffsetY = 12;
   roundRect(ctx, pad, ctaY, inner, F.cta, F.cta / 2);
   ctx.fill();
-  ctx.shadowColor = "transparent";
-  const ctaFont = format === "story" ? 40 : 34;
-  setFont(ctx, `800 ${ctaFont}px ${FONT_BODY}`, 1);
-  const ctaText = `Pide por WhatsApp  ${stripEmoji(d.phone)}`;
-  const ctw = ctx.measureText(ctaText).width;
-  const iconS = ctaFont * 1.15;
-  const cx0 = W / 2 - (ctw + iconS + 18) / 2;
-  drawIcon(ctx, ICONS.chat, cx0, ctaY + F.cta / 2 - iconS / 2, iconS, p.ctaInk, 2.4);
-  drawIcon(
-    ctx,
-    ICONS.phone,
-    cx0 + iconS * 0.3,
-    ctaY + F.cta / 2 - iconS * 0.2,
-    iconS * 0.4,
-    p.ctaInk,
-    3,
-  );
   ctx.fillStyle = p.ctaInk;
-  ctx.textAlign = "left";
-  ctx.fillText(ctaText, cx0 + iconS + 18, ctaY + F.cta / 2 + ctaFont * 0.36);
+  ctx.textAlign = "center";
+  setFont(ctx, `800 ${Math.round(F.cta * 0.36)}px ${FONT_BODY}`, 4);
+  const ctaText = `PIDE POR WHATSAPP AL ${d.phone}`;
+  ctx.fillText(ctaText, W / 2, ctaY + F.cta * 0.62);
+  ctx.restore();
 
-  // ---- Footer ----
+  // Footer address & delivery notice
   ctx.textAlign = "center";
   ctx.fillStyle = p.muted;
-  setFont(ctx, `500 ${format === "story" ? 24 : 21}px ${FONT_BODY}`);
-  const addr = stripEmoji(d.address) || stripEmoji(d.city);
-  ctx.fillText(
-    `${addr}  ·  Válido hoy o hasta agotar existencias`,
-    W / 2,
-    ctaY + F.cta + 52,
-    inner,
-  );
-  setFont(ctx, `700 ${format === "story" ? 18 : 16}px ${FONT_BODY}`, 4);
-  ctx.globalAlpha = 0.7;
-  ctx.fillText("CREADO CON NOVASTOCK", W / 2, ctaY + F.cta + 88);
-  ctx.globalAlpha = 1;
+  setFont(ctx, `500 ${format === "story" ? 22 : 20}px ${FONT_BODY}`, 1);
+  const footerText = `${stripEmoji(d.address)} · Delivery en la zona`;
+  ctx.fillText(footerText, W / 2, H - pad * 0.55);
 
   return canvas;
 }
 
-export function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
-  return new Promise((resolve, reject) =>
-    canvas.toBlob(
-      (b) => (b ? resolve(b) : reject(new Error("No se pudo crear la imagen"))),
-      "image/png",
-    ),
-  );
+export async function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((b) => {
+      if (b) resolve(b);
+      else reject(new Error("Canvas export failed"));
+    }, "image/png");
+  });
 }
