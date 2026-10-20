@@ -1,9 +1,7 @@
-import { useState, useMemo, useEffect } from "react";
-import { WhatsAppConnectionHub } from "./WhatsAppConnectionHub";
+import { useState, useMemo } from "react";
 import {
   Bike,
   MessageSquare,
-  QrCode,
   PhoneCall,
   MapPin,
   Navigation,
@@ -25,8 +23,7 @@ import {
   DollarSign,
   UserCheck,
   Smartphone,
-  ClipboardPaste,
-  HelpCircle,
+  QrCode,
   Sparkles,
   Info,
 } from "lucide-react";
@@ -38,29 +35,22 @@ import { Modal, btnGhost, btnPrimary, inputCls } from "../pos/Modal";
 import {
   openWhatsApp,
   normalizeWhatsAppPhone,
-  buildCustomerDeliveryRequestTemplate,
   buildRidersGroupDeliveryMessage,
   buildCashierNotificationMessage,
   buildDeliveredCustomerMessage,
 } from "@/lib/whatsapp";
 import { matchesSearch } from "@/lib/search";
+import { WhatsAppConnectionHub } from "./WhatsAppConnectionHub";
 
 export function DeliveryModule() {
   const pos = usePos();
   const { deliveries, rate, companySettings } = pos;
 
-  const [tab, setTab] = useState<"active" | "capture" | "connections" | "riders">("active");
+  const [tab, setTab] = useState<"active" | "connections" | "riders">("active");
   const [statusFilter, setStatusFilter] = useState<"todos" | "pendiente" | "en_camino" | "entregado">("todos");
   const [search, setSearch] = useState("");
   const [modalNew, setModalNew] = useState(false);
   const [autoDeleteDelivered, setAutoDeleteDelivered] = useState(false);
-
-  // Bot & Fast capture state - Completely blank by default so it never shows fake demo data
-  const [rawCustomerMessage, setRawCustomerMessage] = useState<string>("");
-  const [capturedClientPhone, setCapturedClientPhone] = useState<string>("");
-  const [capturedPaymentRef, setCapturedPaymentRef] = useState<string>("");
-  const [capturedTotalUsd, setCapturedTotalUsd] = useState<string>("5.00");
-  const [capturedRider, setCapturedRider] = useState<string>("Ezequiel");
 
   // Nuevo delivery manual form
   const [form, setForm] = useState({
@@ -171,125 +161,6 @@ export function DeliveryModule() {
     openWhatsApp({ phone: delivery.clientPhone, message: msg });
   }
 
-  // Copiar plantilla de saludo para WhatsApp
-  function handleCopyCustomerTemplate() {
-    const t = buildCustomerDeliveryRequestTemplate(pos.companySettings.name);
-    navigator.clipboard.writeText(t);
-    toast.success("📋 Formato de Delivery copiado al portapapeles", {
-      description: "Pégalo en el chat de WhatsApp del cliente para que te confirme sus datos.",
-    });
-  }
-
-  // Enviar plantilla de saludo directo a un cliente
-  function handleSendGreetingToClient(phone: string) {
-    const t = buildCustomerDeliveryRequestTemplate(pos.companySettings.name);
-    openWhatsApp({ phone, message: t });
-  }
-
-  // Función inteligente para extraer campos del texto pegado
-  function parseFields(text: string) {
-    const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
-    let name = "";
-    let address = "";
-    let order = "";
-
-    for (const line of lines) {
-      const lower = line.toLowerCase();
-      if (lower.startsWith("nombre:")) {
-        name = line.replace(/nombre:/i, "").trim();
-      } else if (
-        lower.startsWith("dirección") ||
-        lower.startsWith("direccion") ||
-        lower.startsWith("gps:") ||
-        lower.startsWith("ubicación") ||
-        lower.startsWith("ubicacion")
-      ) {
-        address = line.replace(/^(dirección|direccion|gps|ubicación|ubicacion)\s*(gps)?[:\-–=]/i, "").trim();
-      } else if (lower.startsWith("pedido:") || lower.startsWith("orden:")) {
-        order = line.replace(/^(pedido|orden)[:\-–=]/i, "").trim();
-      }
-    }
-
-    return { name, address, order };
-  }
-
-  // Pegar directo desde el portapapeles con 1 toque
-  async function handlePasteFromClipboard() {
-    try {
-      const text = await navigator.clipboard.readText();
-      if (!text.trim()) {
-        toast.info("El portapapeles está vacío. Copia el mensaje en WhatsApp primero.");
-        return;
-      }
-      setRawCustomerMessage(text);
-
-      // Auto-extract phone if present
-      const phoneMatch = text.match(/(?:04\d{2}|584\d{2}|\+584\d{2})[- \d]{7,12}/);
-      if (phoneMatch) setCapturedClientPhone(phoneMatch[0].trim());
-
-      // Auto-extract price if present
-      const priceMatch =
-        text.match(/\$?(\d+(?:[.,]\d{1,2})?)\s*(?:\$|usd|d[oó]lares)/i) ||
-        text.match(/(?:monto|total|precio)[:\s]*\$?(\d+(?:[.,]\d{1,2})?)/i);
-      if (priceMatch) setCapturedTotalUsd(priceMatch[1].replace(",", "."));
-
-      // Auto-extract payment reference if present
-      const refMatch = text.match(/(?:ref|referencia|pago)[:\s]*([a-zA-Z0-9 -]+)/i);
-      if (refMatch) setCapturedPaymentRef(refMatch[1].trim());
-
-      toast.success("✓ Mensaje pegado desde el portapapeles y analizado con éxito");
-    } catch {
-      toast.info("Por favor pega el mensaje manualmente en el recuadro.");
-    }
-  }
-
-  // Procesar texto pegado del cliente y crear delivery
-  function handleParseCustomerMessage() {
-    if (!rawCustomerMessage.trim()) {
-      toast.error("Por favor pega el mensaje que respondió el cliente en WhatsApp.");
-      return;
-    }
-
-    const { name: parsedName, address: parsedAddress, order: parsedOrder } = parseFields(rawCustomerMessage);
-    const name = parsedName || "Cliente WhatsApp";
-    const address = parsedAddress || "San Jacinto, Maracay";
-    const order = parsedOrder || rawCustomerMessage.split("\n")[0] || "Empanadas Surtidas";
-
-    const totalUsdNum = parseFloat(capturedTotalUsd) || 5.0;
-
-    const mapsUrl = address.includes("http")
-      ? address
-      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address + " Aragua Venezuela")}`;
-
-    const newDel = pos.createDelivery({
-      clientName: name,
-      clientPhone: capturedClientPhone.trim() || "0412-0000000",
-      addressGps: address,
-      mapsUrl,
-      itemsText: order,
-      totalUsd: totalUsdNum,
-      totalBs: Math.round(totalUsdNum * rate * 100) / 100,
-      paymentMethod: "Pago Móvil Banesco",
-      paymentReference: capturedPaymentRef.trim() || "Confirmado",
-      riderName: capturedRider,
-      notes: "Capturado de WhatsApp",
-    });
-
-    toast.success(`✅ Delivery #${newDel.orderNumber} creado automáticamente`, {
-      description: `Listo para despachar a ${capturedRider} y enviar al grupo.`,
-    });
-
-    // Despachar al grupo de WhatsApp
-    handleSendToGroup(newDel);
-
-    // Resetear formulario para el próximo pedido
-    setRawCustomerMessage("");
-    setCapturedClientPhone("");
-    setCapturedPaymentRef("");
-    setCapturedTotalUsd("5.00");
-    setTab("active");
-  }
-
   function handleCreateManualDelivery() {
     if (!form.clientName.trim() || !form.addressGps.trim()) {
       toast.error("Por favor ingresa nombre y dirección del cliente");
@@ -330,12 +201,6 @@ export function DeliveryModule() {
     });
   }
 
-  // Detección en vivo de los campos mientras se escribe o pega
-  const livePreview = useMemo(() => {
-    if (!rawCustomerMessage.trim()) return null;
-    return parseFields(rawCustomerMessage);
-  }, [rawCustomerMessage]);
-
   return (
     <div className="space-y-6">
       {/* Header & Métricas */}
@@ -350,7 +215,7 @@ export function DeliveryModule() {
                 Delivery WhatsApp & Despacho Automático a Motorizados
               </h1>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Recepción por WhatsApp, enlace GPS de Google Maps, grupo de repartidores y aviso automático a cajera.
+                Recepción automática por WhatsApp, enlace GPS de Google Maps, grupo de repartidores y aviso a cajera.
               </p>
             </div>
           </div>
@@ -390,17 +255,6 @@ export function DeliveryModule() {
               <span className="hidden sm:inline">Vaciar Todo</span>
             </button>
           )}
-
-          <button
-            type="button"
-            onClick={handleCopyCustomerTemplate}
-            className="rounded-xl border border-border bg-card hover:bg-secondary text-foreground px-3.5 py-2 text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
-            title="Copiar plantilla para pedir datos al cliente"
-          >
-            <Copy className="h-3.5 w-3.5 text-primary" />
-            <span className="hidden sm:inline">Copiar Plantilla Cliente</span>
-            <span className="sm:hidden">Plantilla</span>
-          </button>
 
           <button
             type="button"
@@ -452,12 +306,11 @@ export function DeliveryModule() {
 
       {/* Tabs */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-2">
-        <div className="flex gap-1.5">
+        <div className="flex gap-1.5 flex-wrap">
           {[
-            { id: "active", label: `Deliverys Activos (${deliveries.length})`, icon: Bike },
-            { id: "capture", label: "📱 Bot WhatsApp & Captura Rápida", icon: MessageSquare },
-            { id: "connections", label: "🔗 Conectar WhatsApp (4 Métodos)", icon: QrCode },
-            { id: "riders", label: `Motorizados & Grupos (${ridersList.length})`, icon: UserCheck },
+            { id: "active", label: `🛵 Deliverys Activos (${deliveries.length})`, icon: Bike },
+            { id: "connections", label: "🔗 Conexión WhatsApp en Vivo (QR & Meta API)", icon: QrCode },
+            { id: "riders", label: `👥 Motorizados & Grupos (${ridersList.length})`, icon: UserCheck },
           ].map((t) => (
             <button
               key={t.id}
@@ -530,10 +383,17 @@ export function DeliveryModule() {
           {filteredDeliveries.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border p-12 text-center space-y-2">
               <Bike className="h-10 w-10 text-muted-foreground mx-auto" />
-              <div className="font-bold text-foreground text-sm">No hay deliverys pendientes o en esta lista</div>
+              <div className="font-bold text-foreground text-sm">No hay deliverys pendientes en este momento</div>
               <p className="text-xs text-muted-foreground max-w-md mx-auto">
-                Tu pantalla está limpia. Cuando un cliente pida por WhatsApp, copia su mensaje y pégalo en la pestaña{" "}
-                <strong>«Bot WhatsApp & Captura Rápida»</strong> o pulsa <strong>«+ Nuevo Delivery»</strong>.
+                Tu pantalla está limpia. Vincula tu WhatsApp en la pestaña{" "}
+                <button
+                  type="button"
+                  onClick={() => setTab("connections")}
+                  className="text-primary font-bold hover:underline"
+                >
+                  «🔗 Conexión WhatsApp en Vivo»
+                </button>{" "}
+                para que los pedidos de los clientes caigan automáticamente a la pantalla.
               </p>
             </div>
           ) : (
@@ -714,185 +574,12 @@ export function DeliveryModule() {
         </div>
       )}
 
-      {/* Tab 2: Bot WhatsApp & Captura Rápida */}
-      {tab === "capture" && (
-        <div className="space-y-4 animate-in fade-in-50">
-          {/* Explicación de seguridad y conexión con WhatsApp */}
-          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 text-xs text-foreground flex items-start gap-3">
-            <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <span className="font-bold text-foreground">¿Cómo funciona la captura de WhatsApp?</span>
-              <p className="text-muted-foreground leading-relaxed">
-                Por privacidad y seguridad de WhatsApp, los navegadores web no tienen permiso para leer tus mensajes privados directamente sin tu acción.
-                El flujo más rápido para tu cajera: <strong>copia el mensaje del cliente en WhatsApp</strong> y pulsa el botón{" "}
-                <strong>«📋 Pegar desde Portapapeles»</strong>. El sistema extraerá al instante el Nombre, la Dirección con GPS y el Pedido, creando la comanda y enviándola al grupo de motorizados en un solo clic.
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-            {/* Panel Izquierdo: Plantilla Oficial del Cliente */}
-            <div className="lg:col-span-5 rounded-2xl border border-border bg-card p-5 space-y-4 shadow-xs">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">📱</span>
-                <h3 className="font-bold text-foreground text-sm">Plantilla Oficial de Solicitud de Datos</h3>
-              </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Envía este mensaje al cliente cuando escriba para pedir delivery. Cuando responda con sus datos, solo copia su respuesta:
-              </p>
-
-              <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 font-mono text-xs text-foreground whitespace-pre-wrap leading-relaxed select-all">
-                {buildCustomerDeliveryRequestTemplate(pos.companySettings.name)}
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={handleCopyCustomerTemplate}
-                  className="flex-1 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 py-2.5 px-3 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
-                >
-                  <Copy className="h-3.5 w-3.5" />
-                  <span>Copiar Plantilla</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSendGreetingToClient(capturedClientPhone)}
-                  className="rounded-xl border border-border bg-card hover:bg-secondary text-foreground py-2.5 px-3 text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Send className="h-3.5 w-3.5 text-primary" />
-                  <span>Enviar por WhatsApp</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Panel Derecho: Extractor y Despachador Automático */}
-            <div className="lg:col-span-7 rounded-2xl border border-border bg-card p-5 space-y-4 shadow-xs">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">⚡</span>
-                  <h3 className="font-bold text-foreground text-sm">Captura Rápida de Datos del Cliente</h3>
-                </div>
-                <button
-                  type="button"
-                  onClick={handlePasteFromClipboard}
-                  className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 py-1.5 transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
-                  title="Pega automáticamente lo que copiaste en WhatsApp"
-                >
-                  <ClipboardPaste className="h-3.5 w-3.5" />
-                  <span>📋 Pegar desde Portapapeles (1 Toque)</span>
-                </button>
-              </div>
-
-              <p className="text-xs text-muted-foreground">
-                Pega aquí el mensaje que respondió el cliente en WhatsApp:
-              </p>
-
-              <div className="space-y-3">
-                <div>
-                  <textarea
-                    rows={4}
-                    value={rawCustomerMessage}
-                    onChange={(e) => setRawCustomerMessage(e.target.value)}
-                    placeholder="Pega aquí el mensaje de WhatsApp. Por ejemplo:
-Nombre: Juan Carlos
-Dirección GPS: Urb. San Jacinto, Manzana 4, Casa 12
-Pedido: 3 Empanadas de Mechada, 1 Malta Polar"
-                    className="w-full rounded-xl border border-input bg-background p-3 text-xs font-mono text-foreground outline-none focus:border-primary resize-y leading-relaxed"
-                  />
-                </div>
-
-                {/* Vista previa detectada en vivo */}
-                {livePreview && (
-                  <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-3 text-xs space-y-1 font-sans">
-                    <span className="text-[10px] font-bold text-emerald-500 uppercase flex items-center gap-1">
-                      <Sparkles className="h-3 w-3" /> Datos Detectados Automáticamente:
-                    </span>
-                    <div className="text-foreground">
-                      <strong>Cliente:</strong> {livePreview.name || "(Esperando nombre)"}
-                    </div>
-                    <div className="text-foreground">
-                      <strong>Dirección:</strong> {livePreview.address || "(Esperando dirección)"}
-                    </div>
-                    <div className="text-foreground">
-                      <strong>Pedido:</strong> {livePreview.order || "(Esperando pedido)"}
-                    </div>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
-                  <div>
-                    <label className="font-semibold text-foreground block mb-1">Teléfono Cliente:</label>
-                    <input
-                      type="text"
-                      value={capturedClientPhone}
-                      onChange={(e) => setCapturedClientPhone(e.target.value)}
-                      placeholder="0414-1234567"
-                      className={`${inputCls} font-mono`}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="font-semibold text-foreground block mb-1">Monto ($ USD):</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={capturedTotalUsd}
-                      onChange={(e) => setCapturedTotalUsd(e.target.value)}
-                      className={`${inputCls} font-mono font-bold text-emerald-600 dark:text-emerald-400`}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="font-semibold text-foreground block mb-1">Referencia Pago:</label>
-                    <input
-                      type="text"
-                      value={capturedPaymentRef}
-                      onChange={(e) => setCapturedPaymentRef(e.target.value)}
-                      className={inputCls}
-                      placeholder="Ej: Pago Móvil 8921"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="font-semibold text-foreground block mb-1">Motorizado:</label>
-                    <select
-                      value={capturedRider}
-                      onChange={(e) => setCapturedRider(e.target.value)}
-                      className={inputCls}
-                    >
-                      {ridersList.map((r) => (
-                        <option key={r} value={r}>
-                          {r}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="pt-2">
-                  <button
-                    type="button"
-                    onClick={handleParseCustomerMessage}
-                    className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white py-3 text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-xs active:scale-95"
-                  >
-                    <Bike className="h-4 w-4" />
-                    <span>🚀 Crear Delivery y Despachar al Grupo de WhatsApp</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Tab Conexiones WhatsApp (4 Métodos) */}
+      {/* Tab 2: Conexión WhatsApp en Vivo (QR & Meta API) */}
       {tab === "connections" && (
         <div className="animate-in fade-in-50">
           <WhatsAppConnectionHub
-            onSimulateOrder={(mockText) => {
-              setRawCustomerMessage(mockText);
-              setTab("capture");
-              toast.info("Mensaje simulado cargado en Captura Rápida.");
+            onSimulateOrder={() => {
+              setTab("active");
             }}
           />
         </div>
