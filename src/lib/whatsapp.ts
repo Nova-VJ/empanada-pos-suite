@@ -171,8 +171,8 @@ Quedamos atentos a sus precios vigentes al mayor y condiciones de pago.
 /**
  * Plantilla oficial para solicitar datos al cliente que escribe por WhatsApp
  */
-export function buildCustomerDeliveryRequestTemplate(): string {
-  return `Hola, hablas con Dr. Empanadas Delivery, me confirmas
+export function buildCustomerDeliveryRequestTemplate(companyName: string = "Dr. Empanadas"): string {
+  return `Hola, hablas con ${companyName} Delivery, me confirmas
 
 Nombre:
 Dirección GPS:

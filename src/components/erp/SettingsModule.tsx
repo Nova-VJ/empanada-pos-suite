@@ -15,10 +15,13 @@ export function SettingsModule() {
   const [testPhone, setTestPhone] = useState(form.ownerPhone || form.phone || "0412-1234567");
   const [notifyOnPhone, setNotifyOnPhone] = useState(form.notifyOrdersOnPhone ?? true);
   const [form, setForm] = useState(companySettings);
+  useEffect(() => {
+    setForm(companySettings);
+  }, [companySettings]);
   const [bcvInput, setBcvInput] = useState(String(rate));
 
   function handleSaveCompany() {
-    pos.updateCompanySettings(form);
+    pos.updateCompanySettings({ ...form, isConfigured: true, isLive: true });
     toast.success("Datos fiscales de la empresa actualizados");
   }
 
@@ -596,7 +599,7 @@ export function SettingsModule() {
                       🥟
                     </div>
                     <div className="leading-tight">
-                      <div className="font-bold text-xs truncate">Dr. Empanadas Gerencia</div>
+                      <div className="font-bold text-xs truncate">{pos.companySettings.name} Gerencia</div>
                       <div className="text-[10px] text-emerald-200">en línea</div>
                     </div>
                   </div>
@@ -608,7 +611,7 @@ export function SettingsModule() {
                       {simMessage === "order" && (
                         <>
                           <div className="font-bold text-emerald-400">🔔 NUEVO PEDIDO REGISTRADO #00124</div>
-                          <div className="text-slate-300">🏪 Dr. Empanadas C.A. · San Jacinto</div>
+                          <div className="text-slate-300">🏪 {pos.companySettings.name} · {pos.companySettings.branch}</div>
                           <div className="text-slate-400 text-[10px]">⏰ Hora: 10:45 AM · Para Llevar</div>
                           <div className="border-t border-slate-700 my-1 pt-1">
                             <div>• 2x Empanada Mechada</div>

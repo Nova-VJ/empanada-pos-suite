@@ -268,7 +268,7 @@ export function SalesHistoryModule() {
               Oficial
             </span>
           </div>
-          <p className="text-[11px] text-muted-foreground mt-1">Dr. Empanadas C.A. · Maracay</p>
+          <p className="text-[11px] text-muted-foreground mt-1">{pos.companySettings.name} · {pos.companySettings.city || "Maracay"}</p>
         </div>
       </div>
 

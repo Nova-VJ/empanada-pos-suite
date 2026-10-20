@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   User,
+  Store,
   Mail,
   Lock,
   KeyRound,
@@ -300,9 +301,19 @@ export function AuthUserModal({ onClose }: { onClose: () => void }) {
                     <span className="rounded-full bg-primary/10 border border-primary/25 px-2.5 py-0.5 text-[11px] font-bold text-primary uppercase">
                       {activeUser.role}
                     </span>
-                    <span className="rounded-full bg-secondary border border-border px-2.5 py-0.5 text-[11px] text-muted-foreground font-medium">
+                    <span className="rounded-full bg-secondary border border-border px-2.5 py-0.5 text-[11px] text-muted-foreground font-medium truncate max-w-[170px]">
                       {pos.companySettings.name}
                     </span>
+                    {pos.companySettings.isLive ? (
+                      <span className="rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-bold px-2 py-0.5 text-[10px] flex items-center gap-1">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        Modo Real Activo
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-bold px-2 py-0.5 text-[10px]">
+                        Modo Demostración
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -370,13 +381,25 @@ export function AuthUserModal({ onClose }: { onClose: () => void }) {
                   </div>
                 </div>
 
-                <button
-                  onClick={() => setShowWizard(true)}
-                  className="w-full rounded-xl border border-primary/40 bg-primary/10 hover:bg-primary/20 text-primary py-2.5 px-3 text-xs font-bold transition flex items-center justify-center gap-2 shadow-2xs"
-                >
-                  <Rocket className="h-4 w-4" />
-                  <span>Configurar Datos Reales del Negocio (Dejar Demo)</span>
-                </button>
+                {pos.companySettings.isLive ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowWizard(true)}
+                    className="w-full rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 py-2.5 px-3 text-xs font-semibold transition flex items-center justify-center gap-2 shadow-2xs"
+                  >
+                    <Store className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    <span className="truncate">Datos del Negocio: <strong className="font-bold">{pos.companySettings.name}</strong> (Editar)</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowWizard(true)}
+                    className="w-full rounded-xl border border-primary/40 bg-primary/10 hover:bg-primary/20 text-primary py-2.5 px-3 text-xs font-bold transition flex items-center justify-center gap-2 shadow-2xs"
+                  >
+                    <Rocket className="h-4 w-4" />
+                    <span>Configurar Datos Reales del Negocio (Dejar Demo)</span>
+                  </button>
+                )}
 
                 <div className="flex gap-2 pt-1">
                   <button

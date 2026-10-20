@@ -141,7 +141,7 @@ export function CustomersModule() {
     const cleanPhone = c.phone.replace(/[^0-9]/g, "");
     const formattedPhone = cleanPhone.startsWith("0") ? `58${cleanPhone.slice(1)}` : cleanPhone;
     const text = encodeURIComponent(
-      `Hola ${c.name}, le saludamos cordialmente de Dr. Empanadas C.A. Le recordamos su saldo pendiente de $${(c.debtUsd ?? 0).toFixed(2)} (${fmtBs((c.debtUsd ?? 0) * rate)} a la tasa de hoy). Puede cancelarlo vía Pago Móvil o en nuestro local. ¡Muchas gracias!`
+      `Hola ${c.name}, le saludamos cordialmente de ${pos.companySettings.name} Le recordamos su saldo pendiente de $${(c.debtUsd ?? 0).toFixed(2)} (${fmtBs((c.debtUsd ?? 0) * rate)} a la tasa de hoy). Puede cancelarlo vía Pago Móvil o en nuestro local. ¡Muchas gracias!`
     );
     window.open(`https://wa.me/${formattedPhone}?text=${text}`, "_blank");
   }

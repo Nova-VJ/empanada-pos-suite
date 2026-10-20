@@ -162,7 +162,7 @@ Pedido: 3 Empanadas de Mechada, 2 Empanadas de Queso, 2 Maltas Polar`);
 
   // Copiar plantilla de saludo para WhatsApp
   function handleCopyCustomerTemplate() {
-    const t = buildCustomerDeliveryRequestTemplate();
+    const t = buildCustomerDeliveryRequestTemplate(pos.companySettings.name);
     navigator.clipboard.writeText(t);
     toast.success("📋 Formato de Delivery copiado al portapapeles", {
       description: "Pégalo en el chat de WhatsApp del cliente para que te confirme sus datos.",
@@ -171,7 +171,7 @@ Pedido: 3 Empanadas de Mechada, 2 Empanadas de Queso, 2 Maltas Polar`);
 
   // Enviar plantilla de saludo directo a un cliente
   function handleSendGreetingToClient(phone: string) {
-    const t = buildCustomerDeliveryRequestTemplate();
+    const t = buildCustomerDeliveryRequestTemplate(pos.companySettings.name);
     openWhatsApp({ phone, message: t });
   }
 
@@ -574,7 +574,7 @@ Pedido: 3 Empanadas de Mechada, 2 Empanadas de Queso, 2 Maltas Polar`);
             </p>
 
             <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 font-mono text-xs text-foreground whitespace-pre-wrap leading-relaxed">
-              {buildCustomerDeliveryRequestTemplate()}
+              {buildCustomerDeliveryRequestTemplate(pos.companySettings.name)}
             </div>
 
             <div className="flex flex-wrap gap-2">

@@ -69,7 +69,7 @@ TOTAL SISTEMA:    ${fmtBs(a.expectedTotalBs)} (${fmtUsd(a.expectedTotalBs / rate
 ESTADO DE AUDITORÍA: ${diffText}
 ================================================
 ${a.notes ? `Observaciones del Cajero: ${a.notes}\n================================================\n` : ""}
-Generado automáticamente por NovaStock POS & ERP · Dr. Empanadas C.A.`;
+Generado automáticamente por NovaStock POS & ERP · ${pos.companySettings.name}`;
 
   return { subject: `${title} - ${companySettings.name} (${dateStr})`, body };
 }

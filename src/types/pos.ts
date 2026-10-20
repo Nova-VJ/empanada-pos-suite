@@ -269,6 +269,9 @@ export interface SystemUser {
 }
 
 export interface CompanySettings {
+  isConfigured?: boolean;
+  isLive?: boolean;
+  businessType?: string;
   name: string;
   rif: string;
   email: string;

@@ -252,7 +252,7 @@ export function ProductsModule() {
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Productos y Fichas de Costo</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {products.length} productos activos en el catálogo de Dr. Empanadas C.A.
+            {products.length} productos activos en el catálogo de {pos.companySettings.name}
           </p>
         </div>
         <button
@@ -635,7 +635,7 @@ export function ProductsModule() {
                   <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                   <div className="space-y-0.5">
                     <h4 className="font-bold text-foreground text-xs">
-                      Cálculo 100% Exacto con Facturas de Compra de Dr. Empanadas
+                      Cálculo 100% Exacto con Facturas de Compra de {pos.companySettings.name}
                     </h4>
                     <p className="text-[11px] text-muted-foreground leading-relaxed">
                       El sistema cruza las compras registradas a tus proveedores de Maracay y aplica la merma gastronómica estándar:

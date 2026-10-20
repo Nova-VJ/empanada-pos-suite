@@ -66,4 +66,12 @@ describe("WhatsApp Delivery & Riders Automation", () => {
     expect(msg).toContain("1042");
     expect(msg).toContain("Ezequiel");
   });
+
+  it("adapts customer delivery greeting to any personalized business name", () => {
+    const templateBakery = buildCustomerDeliveryRequestTemplate("Panadería Central");
+    expect(templateBakery).toContain("Hola, hablas con Panadería Central Delivery, me confirmas");
+
+    const templatePizzeria = buildCustomerDeliveryRequestTemplate("Pizzería Roma");
+    expect(templatePizzeria).toContain("Hola, hablas con Pizzería Roma Delivery, me confirmas");
+  });
 });

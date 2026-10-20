@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { usePos } from "@/context/PosContext";
 import { Download, Smartphone, Check, HelpCircle, X } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -7,6 +8,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export function PwaInstallButton() {
+  const pos = usePos();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIos, setIsIos] = useState(false);
@@ -78,7 +80,7 @@ export function PwaInstallButton() {
       <button
         onClick={handleInstallClick}
         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-amber-500/40 bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 text-amber-500 dark:text-amber-400 font-bold text-xs transition shadow-xs active:scale-95"
-        title="Instalar Dr. Empanadas como aplicación en tu PC o teléfono"
+        title={`Instalar ${pos.companySettings.name} como aplicación en tu PC o teléfono`}
       >
         <Smartphone className="h-3.5 w-3.5 text-amber-500 animate-pulse" />
         <span className="hidden sm:inline">Instalar App</span>
@@ -93,7 +95,7 @@ export function PwaInstallButton() {
               <div className="flex items-center gap-2">
                 <span className="text-2xl">📱</span>
                 <div>
-                  <h3 className="font-bold text-sm text-foreground">Instalar Dr. Empanadas</h3>
+                  <h3 className="font-bold text-sm text-foreground">Instalar {pos.companySettings.name}</h3>
                   <p className="text-[11px] text-muted-foreground">Funciona como App nativa en tu pantalla</p>
                 </div>
               </div>

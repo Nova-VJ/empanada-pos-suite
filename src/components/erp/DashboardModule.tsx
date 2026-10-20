@@ -9,6 +9,7 @@ import {
   ShoppingCart,
   Share2,
   Rocket,
+  Store,
 } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { usePos } from "@/context/PosContext";
@@ -102,7 +103,7 @@ export function DashboardModule() {
         <div>
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2.5">
-              Bienvenido a NovaStock · Dr. Empanadas
+              Bienvenido a NovaStock · {pos.companySettings.name || 'Mi Negocio'}
             </h1>
             <Emoji3D
               name="empanada"
@@ -170,14 +171,27 @@ export function DashboardModule() {
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-          <button
-            onClick={() => setShowSetupWizard(true)}
-            className="flex-1 sm:flex-none rounded-xl border border-primary/40 bg-primary/10 hover:bg-primary/20 text-primary px-3 sm:px-3.5 py-2 text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs"
-            title="Cargar tus datos reales de empresa y dejar atrás el modo demo"
-          >
-            <Rocket className="h-3.5 w-3.5" />
-            <span>Datos Reales (Salir Demo)</span>
-          </button>
+          {pos.companySettings.isLive ? (
+            <button
+              type="button"
+              onClick={() => setShowSetupWizard(true)}
+              className="flex-1 sm:flex-none rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-3 sm:px-3.5 py-2 text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-2xs"
+              title="Ver o editar datos fiscales de tu empresa"
+            >
+              <Store className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span className="truncate max-w-[150px] font-bold">{pos.companySettings.name}</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowSetupWizard(true)}
+              className="flex-1 sm:flex-none rounded-xl border border-primary/40 bg-primary/10 hover:bg-primary/20 text-primary px-3 sm:px-3.5 py-2 text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs"
+              title="Cargar tus datos reales de empresa y dejar atrás el modo demo"
+            >
+              <Rocket className="h-3.5 w-3.5" />
+              <span>Datos Reales (Salir Demo)</span>
+            </button>
+          )}
           <button
             onClick={() => pos.setActiveModule("pos")}
             className="flex-1 sm:flex-none rounded-xl bg-primary px-3 sm:px-4 py-2 text-xs font-semibold text-primary-foreground shadow-xs hover:bg-primary/90 transition text-center"

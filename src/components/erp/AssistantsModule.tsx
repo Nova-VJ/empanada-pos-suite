@@ -150,7 +150,7 @@ export function AssistantsModule() {
   const [waSimMessages, setWaSimMessages] = useState<Array<{ from: "user" | "bot"; text: string; time: string }>>([
     {
       from: "bot",
-      text: "👋 ¡Hola! Soy el Asistente NovaStock de Dr. Empanadas C.A. 🥟\nPuedes consultarme en cualquier momento sobre ventas en vivo, stock de insumos, freidoras o tasa BCV.",
+      text: `👋 ¡Hola! Soy el Asistente NovaStock de ${pos.companySettings.name}.\nPuedes consultarme en cualquier momento sobre ventas en vivo, stock de insumos, caja o tasa BCV.`,
       time: "08:00 AM",
     },
   ]);

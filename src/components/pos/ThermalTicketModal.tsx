@@ -27,7 +27,7 @@ export function ThermalTicketModal() {
   const [showFiscalData, setShowFiscalData] = useState(pos.companySettings.ticketConfig?.showFiscalData ?? true);
   const [showBcvRate, setShowBcvRate] = useState(pos.companySettings.ticketConfig?.showBcvRate ?? true);
   const [footerMsg, setFooterMsg] = useState(
-    pos.companySettings.ticketConfig?.footerMessage || "¡Gracias por preferir a Dr. Empanadas! Vuelva pronto 🥟"
+    pos.companySettings.ticketConfig?.footerMessage || `¡Gracias por preferir a ${pos.companySettings.name}! Vuelva pronto`
   );
 
   const [printing, setPrinting] = useState<Tab[] | null>(null);

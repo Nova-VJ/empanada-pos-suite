@@ -265,6 +265,7 @@ interface Ctx extends PosState {
   unlockTerminal: () => void;
   updateCompanySettings: (c: Partial<CompanySettings>) => void;
   clearDemoOrders: () => void;
+  clearAllProducts: () => void;
   resetProductionData: () => void;
   // Delivery orders & Dispatch
   deliveries: DeliveryOrder[];
@@ -404,6 +405,16 @@ export function PosProvider({ children }: { children: ReactNode }) {
             if (parsedFromOldKey.suppliers && parsedFromOldKey.suppliers.length > 0) parsed.suppliers = parsedFromOldKey.suppliers;
           }
         }
+        if (parsed.companySettings) {
+          parsed.companySettings = {
+            ...initial().companySettings,
+            ...parsed.companySettings,
+          };
+          if (parsed.companySettings.name && parsed.companySettings.name !== "Dr. Empanadas C.A.") {
+            parsed.companySettings.isLive = true;
+            parsed.companySettings.isConfigured = true;
+          }
+        }
         setS({ ...initial(), ...parsed });
       } else if (parsedFromOldKey) {
         // Migración transparente desde clave previa
@@ -1140,7 +1151,12 @@ export function PosProvider({ children }: { children: ReactNode }) {
     updateCompanySettings: (c) =>
       setS((x) => ({
         ...x,
-        companySettings: { ...x.companySettings, ...c },
+        companySettings: {
+          ...x.companySettings,
+          ...c,
+          isConfigured: c.isConfigured !== undefined ? c.isConfigured : true,
+          isLive: c.isLive !== undefined ? c.isLive : true,
+        },
       })),
     clearDemoOrders: () =>
       setS((x) => ({
@@ -1164,6 +1180,11 @@ export function PosProvider({ children }: { children: ReactNode }) {
           zigtfTax: 0,
         },
       })),
+    clearAllProducts: () =>
+      setS((x) => ({
+        ...x,
+        products: [],
+      })),
     resetProductionData: () => {
       setS((x) => {
         const fresh: PosState = {
