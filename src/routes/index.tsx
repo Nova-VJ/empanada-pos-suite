@@ -73,21 +73,31 @@ export function PosTerminal() {
           </button>
         </div>
 
-        {/* Modern Category Pills */}
+        {/* Modern Category Pills with 3D Icons */}
         <div className="mt-3 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-          {CATEGORIES.map((c) => (
-            <button
-              key={c}
-              onClick={() => setCat(c)}
-              className={`whitespace-nowrap rounded-xl px-4 py-2 text-xs font-bold transition-all select-none active:scale-95 ${
-                cat === c
-                  ? "bg-primary text-primary-foreground shadow-sm shadow-primary/25"
-                  : "border border-border/80 bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-secondary/70"
-              }`}
-            >
-              {c}
-            </button>
-          ))}
+          {CATEGORIES.map((c) => {
+            const getIcon = () => {
+              if (c === "Empanadas") return <Emoji3D name="empanada" size={20} spinOnHover />;
+              if (c === "Pastelitos") return <Emoji3D name="pastelito" size={20} spinOnHover />;
+              if (c === "Bebidas") return <Emoji3D name="malta" size={20} spinOnHover />;
+              if (c === "Café") return <Emoji3D name="cafe" size={20} spinOnHover />;
+              return null;
+            };
+            return (
+              <button
+                key={c}
+                onClick={() => setCat(c)}
+                className={`whitespace-nowrap rounded-xl px-3.5 py-2 text-xs font-bold transition-all select-none active:scale-95 flex items-center gap-1.5 ${
+                  cat === c
+                    ? "bg-primary text-primary-foreground shadow-sm shadow-primary/25"
+                    : "border border-border/80 bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-secondary/70"
+                }`}
+              >
+                {getIcon()}
+                <span>{c}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Product Cards Grid */}

@@ -98,10 +98,62 @@ export function DashboardModule() {
     <div className="space-y-4 sm:space-y-6 p-3 sm:p-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2 flex-wrap">
-            Bienvenido a NovaSystem · Dr. Empanadas <Emoji3D name="empanada" size={32} />
-          </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2.5">
+              Bienvenido a NovaSystem · Dr. Empanadas
+            </h1>
+            <div className="relative group inline-block">
+              <Emoji3D
+                name="empanada"
+                size={44}
+                spin360
+                interactive
+                className="cursor-pointer filter hover:drop-shadow-[0_4px_12px_rgba(245,158,11,0.5)] transition-all"
+              />
+              <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-slate-900 text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition pointer-events-none shadow-md border border-amber-500/30">
+                Gira 360° en 3D 🔄
+              </span>
+            </div>
+          </div>
+
+          {/* Vitrina 3D Criolla (Empanada, Pastelito, Malta, Café) */}
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
+            <span className="text-[11px] font-semibold text-muted-foreground mr-1">Iconos 3D de la Casa:</span>
+            <div
+              onClick={() => pos.setActiveModule("pos")}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500/10 border border-amber-500/25 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-semibold cursor-pointer transition active:scale-95"
+              title="Empanada Criolla 3D — Toca para probar en TPV"
+            >
+              <Emoji3D name="empanada" size={20} spinOnHover interactive />
+              <span>Empanada 3D</span>
+            </div>
+            <div
+              onClick={() => pos.setActiveModule("pos")}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-orange-500/10 border border-orange-500/25 hover:bg-orange-500/20 text-orange-700 dark:text-orange-300 text-xs font-semibold cursor-pointer transition active:scale-95"
+              title="Pastelito 3D — Toca para probar en TPV"
+            >
+              <Emoji3D name="pastelito" size={20} spinOnHover interactive />
+              <span>Pastelito 3D</span>
+            </div>
+            <div
+              onClick={() => pos.setActiveModule("pos")}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-blue-500/10 border border-blue-500/25 hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 text-xs font-semibold cursor-pointer transition active:scale-95"
+              title="Malta Polar 3D — Toca para probar en TPV"
+            >
+              <Emoji3D name="malta" size={20} spinOnHover interactive />
+              <span>Malta 3D</span>
+            </div>
+            <div
+              onClick={() => pos.setActiveModule("pos")}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-stone-500/10 border border-stone-500/25 hover:bg-stone-500/20 text-stone-700 dark:text-stone-300 text-xs font-semibold cursor-pointer transition active:scale-95"
+              title="Café Expreso 3D — Toca para probar en TPV"
+            >
+              <Emoji3D name="cafe" size={20} spinOnHover interactive />
+              <span>Café 3D</span>
+            </div>
+          </div>
+
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1.5">
             Resumen ejecutivo —{" "}
             {new Date().toLocaleDateString("es-VE", {
               weekday: "long",

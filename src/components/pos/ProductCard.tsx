@@ -1,5 +1,6 @@
 import type { Product } from "@/types/pos";
 import { fmtBs, fmtUsd } from "@/lib/money";
+import { Emoji3D } from "@/components/common/Emoji3D";
 
 export function ProductCard({ product, rate, onAdd }: { product: Product; rate: number; onAdd: (p: Product, mod?: string) => void }) {
   const low = product.stockBar < 25;
@@ -25,7 +26,17 @@ export function ProductCard({ product, rate, onAdd }: { product: Product; rate: 
                 : "bg-gradient-to-br from-cyan-500/20 via-blue-500/10 to-indigo-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/20"
             }`}
           >
-            {product.emoji}
+            {product.category === "Empanadas" || product.name.toLowerCase().includes("empanada") ? (
+              <Emoji3D name="empanada" size={36} spinOnHover />
+            ) : product.category === "Pastelitos" || product.name.toLowerCase().includes("pastelito") ? (
+              <Emoji3D name="pastelito" size={36} spinOnHover />
+            ) : product.category === "Bebidas" || product.name.toLowerCase().includes("malta") ? (
+              <Emoji3D name="malta" size={36} spinOnHover />
+            ) : product.name.toLowerCase().includes("café") || product.name.toLowerCase().includes("cafe") ? (
+              <Emoji3D name="cafe" size={36} spinOnHover />
+            ) : (
+              <span>{product.emoji}</span>
+            )}
           </div>
           <span
             className={`rounded-full px-2 py-0.5 font-mono text-[10px] font-bold tracking-tight transition-colors ${
