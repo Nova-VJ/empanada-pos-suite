@@ -21,10 +21,10 @@ const EMOJI_MAP: Record<Emoji3DName, string> = {
 };
 
 const ALT_MAP: Record<Emoji3DName, string> = {
-  empanada: "🥟 Empanada 3D",
-  pastelito: "🥪 Pastelito 3D",
-  malta: "🥤 Malta 3D",
-  cafe: "☕ Café 3D",
+  empanada: "Empanada",
+  pastelito: "Pastelito",
+  malta: "Malta Polar",
+  cafe: "Café",
 };
 
 export function Emoji3D({
@@ -62,7 +62,7 @@ export function Emoji3D({
         perspective: "600px",
       }}
       onClick={handleClick}
-      title={interactive ? "¡Tócame para girar 360°!" : fallbackAlt}
+      title={fallbackAlt}
     >
       <img
         src={src}

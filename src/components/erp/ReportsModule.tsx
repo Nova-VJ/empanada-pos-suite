@@ -364,7 +364,7 @@ export function ReportsModule() {
         <div>
           <div className="flex items-center gap-2.5">
             <div className="h-9 w-9 rounded-xl overflow-hidden border border-border shadow-xs shrink-0">
-              <img src="/logo.jpg" alt="Logo" className="h-full w-full object-cover" />
+              <img src="/logo-gold.jpg" alt="Logo Dorado" className="h-full w-full object-cover" />
             </div>
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-foreground">

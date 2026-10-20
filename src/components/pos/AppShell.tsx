@@ -339,9 +339,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Sticky Top Header */}
-        <header className="no-print h-14 border-b border-border flex items-center justify-between px-2 sm:px-3.5 bg-card/85 backdrop-blur-md sticky top-0 z-30 gap-1.5 sm:gap-2 overflow-x-clip">
+        <header className="no-print h-14 border-b border-border flex items-center justify-between px-2 sm:px-4 bg-card/85 backdrop-blur-md sticky top-0 z-30 gap-2 w-full max-w-full overflow-hidden">
           {/* Left section: Mobile Menu / Collapse Button + Title */}
-          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 shrink">
             {/* Mobile Hamburger Drawer Button */}
             <button
               onClick={() => setMobileNavOpen(true)}
@@ -362,27 +362,27 @@ export function AppShell({ children }: { children: ReactNode }) {
 
             <div className="h-4 w-px bg-border shrink-0 hidden sm:block" />
 
-            <h2 className="text-xs sm:text-sm font-bold text-foreground truncate max-w-[110px] sm:max-w-[160px] md:max-w-[190px]">
+            <h2 className="text-xs sm:text-sm font-bold text-foreground truncate max-w-[130px] sm:max-w-[190px]">
               {MODULE_TITLES[currentModule]}
             </h2>
           </div>
 
-          {/* Right section: Pills & Controls with intelligent overflow */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {/* Right section: Clean, Responsive Pills & Always Reachable Controls */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-auto">
             {/* Live Rate Pill */}
             <button
               onClick={() => pos.setModal("bcv")}
               className="inline-flex items-center gap-1 sm:gap-1.5 rounded-lg border border-primary/25 bg-primary/10 px-2 py-1 font-mono text-[11px] sm:text-xs font-semibold text-primary hover:bg-primary/15 transition shrink-0"
-              title="Monitor Multi-Divisas (monitordolarve, BCV, Binance)"
+              title="Monitor Multi-Divisas (BCV / Paralelo)"
             >
               <RefreshCw className={`h-3 w-3 ${pos.isRefreshingRates ? "animate-spin" : ""}`} />
-              <span className="hidden sm:inline">{pos.ratesData.variants[pos.ratesData.activeVariantId]?.name?.replace(/\s*\(.*?\)/, "") ?? "BCV"}:</span>
+              <span className="hidden md:inline">{pos.ratesData.variants[pos.ratesData.activeVariantId]?.name?.replace(/\s*\(.*?\)/, "") ?? "BCV"}:</span>
               <span>Bs. {pos.rate.toFixed(2)}</span>
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
             </button>
 
-            {/* Cashier Shift Pill (compact and clean) */}
-            <div className="hidden sm:flex items-center gap-1.5 rounded-lg border border-border bg-secondary/70 py-1 px-2 text-xs shrink-0">
+            {/* Cashier Shift Pill (Arqueo) */}
+            <div className="hidden lg:flex items-center gap-1.5 rounded-lg border border-border bg-secondary/70 py-1 px-2 text-xs shrink-0">
               <span className="font-mono text-muted-foreground text-[11px]">
                 {h}h {String(m).padStart(2, "0")}m
               </span>
@@ -395,79 +395,8 @@ export function AppShell({ children }: { children: ReactNode }) {
               </button>
             </div>
 
-            {/* Quick Open Cash Drawer Button (ultra-wide only) */}
-            <button
-              onClick={() => {
-                toast.success("🗄️ Gaveta de dinero abierta (Pulso ESC/POS enviado a impresora)");
-              }}
-              className="hidden 2xl:inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary/70 px-2.5 py-1 text-xs font-semibold text-foreground hover:bg-secondary transition shrink-0"
-              title="Abrir Gaveta de Dinero (Pulso RJ11 a impresora)"
-            >
-              <span>🗄️ Gaveta</span>
-            </button>
-
-            {/* Support / Technician Pill (ultra-wide only) */}
-            <button
-              onClick={() => pos.setModal("support")}
-              className="hidden 2xl:inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 transition shrink-0"
-              title="Menú Oculto de Soporte Técnico, TeamViewer y Actualizar Biblioteca Móvil"
-            >
-              <Wrench className="h-3 w-3" />
-              <span>Soporte VIP</span>
-            </button>
-
-            {/* Fiscal Printer Status Pill (ultra-wide only) */}
-            <button
-              onClick={() => pos.setModal("printer")}
-              className="hidden 2xl:inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary/70 px-2.5 py-1 font-mono text-xs text-muted-foreground hover:text-foreground hover:border-primary/40 transition shrink-0"
-              title="Estado Impresora Fiscal The Factory HKA"
-            >
-              <Printer className="h-3.5 w-3.5" />
-              <span>HKA {pos.fiscal.port}</span>
-              <span className={pos.fiscal.connected ? "text-emerald-500" : "text-rose-500"}>●</span>
-            </button>
-
-            {/* Quick Mode Switcher (ultra-wide only, desktop already has left sidebar) */}
-            <div className="hidden 2xl:flex items-center gap-0.5 rounded-lg border border-border bg-secondary/60 p-0.5 shrink-0">
-              <button
-                onClick={() => selectModule("pos")}
-                className={`rounded-md px-2 py-1 text-xs font-medium transition ${
-                  currentModule === "pos"
-                    ? "bg-primary text-primary-foreground shadow-2xs"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                TPV (F1)
-              </button>
-              <button
-                onClick={() => selectModule("kds")}
-                className={`rounded-md px-2 py-1 text-xs font-medium transition flex items-center gap-1 ${
-                  currentModule === "kds"
-                    ? "bg-primary text-primary-foreground shadow-2xs"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <span>KDS (F2)</span>
-                {pendingFryer > 0 && (
-                  <span className="rounded-full bg-amber-500 px-1 text-[9px] font-bold text-white">
-                    {pendingFryer}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={() => selectModule("dashboard")}
-                className={`rounded-md px-2 py-1 text-xs font-medium transition ${
-                  currentModule !== "pos" && currentModule !== "kds"
-                    ? "bg-primary text-primary-foreground shadow-2xs"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                ERP (F3)
-              </button>
-            </div>
-
             {/* ALWAYS PINNED ESSENTIAL CONTROLS (PWA Install, Theme, Lock Screen, Profile Login) */}
-            <div className="flex items-center gap-1.5 shrink-0 pl-1.5 sm:pl-2 border-l border-border/60 mr-1 sm:mr-1.5">
+            <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 pl-1.5 sm:pl-2 border-l border-border/60">
               {/* PWA Install Button */}
               <PwaInstallButton />
 
@@ -484,7 +413,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <button
                 onClick={() => {
                   pos.lockTerminal();
-                  toast.info("Terminal bloqueado (Protector de pantalla activo)");
+                  toast.info("Terminal bloqueado");
                 }}
                 className="h-8 w-8 rounded-lg border border-border bg-secondary/60 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition shrink-0"
                 title="Bloquear Terminal (Protector de Pantalla con Clave PIN)"
@@ -497,7 +426,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 type="button"
                 onClick={() => setShowAuthModal(true)}
                 className="h-8 w-8 rounded-full bg-primary/15 border-2 border-primary/30 flex items-center justify-center shrink-0 hover:ring-2 hover:ring-primary/40 transition active:scale-95 group relative"
-                title="Cuenta / Iniciar Sesión con Google o Correo / Crear Usuario"
+                title="Mi Cuenta y Perfil de Usuario"
               >
                 <span className="text-xs font-bold text-primary group-hover:scale-105 transition">
                   {pos.shift.cashier
