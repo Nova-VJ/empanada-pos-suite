@@ -80,6 +80,7 @@ interface PosState {
   accountingAccounts: AccountingAccount[];
   journalEntries: JournalEntry[];
   companySettings: CompanySettings;
+  categories: string[];
   lastMobileSync?: number;
 }
 
@@ -200,6 +201,11 @@ interface Ctx extends PosState {
   syncMobileLibrary: () => Promise<void>;
   createSupplier: (s: Omit<Supplier, "id" | "score" | "dimensions" | "strengths" | "weaknesses" | "redFlags">) => void;
   updateSupplier: (id: string, s: Partial<Supplier>) => void;
+  deleteSupplier: (id: string) => void;
+  updateOrder: (id: number, patch: Partial<Order>) => void;
+  categories: string[];
+  addCategory: (name: string) => void;
+  deleteCategory: (name: string) => void;
   createPurchaseOrder: (po: { supplierId: string; itemsSummary: string; productId?: string; qty?: number; totalUsd: number }) => void;
   advancePurchaseOrder: (id: string) => void;
   toggleSupplierInvoicePaid: (id: string) => void;
@@ -577,6 +583,27 @@ export function PosProvider({ children }: { children: ReactNode }) {
     void api.createOrder(order);
     playCashChime();
     if (order.kdsStatus === "fryer") setTimeout(playKitchenBell, 450);
+
+    // Browser & Phone Web Notification
+    if (typeof window !== "undefined" && "Notification" in window) {
+      if (Notification.permission === "granted") {
+        try {
+          new Notification(`🔔 Venta Registrada · Factura #${order.invoiceNo}`, {
+            body: `${order.lines.length} productos · $${(order.totalBs / order.rate).toFixed(2)} USD (Bs. ${order.totalBs.toFixed(2)})`,
+            icon: "/favicon.png",
+          });
+        } catch {
+          // ignore
+        }
+      } else if (Notification.permission === "default") {
+        try {
+          Notification.requestPermission();
+        } catch {
+          // ignore
+        }
+      }
+    }
+
     return order;
   }, []);
 
@@ -591,7 +618,7 @@ export function PosProvider({ children }: { children: ReactNode }) {
         orders: x.orders.map((o) => (o.zNumber === undefined ? { ...o, zNumber: x.zCounter } : o)),
         zCounter: x.zCounter + 1,
         fiscal: { ...x.fiscal, lastZ: x.zCounter },
-        shift: { ...x.shift, openedAt: Date.now() },
+        shift: { ...x.shift, isOpen: false, openedAt: Date.now() },
       };
     });
     void api.closeShift(audit);
@@ -786,6 +813,31 @@ export function PosProvider({ children }: { children: ReactNode }) {
       setS((x) => ({
         ...x,
         suppliers: x.suppliers.map((item) => (item.id === id ? { ...item, ...sup } : item)),
+      })),
+    deleteSupplier: (id) =>
+      setS((x) => ({
+        ...x,
+        suppliers: x.suppliers.filter((item) => item.id !== id),
+      })),
+    updateOrder: (id, patch) =>
+      setS((x) => ({
+        ...x,
+        orders: x.orders.map((o) => (o.id === id ? { ...o, ...patch } : o)),
+      })),
+    categories: s.categories || ["Empanadas", "Pastelitos", "Horneados", "Bebidas", "Salsas & Extras", "Combos"],
+    addCategory: (name) => {
+      const clean = name.trim();
+      if (!clean) return;
+      setS((x) => {
+        const prev = x.categories || ["Empanadas", "Pastelitos", "Horneados", "Bebidas", "Salsas & Extras", "Combos"];
+        if (prev.includes(clean)) return x;
+        return { ...x, categories: [...prev, clean] };
+      });
+    },
+    deleteCategory: (name) =>
+      setS((x) => ({
+        ...x,
+        categories: (x.categories || ["Empanadas", "Pastelitos", "Horneados", "Bebidas", "Salsas & Extras", "Combos"]).filter((c) => c !== name),
       })),
     createPurchaseOrder: ({ supplierId, itemsSummary, productId, qty, totalUsd }) =>
       setS((x) => {

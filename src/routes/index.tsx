@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Search, Barcode, Share2, Sparkles } from "lucide-react";
+import { Search, Barcode, Share2, Sparkles, Sun } from "lucide-react";
 import { usePos } from "@/context/PosContext";
 import { CATEGORIES } from "@/data/mockProducts";
 import { ProductCard } from "@/components/pos/ProductCard";
@@ -24,7 +24,7 @@ export const Route = createFileRoute("/")({
 
 export function PosTerminal() {
   const pos = usePos();
-  const [cat, setCat] = useState<(typeof CATEGORIES)[number]>("Todos");
+  const [cat, setCat] = useState<string>("Todos");
   const [q, setQ] = useState("");
   const [showPromos, setShowPromos] = useState(false);
 
@@ -41,6 +41,25 @@ export function PosTerminal() {
   return (
     <div className="grid h-[calc(100vh-56px)] grid-cols-1 gap-4 p-4 lg:grid-cols-[65fr_35fr] bg-background">
       <section className="flex min-h-0 flex-col">
+        {/* Banner de Caja Cerrada si no hay turno abierto */}
+        {!pos.shift.isOpen && (
+          <div className="mb-3 rounded-2xl border border-amber-500/40 bg-amber-500/15 p-3 flex flex-wrap items-center justify-between gap-3 text-xs shadow-xs animate-in fade-in-50">
+            <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200 font-semibold">
+              <span className="text-lg">⚠️</span>
+              <span>
+                Caja Cerrada · Para registrar ventas y cobros debes abrir la caja del día con el fondo en Bolívares.
+              </span>
+            </div>
+            <button
+              onClick={() => pos.setModal("shift")}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 text-white px-3.5 py-1.5 font-bold hover:bg-emerald-700 transition shrink-0 shadow-xs cursor-pointer animate-pulse"
+            >
+              <Sun className="h-4 w-4" />
+              <span>Abrir Caja (Fondo Bs.)</span>
+            </button>
+          </div>
+        )}
+
         {/* Modern Search bar + Publicar en Redes Button */}
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
@@ -75,7 +94,7 @@ export function PosTerminal() {
 
         {/* Modern Category Pills with 3D Icons */}
         <div className="mt-3 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-          {CATEGORIES.map((c) => {
+          {["Todos", ...(pos.categories || ["Empanadas", "Pastelitos", "Horneados", "Bebidas", "Salsas & Extras", "Combos"])].map((c) => {
             const getIcon = () => {
               if (c === "Empanadas") return <Emoji3D name="empanada" size={20} spinOnHover />;
               if (c === "Pastelitos") return <Emoji3D name="pastelito" size={20} spinOnHover />;

@@ -124,6 +124,8 @@ export function SocialPromotionsModal({ onClose }: SocialPromotionsModalProps) {
   const [customName, setCustomName] = useState("");
   const [customTagline, setCustomTagline] = useState("");
   const [customBadge, setCustomBadge] = useState("");
+  const [customPromoPrice, setCustomPromoPrice] = useState<string>("");
+  const [customRegularPrice, setCustomRegularPrice] = useState<string>("");
 
   // IA Generator: Analyzes inventory products and creates new promotions
   function handleGenerateFromInventory() {
@@ -234,11 +236,26 @@ export function SocialPromotionsModal({ onClose }: SocialPromotionsModalProps) {
       }
     : selectedPack;
 
+  const promoPriceUsdNum = isCustomizing && customPromoPrice.trim() !== ""
+    ? parseFloat(customPromoPrice.replace(",", ".")) || baseDisplay.promoPriceUsd
+    : baseDisplay.promoPriceUsd;
+
+  const regularPriceUsdNum = isCustomizing && customRegularPrice.trim() !== ""
+    ? parseFloat(customRegularPrice.replace(",", ".")) || baseDisplay.regularPriceUsd
+    : baseDisplay.regularPriceUsd;
+
+  const computedDiscount = regularPriceUsdNum > promoPriceUsdNum
+    ? Math.round(((regularPriceUsdNum - promoPriceUsdNum) / regularPriceUsdNum) * 100)
+    : baseDisplay.discountPct;
+
   const displayPromo = {
     ...baseDisplay,
     name: isCustomizing && customName.trim() ? customName : baseDisplay.name,
     tagline: isCustomizing && customTagline.trim() ? customTagline : baseDisplay.tagline,
-    badge: isCustomizing && customBadge.trim() ? customBadge : baseDisplay.badge,
+    badge: isCustomizing && customBadge.trim() ? customBadge : (isCustomizing && customPromoPrice.trim() ? `OFERTA $${promoPriceUsdNum.toFixed(2)} 🔥` : baseDisplay.badge),
+    promoPriceUsd: promoPriceUsdNum,
+    regularPriceUsd: regularPriceUsdNum,
+    discountPct: computedDiscount,
   };
 
   const priceBs = displayPromo.promoPriceUsd * rate;
@@ -506,43 +523,75 @@ ${displayPromo.items.map((i) => `✔ ${i}`).join("\n")}
                 setCustomName(displayPromo.name);
                 setCustomTagline(displayPromo.tagline);
                 setCustomBadge(displayPromo.badge);
+                setCustomPromoPrice(String(displayPromo.promoPriceUsd));
+                setCustomRegularPrice(String(displayPromo.regularPriceUsd));
               }
               setIsCustomizing(!isCustomizing);
             }}
             className="text-xs font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer"
           >
-            {isCustomizing ? "✕ Cerrar Edición" : "✏️ Editar Textos del Flyer"}
+            {isCustomizing ? "✕ Cerrar Edición" : "✏️ Editar Textos y Precios del Flyer"}
           </button>
         </div>
 
         {isCustomizing && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 bg-primary/5 p-3 rounded-xl border border-primary/20 text-xs">
-            <div>
-              <label className="text-[10px] font-bold text-muted-foreground uppercase">Título de la Promo:</label>
-              <input
-                value={customName}
-                onChange={(e) => setCustomName(e.target.value)}
-                placeholder={displayPromo.name}
-                className={`${inputCls} text-xs py-1 mt-1`}
-              />
+          <div className="space-y-2.5 bg-primary/5 p-3 rounded-xl border border-primary/20 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <div>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase">Título de la Promo:</label>
+                <input
+                  value={customName}
+                  onChange={(e) => setCustomName(e.target.value)}
+                  placeholder={displayPromo.name}
+                  className={`${inputCls} text-xs py-1 mt-1`}
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase">Frase / Eslogan:</label>
+                <input
+                  value={customTagline}
+                  onChange={(e) => setCustomTagline(e.target.value)}
+                  placeholder={displayPromo.tagline}
+                  className={`${inputCls} text-xs py-1 mt-1`}
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase">Etiqueta / Badge:</label>
+                <input
+                  value={customBadge}
+                  onChange={(e) => setCustomBadge(e.target.value)}
+                  placeholder={displayPromo.badge}
+                  className={`${inputCls} text-xs py-1 mt-1`}
+                />
+              </div>
             </div>
-            <div>
-              <label className="text-[10px] font-bold text-muted-foreground uppercase">Frase / Eslogan:</label>
-              <input
-                value={customTagline}
-                onChange={(e) => setCustomTagline(e.target.value)}
-                placeholder={displayPromo.tagline}
-                className={`${inputCls} text-xs py-1 mt-1`}
-              />
-            </div>
-            <div>
-              <label className="text-[10px] font-bold text-muted-foreground uppercase">Etiqueta / Badge:</label>
-              <input
-                value={customBadge}
-                onChange={(e) => setCustomBadge(e.target.value)}
-                placeholder={displayPromo.badge}
-                className={`${inputCls} text-xs py-1 mt-1`}
-              />
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 border-t border-primary/20 pt-2">
+              <div>
+                <label className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">💵 Precio Promo ($ USD):</label>
+                <input
+                  inputMode="decimal"
+                  value={customPromoPrice}
+                  onChange={(e) => setCustomPromoPrice(e.target.value)}
+                  placeholder={String(baseDisplay.promoPriceUsd)}
+                  className={`${inputCls} text-xs py-1 mt-1 font-mono font-bold text-emerald-600 dark:text-emerald-400`}
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase">🏷️ Precio Regular ($ USD):</label>
+                <input
+                  inputMode="decimal"
+                  value={customRegularPrice}
+                  onChange={(e) => setCustomRegularPrice(e.target.value)}
+                  placeholder={String(baseDisplay.regularPriceUsd)}
+                  className={`${inputCls} text-xs py-1 mt-1 font-mono`}
+                />
+              </div>
+              <div className="flex flex-col justify-end">
+                <div className="text-[11px] font-mono font-bold text-primary bg-primary/10 rounded-lg p-1.5 text-center">
+                  Bs. {fmtBs(priceBs)} ({displayPromo.discountPct}% Dto.)
+                </div>
+              </div>
             </div>
           </div>
         )}

@@ -25,6 +25,7 @@ import {
   Wrench,
   Menu,
   X,
+  ShoppingBag,
 } from "lucide-react";
 import { toast } from "sonner";
 import { usePos } from "@/context/PosContext";
@@ -54,6 +55,7 @@ interface NavItem {
 const MAIN_NAV: NavItem[] = [
   { id: "dashboard", title: "Dashboard", icon: LayoutDashboard, color: "text-module-sales", bgColor: "bg-module-sales-light" },
   { id: "pos", title: "TPV / Ventas", icon: ShoppingCart, color: "text-module-sales", bgColor: "bg-module-sales-light", shortcut: "F1" },
+  { id: "sales", title: "Ventas Realizadas", icon: ShoppingBag, color: "text-emerald-500", bgColor: "bg-emerald-500/10", shortcut: "F3" },
   { id: "kds", title: "Cocina KDS", icon: Flame, color: "text-module-inventory", bgColor: "bg-module-inventory-light", shortcut: "F2" },
   { id: "products", title: "Productos", icon: Package, color: "text-module-products", bgColor: "bg-module-products-light" },
   { id: "inventory", title: "Inventario", icon: Warehouse, color: "text-module-inventory", bgColor: "bg-module-inventory-light" },
@@ -78,6 +80,7 @@ const REPORTS_NAV: NavItem[] = [
 const MODULE_TITLES: Record<ModuleId, string> = {
   dashboard: "Dashboard Ejecutivo",
   pos: "Terminal TPV / Ventas",
+  sales: "Ventas Realizadas & Historial de Pedidos",
   kds: "Cocina KDS & Freidoras",
   products: "Catálogo de Productos",
   inventory: "Inventario & Kardex",
@@ -185,7 +188,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       }
       if (e.key === "F3") {
         e.preventDefault();
-        selectModule("dashboard");
+        selectModule("sales");
         return;
       }
       if (pos.modal) return;
@@ -417,18 +420,34 @@ export function AppShell({ children }: { children: ReactNode }) {
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
             </button>
 
-            {/* Cashier Shift Pill (Arqueo) */}
-            <div className="hidden lg:flex items-center gap-1.5 rounded-lg border border-border bg-secondary/70 py-1 px-2 text-xs shrink-0">
-              <span className="font-mono text-muted-foreground text-[11px]">
-                {h}h {String(m).padStart(2, "0")}m
-              </span>
-              <button
-                onClick={() => pos.setModal("shift")}
-                className="inline-flex items-center gap-1 rounded-md bg-card border border-border px-1.5 py-0.5 text-[11px] font-semibold text-foreground hover:bg-destructive hover:text-destructive-foreground hover:border-destructive transition"
-                title="Cierre de Turno y Arqueo X/Z"
-              >
-                <Lock className="h-2.5 w-2.5" /> Arqueo
-              </button>
+            {/* Cashier Shift Pill (Arqueo / Estado de Caja) */}
+            <div className="flex items-center gap-1.5 rounded-lg border border-border bg-secondary/70 py-1 px-2 text-xs shrink-0">
+              {pos.shift.isOpen ? (
+                <>
+                  <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="hidden sm:inline">Caja Abierta</span>
+                  </span>
+                  <span className="hidden md:inline font-mono text-muted-foreground text-[10px]">
+                    ({h}h {String(m).padStart(2, "0")}m)
+                  </span>
+                  <button
+                    onClick={() => pos.setModal("shift")}
+                    className="inline-flex items-center gap-1 rounded-md bg-card border border-border px-1.5 py-0.5 text-[11px] font-semibold text-foreground hover:bg-destructive hover:text-destructive-foreground hover:border-destructive transition cursor-pointer"
+                    title="Corte X / Cierre Z"
+                  >
+                    <Lock className="h-2.5 w-2.5" /> Arqueo / Cierre
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => pos.setModal("shift")}
+                  className="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 text-white px-2.5 py-1 text-[11px] font-bold shadow-xs hover:bg-emerald-700 transition cursor-pointer animate-pulse"
+                  title="Abrir la caja del día con monto inicial"
+                >
+                  <Sun className="h-3.5 w-3.5" /> Abrir Caja
+                </button>
+              )}
             </div>
 
             {/* ALWAYS PINNED ESSENTIAL CONTROLS (PWA Install, Theme, Lock Screen, Profile Login) */}

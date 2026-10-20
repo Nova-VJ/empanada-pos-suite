@@ -1,8 +1,9 @@
-export type Category = "Empanadas" | "Pastelitos" | "Horneados" | "Bebidas" | "Salsas & Extras" | "Combos";
+export type Category = "Empanadas" | "Pastelitos" | "Horneados" | "Bebidas" | "Salsas & Extras" | "Combos" | (string & {});
 
 export type ModuleId =
   | "dashboard"
   | "pos"
+  | "sales"
   | "kds"
   | "products"
   | "inventory"
@@ -262,6 +263,9 @@ export interface CompanySettings {
   printerWidth?: "58mm" | "80mm";
   lowStockAlertsEnabled?: boolean;
   ticketConfig?: TicketConfig;
+  ownerPhone?: string;
+  notifyOrdersOnPhone?: boolean;
+  customCategories?: string[];
 }
 
 export interface CartItem {

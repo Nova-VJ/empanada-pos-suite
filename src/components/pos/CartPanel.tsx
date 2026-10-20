@@ -1,6 +1,7 @@
 import { Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
 import { usePos } from "@/context/PosContext";
 import { fmtBs, fmtUsd, IGTF } from "@/lib/money";
+import { toast } from "sonner";
 
 const DISCOUNTS: { label: string; v: number }[] = [
   { label: "0%", v: 0 },
@@ -207,8 +208,15 @@ export function CartPanel() {
         {/* Botón Cobrar Orden */}
         <button
           disabled={cart.length === 0}
-          onClick={() => pos.setModal("payment")}
-          className="w-full rounded-2xl bg-gradient-to-r from-primary to-indigo-600 py-3.5 text-sm font-black tracking-wide text-white shadow-md hover:shadow-lg transition-all active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40 select-none flex items-center justify-center gap-2"
+          onClick={() => {
+            if (!pos.shift.isOpen) {
+              toast.error("La caja se encuentra CERRADA. Abre la caja del día ingresando el fondo en Bolívares para poder procesar pagos.");
+              pos.setModal("shift");
+              return;
+            }
+            pos.setModal("payment");
+          }}
+          className="w-full rounded-2xl bg-gradient-to-r from-primary to-indigo-600 py-3.5 text-sm font-black tracking-wide text-white shadow-md hover:shadow-lg transition-all active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40 select-none flex items-center justify-center gap-2 cursor-pointer"
         >
           <span>💳 COBRAR ORDEN</span>
           <span className="rounded-md bg-black/20 px-2 py-0.5 text-xs font-mono font-normal">F10 o Espacio</span>

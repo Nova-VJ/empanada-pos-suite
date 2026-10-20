@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { usePos } from "@/context/PosContext";
 import { DashboardModule } from "@/components/erp/DashboardModule";
+import { SalesHistoryModule } from "@/components/erp/SalesHistoryModule";
 import { ProductsModule } from "@/components/erp/ProductsModule";
 import { InventoryModule } from "@/components/erp/InventoryModule";
 import { CustomersModule } from "@/components/erp/CustomersModule";
@@ -31,6 +32,8 @@ function Backoffice() {
 
   const renderActive = () => {
     switch (activeModule) {
+      case "sales":
+        return <SalesHistoryModule />;
       case "products":
         return <ProductsModule />;
       case "inventory":

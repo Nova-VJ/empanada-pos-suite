@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { ArrowRight, CheckCircle2, Edit, FileText, Filter, Package, Plus, Search, SlidersHorizontal, Truck, Award, Sparkles, X, Calculator, Clock, RefreshCw, Radio, Zap, ShieldCheck, ChevronDown, ChevronUp, Bell, Check, MapPin, Globe, Store, Building, PhoneCall, ExternalLink, Navigation, CheckCircle, Info, MessageSquare } from "lucide-react";
+import { ArrowRight, Trash2, CheckCircle2, Edit, FileText, Filter, Package, Plus, Search, SlidersHorizontal, Truck, Award, Sparkles, X, Calculator, Clock, RefreshCw, Radio, Zap, ShieldCheck, ChevronDown, ChevronUp, Bell, Check, MapPin, Globe, Store, Building, PhoneCall, ExternalLink, Navigation, CheckCircle, Info, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { usePos } from "@/context/PosContext";
 import { fmtBs, fmtUsd } from "@/lib/money";
@@ -672,6 +672,7 @@ export function SuppliersModule() {
   const [radarSourceFilter, setRadarSourceFilter] = useState<"todos" | "osm" | "directory" | "galpon">("todos");
   const [radarZoneFilter, setRadarZoneFilter] = useState<string>("todas");
   const [newGalponModal, setNewGalponModal] = useState(false);
+  const [deletingSupplier, setDeletingSupplier] = useState<Supplier | null>(null);
   const [newGalponForm, setNewGalponForm] = useState({
     name: "",
     galponZone: "Galpón 3, Puesto 12",
@@ -1612,7 +1613,8 @@ export function SuppliersModule() {
           </div>
 
           <div className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
-            <table className="w-full text-xs">
+            <div className="overflow-x-auto min-w-full">
+            <table className="w-full min-w-[850px] text-xs">
               <thead className="border-b border-border bg-secondary/50 text-left text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3 font-semibold">Nombre / Razón Social</th>
@@ -1622,7 +1624,7 @@ export function SuppliersModule() {
                   <th className="px-4 py-3 font-semibold">Crédito</th>
                   <th className="px-4 py-3 font-semibold">Scoring</th>
                   <th className="px-4 py-3 font-semibold">Estado</th>
-                  <th className="px-4 py-3 w-[60px]" />
+                  <th className="px-4 py-3 text-right font-semibold w-[90px]">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -1653,24 +1655,36 @@ export function SuppliersModule() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <button
-                        onClick={() => openEditSupplier(s)}
-                        className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </button>
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => openEditSupplier(s)}
+                          className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition cursor-pointer"
+                          title="Editar proveedor"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => setDeletingSupplier(s)}
+                          className="rounded-lg p-1.5 text-destructive hover:bg-destructive/10 transition cursor-pointer"
+                          title="Eliminar proveedor"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
       )}
 
       {tab === "orders" && (
         <div className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
-          <table className="w-full text-xs">
+          <div className="overflow-x-auto min-w-full">
+          <table className="w-full min-w-[850px] text-xs">
             <thead className="border-b border-border bg-secondary/50 text-left text-muted-foreground">
               <tr>
                 <th className="px-4 py-3 font-semibold">Nº Pedido</th>
@@ -1725,12 +1739,14 @@ export function SuppliersModule() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
       {tab === "invoices" && (
         <div className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
-          <table className="w-full text-xs">
+          <div className="overflow-x-auto min-w-full">
+          <table className="w-full min-w-[850px] text-xs">
             <thead className="border-b border-border bg-secondary/50 text-left text-muted-foreground">
               <tr>
                 <th className="px-4 py-3 font-semibold">Nº Factura</th>
@@ -1784,6 +1800,7 @@ export function SuppliersModule() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
@@ -2277,6 +2294,40 @@ export function SuppliersModule() {
                 <span>Ahorro estimado para Dr. Empanadas: ~$65.00 a $90.00 USD al mes.</span>
               </div>
             </div>
+          </div>
+        </Modal>
+      )}
+      {deletingSupplier && (
+        <Modal
+          title="Eliminar Proveedor"
+          onClose={() => setDeletingSupplier(null)}
+          width="max-w-md"
+          footer={
+            <div className="flex justify-end gap-2 w-full">
+              <button type="button" onClick={() => setDeletingSupplier(null)} className={btnGhost}>
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  pos.deleteSupplier(deletingSupplier.id);
+                  toast.success(`Proveedor «${deletingSupplier.name}» eliminado del directorio`);
+                  setDeletingSupplier(null);
+                }}
+                className="rounded-xl bg-destructive text-destructive-foreground px-4 py-2 text-xs font-semibold hover:opacity-90 transition cursor-pointer"
+              >
+                Eliminar Proveedor
+              </button>
+            </div>
+          }
+        >
+          <div className="space-y-3 text-xs text-muted-foreground">
+            <p>
+              ¿Estás seguro de que deseas eliminar permanentemente de tu directorio al proveedor <b>{deletingSupplier.name}</b> (RIF: {deletingSupplier.rif})?
+            </p>
+            <p className="text-[11px] text-amber-600 dark:text-amber-400 bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20 font-medium">
+              ⚠️ Esta acción quitará el proveedor del listado activo. Las órdenes históricas mantendrán su registro.
+            </p>
           </div>
         </Modal>
       )}

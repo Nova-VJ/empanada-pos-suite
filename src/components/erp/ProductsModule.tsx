@@ -43,6 +43,8 @@ export function ProductsModule() {
   const [portionDoughG, setPortionDoughG] = useState<number>(80);
   const [portionFillingG, setPortionFillingG] = useState<number>(60);
   const [portionOilMl, setPortionOilMl] = useState<number>(25);
+  const [categoryModal, setCategoryModal] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
   const [formOpen, setFormOpen] = useState(false);
 
   const [form, setForm] = useState({
@@ -273,20 +275,27 @@ export function ProductsModule() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <div className="flex gap-1.5 overflow-x-auto pb-1">
-          {CATEGORIES.map((c) => (
+        <div className="flex gap-1.5 overflow-x-auto pb-1 items-center">
+          {["Todos", ...(pos.categories || ["Empanadas", "Pastelitos", "Horneados", "Bebidas", "Salsas & Extras", "Combos"])].map((c) => (
             <button
               key={c}
-              onClick={() => setCatFilter(c)}
-              className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+              onClick={() => setCatFilter(c as any)}
+              className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold transition cursor-pointer ${
                 catFilter === c
-                  ? "bg-module-products text-white"
+                  ? "bg-module-products text-white shadow-xs"
                   : "bg-secondary text-muted-foreground hover:text-foreground"
               }`}
             >
               {c}
             </button>
           ))}
+          <button
+            onClick={() => setCategoryModal(true)}
+            className="whitespace-nowrap rounded-lg border border-dashed border-module-products/60 text-module-products px-3 py-1.5 text-xs font-bold hover:bg-module-products/10 transition cursor-pointer flex items-center gap-1 shrink-0"
+            title="Agregar o gestionar categorías del inventario"
+          >
+            <Plus className="h-3.5 w-3.5" /> Nueva Categoría
+          </button>
         </div>
       </div>
 
@@ -445,7 +454,7 @@ export function ProductsModule() {
                 onChange={(e) => setForm({ ...form, category: e.target.value as Category })}
                 className={`${inputCls} mt-1`}
               >
-                {VALID_CATS.map((c) => (
+                {pos.categories.map((c) => (
                   <option key={c} value={c}>
                     {c}
                   </option>
@@ -877,6 +886,90 @@ export function ProductsModule() {
                     </button>
                   ))}
                 </div>
+              </div>
+            </div>
+          </div>
+        </Modal>
+      )}
+      {categoryModal && (
+        <Modal
+          title="Gestión de Categorías de Inventario & Menú"
+          onClose={() => setCategoryModal(false)}
+          width="max-w-md"
+          footer={
+            <div className="flex justify-end">
+              <button type="button" onClick={() => setCategoryModal(false)} className={btnPrimary}>
+                Listo
+              </button>
+            </div>
+          }
+        >
+          <div className="space-y-4 text-xs">
+            <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-muted-foreground text-[11px]">
+              Agrega nuevas categorías para clasificar tus productos (ej. Postres, Jugos Naturales, Desayunos, etc.). Se reflejarán de inmediato en el TPV, catálogo y reportes.
+            </div>
+
+            <div>
+              <label className="font-semibold text-foreground block mb-1">Nombre de la nueva categoría:</label>
+              <div className="flex gap-2">
+                <input
+                  value={newCatName}
+                  onChange={(e) => setNewCatName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && newCatName.trim()) {
+                      pos.addCategory(newCatName.trim());
+                      toast.success(`Categoría «${newCatName.trim()}» agregada`);
+                      setNewCatName("");
+                    }
+                  }}
+                  placeholder="Ej. Postres, Jugos, Desayunos..."
+                  className={`${inputCls} flex-1`}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!newCatName.trim()) {
+                      toast.error("Escribe el nombre de la categoría");
+                      return;
+                    }
+                    pos.addCategory(newCatName.trim());
+                    toast.success(`Categoría «${newCatName.trim()}» agregada al inventario`);
+                    setNewCatName("");
+                  }}
+                  className="rounded-xl bg-module-products text-white px-3.5 py-2 font-bold hover:opacity-90 transition shrink-0 cursor-pointer"
+                >
+                  Agregar
+                </button>
+              </div>
+            </div>
+
+            <div className="border-t border-border pt-3">
+              <label className="font-semibold text-foreground block mb-2">Categorías Actuales ({pos.categories.length}):</label>
+              <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto">
+                {pos.categories.map((cat) => {
+                  const isDefault = ["Empanadas", "Pastelitos", "Horneados", "Bebidas", "Salsas & Extras", "Combos"].includes(cat);
+                  return (
+                    <div
+                      key={cat}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-medium text-foreground"
+                    >
+                      <span>{cat}</span>
+                      {!isDefault && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            pos.deleteCategory(cat);
+                            toast.info(`Categoría «${cat}» eliminada`);
+                          }}
+                          className="text-muted-foreground hover:text-destructive transition ml-1 cursor-pointer"
+                          title="Eliminar categoría"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
