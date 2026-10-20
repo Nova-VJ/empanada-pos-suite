@@ -321,6 +321,16 @@ export interface CompanySettings {
   cashierPhone?: string;
   activeRiders?: string[];
   hideCostsFromStaff?: boolean;
+  // WhatsApp Integration Settings
+  whatsappConnectionMode?: "clipboard" | "qr_gateway" | "meta_api" | "android_webhook";
+  whatsappGatewayUrl?: string;
+  whatsappGatewayApiKey?: string;
+  whatsappInstanceName?: string;
+  whatsappQrConnected?: boolean;
+  whatsappMetaPhoneId?: string;
+  whatsappMetaWabaId?: string;
+  whatsappMetaAccessToken?: string;
+  whatsappMetaVerifyToken?: string;
 }
 
 export interface CartItem {

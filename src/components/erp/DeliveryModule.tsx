@@ -1,7 +1,9 @@
 import { useState, useMemo, useEffect } from "react";
+import { WhatsAppConnectionHub } from "./WhatsAppConnectionHub";
 import {
   Bike,
   MessageSquare,
+  QrCode,
   PhoneCall,
   MapPin,
   Navigation,
@@ -47,7 +49,7 @@ export function DeliveryModule() {
   const pos = usePos();
   const { deliveries, rate, companySettings } = pos;
 
-  const [tab, setTab] = useState<"active" | "capture" | "riders">("active");
+  const [tab, setTab] = useState<"active" | "capture" | "connections" | "riders">("active");
   const [statusFilter, setStatusFilter] = useState<"todos" | "pendiente" | "en_camino" | "entregado">("todos");
   const [search, setSearch] = useState("");
   const [modalNew, setModalNew] = useState(false);
@@ -454,6 +456,7 @@ export function DeliveryModule() {
           {[
             { id: "active", label: `Deliverys Activos (${deliveries.length})`, icon: Bike },
             { id: "capture", label: "📱 Bot WhatsApp & Captura Rápida", icon: MessageSquare },
+            { id: "connections", label: "🔗 Conectar WhatsApp (4 Métodos)", icon: QrCode },
             { id: "riders", label: `Motorizados & Grupos (${ridersList.length})`, icon: UserCheck },
           ].map((t) => (
             <button
@@ -879,6 +882,19 @@ Pedido: 3 Empanadas de Mechada, 1 Malta Polar"
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Tab Conexiones WhatsApp (4 Métodos) */}
+      {tab === "connections" && (
+        <div className="animate-in fade-in-50">
+          <WhatsAppConnectionHub
+            onSimulateOrder={(mockText) => {
+              setRawCustomerMessage(mockText);
+              setTab("capture");
+              toast.info("Mensaje simulado cargado en Captura Rápida.");
+            }}
+          />
         </div>
       )}
 
