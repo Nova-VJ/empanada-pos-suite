@@ -16,6 +16,7 @@ import { fmtBs, fmtUsd } from "@/lib/money";
 import type { ModuleId } from "@/types/pos";
 import { SocialPromotionsModal } from "../pos/SocialPromotionsModal";
 import { BusinessSetupWizardModal } from "../pos/BusinessSetupWizardModal";
+import { Emoji3D } from "@/components/common/Emoji3D";
 
 export function DashboardModule() {
   const pos = usePos();
@@ -97,7 +98,9 @@ export function DashboardModule() {
     <div className="space-y-4 sm:space-y-6 p-3 sm:p-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Bienvenido a NovaSystem · Dr. Empanadas 🥟</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2 flex-wrap">
+            Bienvenido a NovaSystem · Dr. Empanadas <Emoji3D name="empanada" size={32} />
+          </h1>
           <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
             Resumen ejecutivo —{" "}
             {new Date().toLocaleDateString("es-VE", {

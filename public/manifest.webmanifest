@@ -1,0 +1,54 @@
+{
+  "name": "Dr. Empanadas · NovaSystem POS",
+  "short_name": "Dr. Empanadas",
+  "description": "Punto de Venta POS, Cocina KDS y Facturación para Dr. Empanadas C.A. (San Jacinto, Maracay)",
+  "start_url": "/",
+  "id": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "background_color": "#0B0F19",
+  "theme_color": "#E5A83B",
+  "orientation": "any",
+  "categories": ["business", "food", "productivity"],
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Caja Rápida TPV",
+      "short_name": "Caja",
+      "url": "/",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Cocina KDS",
+      "short_name": "Cocina",
+      "url": "/kds",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Backoffice & ERP",
+      "short_name": "Backoffice",
+      "url": "/backoffice",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}

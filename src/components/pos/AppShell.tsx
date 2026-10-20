@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { usePos } from "@/context/PosContext";
+import { PwaInstallButton } from "./PwaInstallButton";
 import type { ModuleId } from "@/types/pos";
 import { Modal, btnPrimary, inputCls } from "./Modal";
 import { PaymentModal } from "./PaymentModal";
@@ -465,8 +466,11 @@ export function AppShell({ children }: { children: ReactNode }) {
               </button>
             </div>
 
-            {/* ALWAYS PINNED ESSENTIAL CONTROLS (Theme, Lock Screen, Profile Login) */}
+            {/* ALWAYS PINNED ESSENTIAL CONTROLS (PWA Install, Theme, Lock Screen, Profile Login) */}
             <div className="flex items-center gap-1.5 shrink-0 pl-1.5 sm:pl-2 border-l border-border/60 mr-1 sm:mr-1.5">
+              {/* PWA Install Button */}
+              <PwaInstallButton />
+
               {/* Theme Toggle (Light / Dark) */}
               <button
                 onClick={pos.toggleTheme}

@@ -80,9 +80,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "NovaSystem × Dr. Empanadas · POS, KDS & ERP Suite" },
       { name: "description", content: "Suite integral POS, Cocina KDS, ERP, Facturación SENIAT, Contabilidad e IA para Dr. Empanadas C.A." },
+      { name: "theme-color", content: "#E5A83B" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "Dr. Empanadas" },
       { property: "og:title", content: "NovaSystem × Dr. Empanadas · POS, KDS & ERP Suite" },
       { property: "og:description", content: "Suite integral POS, Cocina KDS, ERP, Facturación SENIAT, Contabilidad e IA para Dr. Empanadas C.A." },
       { property: "og:type", content: "website" },
@@ -96,6 +101,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
       { rel: "icon", href: "/favicon.png", type: "image/png" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
@@ -128,6 +134,22 @@ function ThemedToaster() {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  useEffect(() => {
+    // Register PWA Service Worker
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker
+          .register("/sw.js")
+          .then((reg) => {
+            console.log("[PWA] Service Worker registrado con éxito:", reg.scope);
+          })
+          .catch((err) => {
+            console.warn("[PWA] Error al registrar Service Worker:", err);
+          });
+      });
+    }
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

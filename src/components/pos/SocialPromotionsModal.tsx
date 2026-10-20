@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { usePos } from "@/context/PosContext";
 import { fmtBs, fmtUsd } from "@/lib/money";
 import { Modal, btnPrimary, btnGhost, inputCls } from "./Modal";
+import { Emoji3D } from "@/components/common/Emoji3D";
 
 export interface PromoPack {
   id: string;
@@ -1147,7 +1148,15 @@ ${displayPromo.items.map((i) => `✔ ${i}`).join("\n")}
 
                 {/* Middle content */}
                 <div className="relative text-center space-y-2 py-1">
-                  <div className="text-5xl animate-bounce">{displayPromo.icon}</div>
+                  <div className="flex justify-center py-1">
+                    {displayPromo.icon === "🥟" ? (
+                      <Emoji3D name="empanada" size={68} className="animate-bounce" />
+                    ) : displayPromo.icon === "🥪" ? (
+                      <Emoji3D name="pastelito" size={68} className="animate-bounce" />
+                    ) : (
+                      <span className="text-5xl animate-bounce">{displayPromo.icon}</span>
+                    )}
+                  </div>
                   <div className="text-base font-black tracking-tight text-white leading-tight">
                     {displayPromo.name}
                   </div>

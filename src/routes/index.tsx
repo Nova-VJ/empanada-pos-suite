@@ -8,6 +8,7 @@ import { CartPanel } from "@/components/pos/CartPanel";
 import { SEARCH_ID } from "@/components/pos/AppShell";
 import { matchesSearch } from "@/lib/search";
 import { SocialPromotionsModal } from "@/components/pos/SocialPromotionsModal";
+import { Emoji3D } from "@/components/common/Emoji3D";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -96,7 +97,9 @@ export function PosTerminal() {
           ))}
           {list.length === 0 && (
             <div className="col-span-full py-24 text-center text-muted-foreground">
-              <div className="text-5xl animate-bounce">🥟</div>
+              <div className="flex justify-center mb-2">
+                <Emoji3D name="empanada" size={64} className="animate-bounce" />
+              </div>
               <p className="mt-3 text-sm font-bold text-foreground">No se encontraron productos para “{q}”</p>
               <p className="mt-1 text-xs text-muted-foreground">Prueba buscando por carne, queso, malta o código</p>
             </div>
