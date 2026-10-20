@@ -27,9 +27,9 @@ export function ProductCard({ product, rate, onAdd }: { product: Product; rate: 
             }`}
           >
             {product.category === "Empanadas" || product.name.toLowerCase().includes("empanada") ? (
-              <Emoji3D name="empanada" size={36} spinOnHover />
+              <Emoji3D name="empanada" size={38} spinOnHover />
             ) : product.category === "Pastelitos" || product.name.toLowerCase().includes("pastelito") ? (
-              <Emoji3D name="pastelito" size={36} spinOnHover />
+              <Emoji3D name="pastelito" size={38} spinOnHover />
             ) : product.category === "Bebidas" || product.name.toLowerCase().includes("malta") ? (
               <Emoji3D name="malta" size={36} spinOnHover />
             ) : product.name.toLowerCase().includes("café") || product.name.toLowerCase().includes("cafe") ? (
