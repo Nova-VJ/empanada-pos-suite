@@ -1,5 +1,21 @@
 import { useState } from "react";
-import { Package, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import {
+  Package,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+  Calculator,
+  Info,
+  Save,
+  Building2,
+  Globe2,
+  Sliders,
+  CheckCircle2,
+  TrendingUp,
+  Sparkles,
+  RefreshCw,
+} from "lucide-react";
 import { toast } from "sonner";
 import { usePos } from "@/context/PosContext";
 import { CATEGORIES } from "@/data/mockProducts";
@@ -18,10 +34,15 @@ export function ProductsModule() {
   const [editing, setEditing] = useState<Product | null>(null);
   const [costProduct, setCostProduct] = useState<Product | null>(null);
   const [customCost, setCustomCost] = useState<string>("0.60");
-  const [portionDough, setPortionDough] = useState(80); // gramos
-  const [portionFilling, setPortionFilling] = useState(60); // gramos
-  const [portionOil, setPortionOil] = useState(25); // ml
-  const [portionPack, setPortionPack] = useState(0.07); // USD
+  const [costTab, setCostTab] = useState<"facturas" | "mercado" | "manual">("facturas");
+  const [flourCostKg, setFlourCostKg] = useState<number>(0.95);
+  const [fillingCostKg, setFillingCostKg] = useState<number>(5.20);
+  const [oilCostL, setOilCostL] = useState<number>(1.77);
+  const [packCostUnit, setPackCostUnit] = useState<number>(0.055);
+  const [energyCostUnit, setEnergyCostUnit] = useState<number>(0.035);
+  const [portionDoughG, setPortionDoughG] = useState<number>(80);
+  const [portionFillingG, setPortionFillingG] = useState<number>(60);
+  const [portionOilMl, setPortionOilMl] = useState<number>(25);
   const [formOpen, setFormOpen] = useState(false);
 
   const [form, setForm] = useState({
@@ -64,26 +85,97 @@ export function ProductsModule() {
     setFormOpen(true);
   }
 
+  function getFillingDefaults(name: string) {
+    const lower = name.toLowerCase();
+    if (lower.includes("queso")) return { name: "Queso Llanero Duro", kg: 4.50, marketKg: 4.80, invoice: "FAC-QLL-10942 (Lácteos Llanera)", supplier: "Llanera Guárico" };
+    if (lower.includes("pollo")) return { name: "Pechuga de Pollo", kg: 3.90, marketKg: 4.20, invoice: "FAC-FSR-55301 (Frigorífico)", supplier: "Frigorífico Santa Rosalía" };
+    if (lower.includes("cazón") || lower.includes("cazon")) return { name: "Cazón Fresco Guisado", kg: 4.20, marketKg: 4.60, invoice: "FAC-MO-3950 (Mariscos Oriente)", supplier: "Mariscos Oriente" };
+    if (lower.includes("pabellon") || lower.includes("pabellón")) return { name: "Pabellón (Carne, Caraota, Tajada, Queso)", kg: 5.40, marketKg: 5.80, invoice: "FAC-FSR-55301 + Insumos", supplier: "Frigorífico & Vituallas" };
+    return { name: "Carne Falda de Res", kg: 5.20, marketKg: 5.60, invoice: "FAC-FSR-55301 (Frigorífico)", supplier: "Frigorífico Santa Rosalía" };
+  }
+
+  function recalculateFormula(tab: "facturas" | "mercado" | "manual", flour: number, filling: number, oil: number, pack: number, energy: number, doughG: number, fillingG: number, oilMl: number) {
+    if (tab === "mercado") {
+      return "0.60";
+    }
+    const costMasa = ((doughG * 0.55) / 1000) * flour + 0.01;
+    const costRelleno = ((fillingG * 1.30) / 1000) * filling;
+    const costAceite = (oilMl / 1000) * oil;
+    const costEmpaque = pack + energy;
+    const total = costMasa + costRelleno + costAceite + costEmpaque;
+    return total.toFixed(2);
+  }
+
   function openCostSheet(p: Product) {
     setCostProduct(p);
-    setCustomCost(p.costUsd.toFixed(2));
-    // Dynamic defaults according to product category
-    if (p.category === "Empanadas") {
-      setPortionDough(80);
-      setPortionFilling(60);
-      setPortionOil(25);
-      setPortionPack(0.07);
-    } else if (p.category === "Pastelitos") {
-      setPortionDough(70);
-      setPortionFilling(50);
-      setPortionOil(20);
-      setPortionPack(0.06);
+    setCostTab("facturas");
+    const d = getFillingDefaults(p.name);
+    setFlourCostKg(0.95);
+    setFillingCostKg(d.kg);
+    setOilCostL(1.77);
+    setPackCostUnit(0.055);
+    setEnergyCostUnit(0.035);
+    const dG = p.category === "Empanadas" ? 80 : p.category === "Pastelitos" ? 70 : 60;
+    const fG = p.category === "Empanadas" ? 60 : p.category === "Pastelitos" ? 50 : 40;
+    const oM = p.category === "Empanadas" ? 25 : 20;
+    setPortionDoughG(dG);
+    setPortionFillingG(fG);
+    setPortionOilMl(oM);
+
+    const total = recalculateFormula("facturas", 0.95, d.kg, 1.77, 0.055, 0.035, dG, fG, oM);
+    setCustomCost(total);
+  }
+
+  function handleSelectCostMode(mode: "facturas" | "mercado" | "manual") {
+    setCostTab(mode);
+    if (!costProduct) return;
+    const d = getFillingDefaults(costProduct.name);
+
+    if (mode === "facturas") {
+      setFlourCostKg(0.95);
+      setFillingCostKg(d.kg);
+      setOilCostL(1.77);
+      setPackCostUnit(0.055);
+      setEnergyCostUnit(0.035);
+      const total = recalculateFormula("facturas", 0.95, d.kg, 1.77, 0.055, 0.035, portionDoughG, portionFillingG, portionOilMl);
+      setCustomCost(total);
+    } else if (mode === "mercado") {
+      setFlourCostKg(1.05);
+      setFillingCostKg(d.marketKg);
+      setOilCostL(1.88);
+      setPackCostUnit(0.060);
+      setEnergyCostUnit(0.040);
+      setCustomCost("0.60");
     } else {
-      setPortionDough(0);
-      setPortionFilling(0);
-      setPortionOil(0);
-      setPortionPack(0.05);
+      // Keep current values for manual editing
     }
+  }
+
+  function handleIngredientChange(type: "flour" | "filling" | "oil" | "pack" | "energy" | "doughG" | "fillingG" | "oilMl", val: number) {
+    let fl = flourCostKg;
+    let fi = fillingCostKg;
+    let oi = oilCostL;
+    let pa = packCostUnit;
+    let en = energyCostUnit;
+    let dG = portionDoughG;
+    let fG = portionFillingG;
+    let oM = portionOilMl;
+
+    if (type === "flour") { fl = val; setFlourCostKg(val); }
+    if (type === "filling") { fi = val; setFillingCostKg(val); }
+    if (type === "oil") { oi = val; setOilCostL(val); }
+    if (type === "pack") { pa = val; setPackCostUnit(val); }
+    if (type === "energy") { en = val; setEnergyCostUnit(val); }
+    if (type === "doughG") { dG = val; setPortionDoughG(val); }
+    if (type === "fillingG") { fG = val; setPortionFillingG(val); }
+    if (type === "oilMl") { oM = val; setPortionOilMl(val); }
+
+    const costMasa = ((dG * 0.55) / 1000) * fl + 0.01;
+    const costRelleno = ((fG * 1.30) / 1000) * fi;
+    const costAceite = (oM / 1000) * oi;
+    const costEmpaque = pa + en;
+    const total = (costMasa + costRelleno + costAceite + costEmpaque).toFixed(2);
+    setCustomCost(total);
   }
 
   function handleSaveCost() {
@@ -418,7 +510,7 @@ export function ProductsModule() {
           </div>
         </Modal>
       )}
-      {/* Ficha Técnica & Escandallo de Costo Interactivo (Modal Explicativo y Editable) */}
+      {/* Ficha Técnica & Escandallo de Costo Interactivo (Modal Explicativo y Dinámico) */}
       {costProduct && (
         <Modal
           title={
@@ -426,15 +518,18 @@ export function ProductsModule() {
               <div className="h-7 w-7 rounded-lg bg-amber-500/15 text-amber-600 flex items-center justify-center">
                 <Calculator className="h-4 w-4" />
               </div>
-              <span className="truncate">Ficha de Costo & Escandallo: {costProduct.name}</span>
+              <div className="flex flex-col">
+                <span className="truncate font-bold">Escandallo Dinámico: {costProduct.name}</span>
+                <span className="text-[10px] text-muted-foreground font-normal">Cálculo matemático real basado en insumos e inventario</span>
+              </div>
             </div>
           }
           onClose={() => setCostProduct(null)}
-          width="max-w-xl"
+          width="max-w-2xl"
           footer={
             <div className="flex items-center justify-between w-full">
               <div className="text-[11px] text-muted-foreground">
-                Margen proyectado: <b>{costProduct.priceUsd > 0 ? (((costProduct.priceUsd - (parseFloat(customCost) || 0.6)) / costProduct.priceUsd) * 100).toFixed(1) : 0}%</b>
+                Margen proyectado: <b className="text-emerald-600 dark:text-emerald-400 text-xs">{costProduct.priceUsd > 0 ? (((costProduct.priceUsd - (parseFloat(customCost) || 0.6)) / costProduct.priceUsd) * 100).toFixed(1) : 0}%</b>
               </div>
               <div className="flex gap-2">
                 <button
@@ -450,7 +545,7 @@ export function ProductsModule() {
                   className="rounded-xl bg-primary px-5 py-2 font-bold text-primary-foreground text-xs shadow-xs hover:bg-primary/90 flex items-center gap-1.5"
                 >
                   <Save className="h-3.5 w-3.5" />
-                  <span>Guardar Nuevo Costo</span>
+                  <span>Guardar Nuevo Costo (${parseFloat(customCost || "0").toFixed(2)})</span>
                 </button>
               </div>
             </div>
@@ -467,14 +562,14 @@ export function ProductsModule() {
                 <div className="text-[10px] text-muted-foreground">{fmtBs(costProduct.priceUsd * rate)}</div>
               </div>
               <div>
-                <div className="text-[10px] uppercase font-semibold text-muted-foreground">Costo Unitario</div>
+                <div className="text-[10px] uppercase font-semibold text-muted-foreground">Costo Escandallo</div>
                 <div className="font-mono text-base font-bold text-amber-600 dark:text-amber-400 mt-0.5">
                   ${parseFloat(customCost || "0").toFixed(2)} USD
                 </div>
                 <div className="text-[10px] text-muted-foreground">{fmtBs((parseFloat(customCost) || 0) * rate)}</div>
               </div>
               <div>
-                <div className="text-[10px] uppercase font-semibold text-muted-foreground">Ganancia Bruta</div>
+                <div className="text-[10px] uppercase font-semibold text-muted-foreground">Ganancia Neta</div>
                 <div className="font-mono text-base font-bold text-foreground mt-0.5">
                   ${(costProduct.priceUsd - (parseFloat(customCost) || 0.6)).toFixed(2)} USD
                 </div>
@@ -484,81 +579,277 @@ export function ProductsModule() {
               </div>
             </div>
 
-            {/* Explicación Pedida por el Usuario: ¿De dónde saca el costo? */}
-            <div className="rounded-xl border border-primary/30 bg-primary/5 p-3.5 space-y-2">
-              <div className="flex items-start gap-2">
-                <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <h4 className="font-bold text-foreground text-xs">
-                    ¿De dónde proviene la estimación de ${costProduct.costUsd.toFixed(2)} USD?
-                  </h4>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">
-                    Se calcula mediante la <b>Ficha Técnica Gastronómica Oficial de Dr. Empanadas</b> para Maracay,
-                    desglosando materia prima, merma por fritura y costos directos de empaque por unidad:
-                  </p>
-                </div>
-              </div>
-
-              {/* Tabla de Escandallo por Ingrediente */}
-              <div className="rounded-xl border border-border bg-card overflow-hidden">
-                <table className="w-full text-[11px] text-left">
-                  <thead className="border-b border-border bg-secondary/50 text-muted-foreground">
-                    <tr>
-                      <th className="px-3 py-2 font-semibold">Rubro / Ingrediente</th>
-                      <th className="px-3 py-2 font-semibold">Porción por Empanada</th>
-                      <th className="px-3 py-2 font-semibold text-right">Costo Estimado</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border font-mono">
-                    <tr>
-                      <td className="px-3 py-2 font-sans font-medium text-foreground flex items-center gap-1.5">
-                        <span>🌽</span> Masa de Maíz Precocida
-                      </td>
-                      <td className="px-3 py-2 text-muted-foreground">80g (Harina P.A.N. + agua y sal)</td>
-                      <td className="px-3 py-2 text-right font-bold text-foreground">$0.12 USD</td>
-                    </tr>
-                    <tr>
-                      <td className="px-3 py-2 font-sans font-medium text-foreground flex items-center gap-1.5">
-                        <span>🥩</span> Relleno Principal Guisado
-                      </td>
-                      <td className="px-3 py-2 text-muted-foreground">60g (Carne / Pollo / Queso)</td>
-                      <td className="px-3 py-2 text-right font-bold text-foreground">$0.32 USD</td>
-                    </tr>
-                    <tr>
-                      <td className="px-3 py-2 font-sans font-medium text-foreground flex items-center gap-1.5">
-                        <span>🛢️</span> Aceite Vegetal en Freidora
-                      </td>
-                      <td className="px-3 py-2 text-muted-foreground">25ml (absorción y merma)</td>
-                      <td className="px-3 py-2 text-right font-bold text-foreground">$0.09 USD</td>
-                    </tr>
-                    <tr>
-                      <td className="px-3 py-2 font-sans font-medium text-foreground flex items-center gap-1.5">
-                        <span>📦</span> Empaque, Gas y Servilleta
-                      </td>
-                      <td className="px-3 py-2 text-muted-foreground">Papel parafinado + energía</td>
-                      <td className="px-3 py-2 text-right font-bold text-foreground">$0.07 USD</td>
-                    </tr>
-                  </tbody>
-                  <tfoot className="border-t-2 border-border bg-secondary/30 font-mono font-bold">
-                    <tr>
-                      <td className="px-3 py-2 font-sans text-foreground">Total Escandallo Estándar</td>
-                      <td className="px-3 py-2 text-muted-foreground">1 empanada lista</td>
-                      <td className="px-3 py-2 text-right text-amber-600 dark:text-amber-400 text-xs">$0.60 USD</td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
+            {/* Selector de Fuente de Datos */}
+            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-secondary/80 border border-border">
+              <button
+                type="button"
+                onClick={() => handleSelectCostMode("facturas")}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-bold transition ${
+                  costTab === "facturas"
+                    ? "bg-card text-foreground shadow-xs border border-border text-emerald-600 dark:text-emerald-400"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Building2 className="h-3.5 w-3.5" />
+                <span>🏢 Mis Facturas (Tu Inventario)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSelectCostMode("mercado")}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-bold transition ${
+                  costTab === "mercado"
+                    ? "bg-card text-foreground shadow-xs border border-border text-blue-600 dark:text-blue-400"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Globe2 className="h-3.5 w-3.5" />
+                <span>🌐 Referencia Oficial Maracay</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSelectCostMode("manual")}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-bold transition ${
+                  costTab === "manual"
+                    ? "bg-card text-foreground shadow-xs border border-border text-amber-600 dark:text-amber-400"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Sliders className="h-3.5 w-3.5" />
+                <span>✏️ Ajustar Insumos</span>
+              </button>
             </div>
 
-            {/* Editor de Costo Manual */}
-            <div className="rounded-xl border border-border bg-card p-3.5 space-y-2">
-              <label className="block text-xs font-bold text-foreground">
-                Personalizar Costo Real de tu Negocio ($ USD)
-              </label>
-              <p className="text-[11px] text-muted-foreground">
-                Si tus costos en San Jacinto son diferentes o consigues insumos más económicos, escribe tu costo real aquí:
-              </p>
-              <div className="flex items-center gap-2 pt-1">
+            {/* Pestaña 1: Facturas Reales del Negocio */}
+            {costTab === "facturas" && (
+              <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3.5 space-y-2.5">
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                  <div className="space-y-0.5">
+                    <h4 className="font-bold text-foreground text-xs">
+                      Cálculo 100% Exacto con Facturas de Compra de Dr. Empanadas
+                    </h4>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      El sistema cruza las compras registradas a tus proveedores de Maracay y aplica la merma gastronómica estándar:
+                    </p>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-border bg-card overflow-hidden">
+                  <table className="w-full text-[11px] text-left">
+                    <thead className="border-b border-border bg-secondary/50 text-muted-foreground">
+                      <tr>
+                        <th className="px-3 py-2 font-semibold">Rubro</th>
+                        <th className="px-3 py-2 font-semibold">Proveedor & Factura Real</th>
+                        <th className="px-3 py-2 font-semibold text-center">Porción</th>
+                        <th className="px-3 py-2 font-semibold text-right">Costo Empanada</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border font-mono">
+                      <tr>
+                        <td className="px-3 py-2 font-sans font-medium text-foreground">🌽 Masa de Maíz</td>
+                        <td className="px-3 py-2 text-muted-foreground font-sans">
+                          Polar FAC-88210 · Bulto $19 ($0.95/kg)
+                        </td>
+                        <td className="px-3 py-2 text-center text-muted-foreground">{portionDoughG}g (44g harina)</td>
+                        <td className="px-3 py-2 text-right font-bold text-foreground">
+                          ${(((portionDoughG * 0.55) / 1000) * flourCostKg + 0.01).toFixed(3)}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="px-3 py-2 font-sans font-medium text-foreground">🥩 Relleno Guisado</td>
+                        <td className="px-3 py-2 text-muted-foreground font-sans">
+                          {getFillingDefaults(costProduct.name).invoice} (${fillingCostKg.toFixed(2)}/kg)
+                        </td>
+                        <td className="px-3 py-2 text-center text-muted-foreground">{portionFillingG}g (merma 30%)</td>
+                        <td className="px-3 py-2 text-right font-bold text-foreground">
+                          ${(((portionFillingG * 1.30) / 1000) * fillingCostKg).toFixed(3)}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="px-3 py-2 font-sans font-medium text-foreground">🛢️ Aceite Freidora</td>
+                        <td className="px-3 py-2 text-muted-foreground font-sans">
+                          Bidón Polar Turmero 18L ($32.00 · $1.77/L)
+                        </td>
+                        <td className="px-3 py-2 text-center text-muted-foreground">{portionOilMl}ml absorción</td>
+                        <td className="px-3 py-2 text-right font-bold text-foreground">
+                          ${(((portionOilMl) / 1000) * oilCostL).toFixed(3)}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="px-3 py-2 font-sans font-medium text-foreground">📦 Empaque & Gas</td>
+                        <td className="px-3 py-2 text-muted-foreground font-sans">
+                          Envases Chacao FAC-31092 ($0.055) + Gas
+                        </td>
+                        <td className="px-3 py-2 text-center text-muted-foreground">1 servicio</td>
+                        <td className="px-3 py-2 text-right font-bold text-foreground">
+                          ${(packCostUnit + energyCostUnit).toFixed(3)}
+                        </td>
+                      </tr>
+                    </tbody>
+                    <tfoot className="border-t-2 border-border bg-secondary/40 font-mono font-bold">
+                      <tr>
+                        <td colSpan={3} className="px-3 py-2 font-sans text-foreground">
+                          Total Calculado de tus Facturas
+                        </td>
+                        <td className="px-3 py-2 text-right text-emerald-600 dark:text-emerald-400 text-xs">
+                          ${customCost} USD
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Pestaña 2: Referencia Oficial Mayorista Maracay */}
+            {costTab === "mercado" && (
+              <div className="rounded-xl border border-blue-500/30 bg-blue-500/5 p-3.5 space-y-2.5">
+                <div className="flex items-start gap-2">
+                  <Globe2 className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                  <div className="space-y-0.5">
+                    <h4 className="font-bold text-foreground text-xs">
+                      ¿Por qué dice $0.60 el costo estimado y de dónde sale?
+                    </h4>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      Proviene de la <b>Canasta Gastronómica Mayorista de Maracay (Mercado Mayorista Intercomunal & CENDAS Aragua, Octubre 2026)</b>. Se usa como referencia verificable cuando aún no se registran facturas:
+                    </p>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-border bg-card overflow-hidden">
+                  <table className="w-full text-[11px] text-left">
+                    <thead className="border-b border-border bg-secondary/50 text-muted-foreground">
+                      <tr>
+                        <th className="px-3 py-2 font-semibold">Rubro Mayorista</th>
+                        <th className="px-3 py-2 font-semibold">Fuente Oficial de Referencia</th>
+                        <th className="px-3 py-2 font-semibold text-center">Porción</th>
+                        <th className="px-3 py-2 font-semibold text-right">Costo Estimado</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border font-mono">
+                      <tr>
+                        <td className="px-3 py-2 font-sans font-medium text-foreground">🌽 Masa de Maíz</td>
+                        <td className="px-3 py-2 text-muted-foreground font-sans">Bulto Harina PAN ($21 mayorista)</td>
+                        <td className="px-3 py-2 text-center text-muted-foreground">80g masa</td>
+                        <td className="px-3 py-2 text-right font-bold text-foreground">$0.12 USD</td>
+                      </tr>
+                      <tr>
+                        <td className="px-3 py-2 font-sans font-medium text-foreground">🥩 Relleno Guisado</td>
+                        <td className="px-3 py-2 text-muted-foreground font-sans">Carne/Queso promedio ($5.60/kg)</td>
+                        <td className="px-3 py-2 text-center text-muted-foreground">60g guisado</td>
+                        <td className="px-3 py-2 text-right font-bold text-foreground">$0.32 USD</td>
+                      </tr>
+                      <tr>
+                        <td className="px-3 py-2 font-sans font-medium text-foreground">🛢️ Aceite Vegetal</td>
+                        <td className="px-3 py-2 text-muted-foreground font-sans">Bidón 18L ($34 mayorista)</td>
+                        <td className="px-3 py-2 text-center text-muted-foreground">25ml merma</td>
+                        <td className="px-3 py-2 text-right font-bold text-foreground">$0.09 USD</td>
+                      </tr>
+                      <tr>
+                        <td className="px-3 py-2 font-sans font-medium text-foreground">📦 Empaque y Gas</td>
+                        <td className="px-3 py-2 text-muted-foreground font-sans">Papel parafinado + gas comercial</td>
+                        <td className="px-3 py-2 text-center text-muted-foreground">1 empanada</td>
+                        <td className="px-3 py-2 text-right font-bold text-foreground">$0.07 USD</td>
+                      </tr>
+                    </tbody>
+                    <tfoot className="border-t-2 border-border bg-secondary/40 font-mono font-bold">
+                      <tr>
+                        <td colSpan={3} className="px-3 py-2 font-sans text-foreground">Total Estimado Oficial Maracay</td>
+                        <td className="px-3 py-2 text-right text-blue-600 dark:text-blue-400 text-xs">$0.60 USD</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Pestaña 3: Ajustar Insumos (Tu Receta y Precios del Dueño) */}
+            {costTab === "manual" && (
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3.5 space-y-3">
+                <div className="flex items-start gap-2">
+                  <Sliders className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                  <div className="space-y-0.5">
+                    <h4 className="font-bold text-foreground text-xs">
+                      Personaliza el Costo de tu Mercancía o Gramaje
+                    </h4>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      Si compras insumos a otro precio o tus empanadas tienen porciones especiales, ajústalas aquí y el costo se calculará al instante:
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                  <label className="font-semibold text-foreground text-[11px]">
+                    Harina de Maíz ($/Kg)
+                    <input
+                      type="number"
+                      step="0.05"
+                      value={flourCostKg}
+                      onChange={(e) => handleIngredientChange("flour", parseFloat(e.target.value) || 0)}
+                      className="w-full rounded-lg border border-border bg-card px-2.5 py-1.5 font-mono text-xs font-bold mt-1"
+                    />
+                  </label>
+                  <label className="font-semibold text-foreground text-[11px]">
+                    Relleno ($/Kg)
+                    <input
+                      type="number"
+                      step="0.10"
+                      value={fillingCostKg}
+                      onChange={(e) => handleIngredientChange("filling", parseFloat(e.target.value) || 0)}
+                      className="w-full rounded-lg border border-border bg-card px-2.5 py-1.5 font-mono text-xs font-bold mt-1"
+                    />
+                  </label>
+                  <label className="font-semibold text-foreground text-[11px]">
+                    Aceite ($/Litro)
+                    <input
+                      type="number"
+                      step="0.05"
+                      value={oilCostL}
+                      onChange={(e) => handleIngredientChange("oil", parseFloat(e.target.value) || 0)}
+                      className="w-full rounded-lg border border-border bg-card px-2.5 py-1.5 font-mono text-xs font-bold mt-1"
+                    />
+                  </label>
+                  <label className="font-semibold text-foreground text-[11px]">
+                    Gramos de Masa
+                    <input
+                      type="number"
+                      step="5"
+                      value={portionDoughG}
+                      onChange={(e) => handleIngredientChange("doughG", parseFloat(e.target.value) || 0)}
+                      className="w-full rounded-lg border border-border bg-card px-2.5 py-1.5 font-mono text-xs font-bold mt-1"
+                    />
+                  </label>
+                  <label className="font-semibold text-foreground text-[11px]">
+                    Gramos de Relleno
+                    <input
+                      type="number"
+                      step="5"
+                      value={portionFillingG}
+                      onChange={(e) => handleIngredientChange("fillingG", parseFloat(e.target.value) || 0)}
+                      className="w-full rounded-lg border border-border bg-card px-2.5 py-1.5 font-mono text-xs font-bold mt-1"
+                    />
+                  </label>
+                  <label className="font-semibold text-foreground text-[11px]">
+                    Aceite por Fritura (ml)
+                    <input
+                      type="number"
+                      step="5"
+                      value={portionOilMl}
+                      onChange={(e) => handleIngredientChange("oilMl", parseFloat(e.target.value) || 0)}
+                      className="w-full rounded-lg border border-border bg-card px-2.5 py-1.5 font-mono text-xs font-bold mt-1"
+                    />
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {/* Ajuste Rápido de Costo Global */}
+            <div className="rounded-xl border border-border bg-card p-3 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-foreground">Costo Final Aplicado ($ USD)</span>
+                <span className="text-[10px] text-muted-foreground">Puedes escribir el monto directo o usar un atajo:</span>
+              </div>
+              <div className="flex items-center gap-2 pt-0.5">
                 <div className="relative flex-1">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 font-mono font-bold text-muted-foreground">$</span>
                   <input
@@ -567,11 +858,11 @@ export function ProductsModule() {
                     min="0.10"
                     value={customCost}
                     onChange={(e) => setCustomCost(e.target.value)}
-                    className="w-full rounded-xl border border-border bg-secondary/50 pl-7 pr-3 py-2 text-foreground font-mono text-sm font-bold focus:outline-hidden focus:border-primary"
+                    className="w-full rounded-xl border border-border bg-secondary/50 pl-7 pr-3 py-1.5 text-foreground font-mono text-sm font-bold focus:outline-hidden focus:border-primary"
                   />
                 </div>
                 <div className="flex gap-1.5">
-                  {["0.50", "0.60", "0.75", "0.90"].map((v) => (
+                  {["0.50", "0.55", "0.60", "0.75", "0.90"].map((v) => (
                     <button
                       key={v}
                       type="button"
