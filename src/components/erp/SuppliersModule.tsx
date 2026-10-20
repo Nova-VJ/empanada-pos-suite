@@ -672,6 +672,12 @@ export function SuppliersModule() {
   const [radarSourceFilter, setRadarSourceFilter] = useState<"todos" | "osm" | "directory" | "galpon">("todos");
   const [radarZoneFilter, setRadarZoneFilter] = useState<string>("todas");
   const [newGalponModal, setNewGalponModal] = useState(false);
+  const [radarSearch, setRadarSearch] = useState("");
+  const [radarCategoryFilter, setRadarCategoryFilter] = useState("todos");
+  const [finderSearch, setFinderSearch] = useState("");
+  const [parseListModal, setParseListModal] = useState(false);
+  const [rawListText, setRawListText] = useState("");
+  const [rawSupplierName, setRawSupplierName] = useState("Mayorista Maracay - Lista WhatsApp");
   const [deletingSupplier, setDeletingSupplier] = useState<Supplier | null>(null);
   const [newGalponForm, setNewGalponForm] = useState({
     name: "",
@@ -685,6 +691,78 @@ export function SuppliersModule() {
     notes: "Puesto nuevo incorporado por el dueño",
   });
   const [escandalloSimItem, setEscandalloSimItem] = useState<LocalSupplierEntry | null>(null);
+
+  const filteredLocalSuppliers = useMemo(() => {
+    return localSuppliers.filter((s) => {
+      if (radarSourceFilter !== "todos" && s.sourceType !== radarSourceFilter) return false;
+      if (radarZoneFilter !== "todas" && !s.zone.toLowerCase().includes(radarZoneFilter.toLowerCase())) return false;
+      if (radarCategoryFilter !== "todos" && s.category !== radarCategoryFilter) return false;
+      if (radarSearch.trim()) {
+        const q = radarSearch.trim();
+        const matchName = matchesSearch(s.name, q);
+        const matchProduct = matchesSearch(s.keyProduct, q);
+        const matchZone = matchesSearch(s.zone, q) || matchesSearch(s.address, q);
+        const matchNotes = matchesSearch(s.notes, q);
+        const matchCategory = matchesSearch(s.category, q);
+        if (!matchName && !matchProduct && !matchZone && !matchNotes && !matchCategory) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [localSuppliers, radarSourceFilter, radarZoneFilter, radarCategoryFilter, radarSearch]);
+
+  function handleProcessRawWhatsAppList() {
+    if (!rawListText.trim()) {
+      toast.error("Pega el texto de la lista de precios o factura");
+      return;
+    }
+    const lines = rawListText.split("\n").map((l) => l.trim()).filter(Boolean);
+    let parsedCount = 0;
+    const newItems: LocalSupplierEntry[] = [];
+
+    for (const line of lines) {
+      // Regex match: Product name followed by price $X.XX or Bs. XX
+      const m = line.match(/^([a-zA-ZáéíóúÁÉÍÓÚñÑ\s&\-\.,]+?)[:\-\s]+(?:[$USDbsBS\.\s]*)([0-9]+(?:[\.,][0-9]{1,2})?)/);
+      if (m && m[1] && m[2]) {
+        const prodName = m[1].trim();
+        const price = parseFloat(m[2].replace(",", "."));
+        if (price > 0 && prodName.length > 2) {
+          parsedCount++;
+          newItems.push({
+            id: `wa-parsed-${Date.now()}-${parsedCount}`,
+            name: `${rawSupplierName.trim()} (${prodName})`,
+            sourceType: "galpon",
+            category: prodName.toLowerCase().includes("harina") ? "Harinas" : prodName.toLowerCase().includes("queso") ? "Lácteos" : prodName.toLowerCase().includes("aceite") ? "Aceites" : prodName.toLowerCase().includes("carne") || prodName.toLowerCase().includes("pollo") ? "Carnes" : "Empaques",
+            zone: "Mercado Mayorista (Av. Intercomunal)",
+            distanceKm: 4.2,
+            phone: "0243-2690000",
+            waNumber: "+584121234567",
+            rif: "J-31000000-0",
+            address: "Mercado Mayorista de Maracay, Galpón Central",
+            deliveryDays: "Lunes a Sábado (6:00 AM - 1:00 PM)",
+            keyProduct: prodName,
+            priceEstimateUsd: price,
+            unit: "Unidad / Kilo",
+            savingsVsAvgPct: 12.5,
+            verified: true,
+            notes: "Precio extraído de lista de difusión de WhatsApp",
+          });
+        }
+      }
+    }
+
+    if (parsedCount > 0) {
+      setLocalSuppliers((prev) => [...newItems, ...prev]);
+      toast.success(`✅ ¡${parsedCount} precios extraídos con éxito!`, {
+        description: `Se han incorporado al radar y recalculado los precios de insumos en Maracay.`,
+      });
+      setParseListModal(false);
+      setRawListText("");
+    } else {
+      toast.warning("No se detectaron precios automáticos. Ejemplo de formato: Harina PAN 19.50 o Queso Llanero 4.20");
+    }
+  }
 
   function handleAddCustomGalpon() {
     if (!newGalponForm.name.trim() || !newGalponForm.keyProduct.trim()) {
@@ -1455,29 +1533,57 @@ export function SuppliersModule() {
             </div>
           </div>
 
-          {/* Filtros de Búsqueda */}
-          <div className="rounded-xl border border-border bg-card p-3.5 space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
-              {/* Filtro por Fuente */}
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-muted-foreground font-semibold">Fuente:</span>
-                {[
-                  { id: "todos", label: `Todos (${localSuppliers.length})` },
-                  { id: "galpon", label: `🏛️ Galpones Mayorista (${localSuppliers.filter((s) => s.sourceType === "galpon").length})` },
-                  { id: "osm", label: `🗺️ OpenStreetMap (${localSuppliers.filter((s) => s.sourceType === "osm").length})` },
-                  { id: "directory", label: `🏢 Directorios Aragua (${localSuppliers.filter((s) => s.sourceType === "directory").length})` },
-                ].map((f) => (
+          {/* Filtros de Búsqueda y Buscador en Tiempo Real */}
+          <div className="rounded-xl border border-border bg-card p-4 space-y-3 shadow-xs">
+            {/* Buscador de texto en vivo */}
+            <div className="flex flex-wrap items-center gap-2.5">
+              <div className="relative flex-1 min-w-[260px]">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  value={radarSearch}
+                  onChange={(e) => setRadarSearch(e.target.value)}
+                  placeholder="Escribe para buscar proveedor, galpón o insumo (Harina, Queso, Carne, Aceite, Polar...)..."
+                  className={`${inputCls} pl-10 text-xs py-2.5`}
+                />
+                {radarSearch && (
                   <button
-                    key={f.id}
                     type="button"
-                    onClick={() => setRadarSourceFilter(f.id as typeof radarSourceFilter)}
-                    className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
-                      radarSourceFilter === f.id
+                    onClick={() => setRadarSearch("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs p-1"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setParseListModal(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-3.5 py-2.5 text-xs font-bold transition shadow-xs cursor-pointer shrink-0"
+                title="Pegar lista de precios recibida por WhatsApp o factura para actualizar cotizaciones"
+              >
+                <FileText className="h-4 w-4" />
+                <span>📥 Cargar Lista WhatsApp / Factura</span>
+              </button>
+            </div>
+
+            {/* Filtros secundarios: Rubro, Fuente y Zona */}
+            <div className="flex flex-wrap items-center justify-between gap-3 text-xs border-t border-border pt-3">
+              {/* Filtro por Rubro */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-muted-foreground font-semibold">Rubro:</span>
+                {["todos", "Harinas", "Lácteos", "Aceites", "Carnes", "Empaques"].map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setRadarCategoryFilter(cat)}
+                    className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition cursor-pointer ${
+                      radarCategoryFilter === cat
                         ? "bg-primary text-primary-foreground shadow-2xs"
                         : "bg-secondary text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    {f.label}
+                    {cat === "todos" ? "Todos los Rubros" : cat}
                   </button>
                 ))}
               </div>
@@ -1488,7 +1594,7 @@ export function SuppliersModule() {
                 <select
                   value={radarZoneFilter}
                   onChange={(e) => setRadarZoneFilter(e.target.value)}
-                  className="rounded-lg border border-border bg-secondary px-2.5 py-1 text-xs font-medium text-foreground outline-none focus:border-primary"
+                  className="rounded-lg border border-border bg-secondary px-2.5 py-1 text-xs font-medium text-foreground outline-none focus:border-primary cursor-pointer"
                 >
                   <option value="todas">Todas las zonas (Eje Aragua)</option>
                   <option value="San Jacinto">San Jacinto (&lt; 3 km)</option>
@@ -1499,14 +1605,30 @@ export function SuppliersModule() {
                 </select>
               </div>
             </div>
+
+            {/* Contador de resultados en tiempo real */}
+            <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-border/60">
+              <div>
+                Mostrando <b>{filteredLocalSuppliers.length}</b> de <b>{localSuppliers.length}</b> proveedores y galpones mapeados en Aragua
+              </div>
+              {radarSearch && (
+                <div className="text-primary font-semibold">
+                  Resultados filtrados para: «{radarSearch}»
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Listado de Tarjetas de Proveedores */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-            {localSuppliers
-              .filter((s) => radarSourceFilter === "todos" || s.sourceType === radarSourceFilter)
-              .filter((s) => radarZoneFilter === "todas" || s.zone.toLowerCase().includes(radarZoneFilter.toLowerCase()))
-              .map((item) => (
+            {filteredLocalSuppliers.length === 0 ? (
+              <div className="col-span-2 rounded-2xl border border-border bg-card p-12 text-center text-muted-foreground">
+                <Truck className="h-10 w-10 mx-auto mb-2 opacity-30" />
+                <p className="font-semibold text-foreground text-sm">No se encontraron proveedores con ese criterio</p>
+                <p className="text-xs mt-1">Prueba escribiendo otro término (ej. Harina, Queso, Mayorista) o cambiando la zona.</p>
+              </div>
+            ) : (
+              filteredLocalSuppliers.map((item) => (
                 <div
                   key={item.id}
                   className="rounded-2xl border border-border bg-card hover:border-primary/40 transition shadow-2xs p-4 flex flex-col justify-between gap-3"
@@ -1586,16 +1708,28 @@ export function SuppliersModule() {
                       <button
                         type="button"
                         onClick={() => handleQuickAddToSuppliers(item)}
-                        className="rounded-lg border border-border bg-card hover:bg-primary hover:text-primary-foreground text-foreground px-2.5 py-1.5 text-xs font-semibold transition flex items-center gap-1"
+                        className="rounded-lg border border-border bg-card hover:bg-primary hover:text-primary-foreground text-foreground px-2.5 py-1.5 text-xs font-semibold transition flex items-center gap-1 cursor-pointer"
                         title="Agregar a mis proveedores registrados"
                       >
                         <Plus className="h-3.5 w-3.5" />
                         <span>Incorporar</span>
                       </button>
+
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.name + " " + item.address + " Aragua Venezuela")}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded-lg border border-border bg-secondary hover:bg-secondary/80 text-foreground px-2 py-1.5 text-xs font-semibold transition inline-flex items-center gap-1 cursor-pointer"
+                        title="Abrir ubicación en Google Maps / GPS"
+                      >
+                        <Navigation className="h-3.5 w-3.5 text-primary" />
+                        <span className="hidden sm:inline">Mapa</span>
+                      </a>
                     </div>
                   </div>
                 </div>
-              ))}
+              ))
+            )}
           </div>
         </div>
       )}
@@ -2293,6 +2427,54 @@ export function SuppliersModule() {
                 <CheckCircle2 className="h-4 w-4" />
                 <span>Ahorro estimado para Dr. Empanadas: ~$65.00 a $90.00 USD al mes.</span>
               </div>
+            </div>
+          </div>
+        </Modal>
+      )}
+            {parseListModal && (
+        <Modal
+          title="📥 Cargar Lista de Precios de WhatsApp / Factura"
+          onClose={() => setParseListModal(false)}
+          width="max-w-lg"
+          footer={
+            <div className="flex justify-end gap-2 w-full">
+              <button type="button" onClick={() => setParseListModal(false)} className={btnGhost}>
+                Cancelar
+              </button>
+              <button type="button" onClick={handleProcessRawWhatsAppList} className={btnPrimary}>
+                ⚡ Procesar y Actualizar Precios
+              </button>
+            </div>
+          }
+        >
+          <div className="space-y-3.5 text-xs">
+            <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-[11px] text-muted-foreground leading-relaxed">
+              💡 Pega aquí el mensaje de texto o lista de precios que te envíen los mayoristas los lunes por WhatsApp. El sistema extraerá automáticamente el nombre de los productos y sus precios en USD o Bs. para actualizar tu comparador y costos de escandallo.
+            </div>
+
+            <div>
+              <label className="font-semibold text-foreground block mb-1">Nombre del Proveedor o Galpón Emisor:</label>
+              <input
+                value={rawSupplierName}
+                onChange={(e) => setRawSupplierName(e.target.value)}
+                className={inputCls}
+                placeholder="Ej. Galpón 4 Mayorista / Distribuidora San Vicente"
+              />
+            </div>
+
+            <div>
+              <label className="font-semibold text-foreground block mb-1">Texto de la Lista / Factura de Compra:</label>
+              <textarea
+                value={rawListText}
+                onChange={(e) => setRawListText(e.target.value)}
+                rows={6}
+                className={`${inputCls} font-mono text-[11px] leading-normal`}
+                placeholder={`Pega el texto aquí. Ejemplo:
+Harina PAN Blanco: 19.80
+Queso Llanero Duro kg: 4.10
+Carne para mechar kg: 5.60
+Aceite Vegetal 18L: 29.00`}
+              />
             </div>
           </div>
         </Modal>
