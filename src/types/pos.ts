@@ -77,6 +77,30 @@ export interface CustomerRecord {
   creditMovements?: CreditMovement[];
 }
 
+export interface RecipeIngredient {
+  id: string;
+  name: string; // ej. Masa Harina P.A.N., Carne Mechada, Queso Llanero, Jamón de Pierna
+  grams: number; // porción en gramos (ej. 80g masa, 60g carne, 25g queso)
+  pricePerKg: number; // costo de materia prima $/Kg (ej. $0.95/kg, $6.50/kg)
+  unitCostUsd: number; // (grams / 1000) * pricePerKg
+}
+
+export interface ProductRecipe {
+  ingredients: RecipeIngredient[];
+  oilMl: number; // ml de aceite absorbido por fritura (ej. 15ml)
+  oilPricePerLiter: number; // $/L de aceite (ej. $1.77)
+  oilCostUsd: number;
+  packagingAndEnergyUsd: number; // empaque, bolsa antigrasa, servilletas y gas
+  // Mano de obra del trabajador
+  includeLabor?: boolean;
+  laborType: "per_unit" | "daily_shift";
+  laborDailySalaryUsd?: number;
+  laborDailyUnits?: number;
+  laborCostPerUnitUsd: number; // $/unidad producida
+  totalCostUsd: number;
+  lastUpdated?: number;
+}
+
 export interface Product {
   id: string;
   sku: string;
@@ -92,6 +116,7 @@ export interface Product {
   stockMin?: number;
   kitchen: boolean; // false = bar / drinks
   modifiers: string[];
+  recipe?: ProductRecipe;
 }
 
 export type InventoryMoveType = "compra" | "venta" | "devolucion" | "ajuste" | "recuento" | "ecommerce";
@@ -295,6 +320,7 @@ export interface CompanySettings {
   deliveryGroupName?: string;
   cashierPhone?: string;
   activeRiders?: string[];
+  hideCostsFromStaff?: boolean;
 }
 
 export interface CartItem {

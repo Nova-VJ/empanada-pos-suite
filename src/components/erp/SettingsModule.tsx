@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Building2, FileText, Globe, Percent, Printer, Save, Users, Bell, MessageSquare, Smartphone, CheckCircle2, Send, Share2, Volume2, Download, UploadCloud, RefreshCw, Database } from "lucide-react";
 import { openWhatsApp, normalizeWhatsAppPhone } from "@/lib/whatsapp";
 import { playCashChime } from "@/services/sound";
@@ -12,9 +12,9 @@ export function SettingsModule() {
   const { companySettings, fiscal, rate } = pos;
   const [tab, setTab] = useState<"company" | "tax" | "series" | "printer" | "users" | "ecommerce" | "whatsapp" | "backup">("company");
   const [simMessage, setSimMessage] = useState<string>("order");
-  const [testPhone, setTestPhone] = useState(form.ownerPhone || form.phone || "0412-1234567");
-  const [notifyOnPhone, setNotifyOnPhone] = useState(form.notifyOrdersOnPhone ?? true);
   const [form, setForm] = useState(companySettings);
+  const [testPhone, setTestPhone] = useState(companySettings.ownerPhone || companySettings.phone || "0412-1234567");
+  const [notifyOnPhone, setNotifyOnPhone] = useState(companySettings.notifyOrdersOnPhone ?? true);
   useEffect(() => {
     setForm(companySettings);
   }, [companySettings]);

@@ -687,6 +687,7 @@ export function SuppliersModule() {
   const [radarSearch, setRadarSearch] = useState("");
   const [radarCategoryFilter, setRadarCategoryFilter] = useState("todos");
   const [finderSearch, setFinderSearch] = useState("");
+  const [supplyCategory, setSupplyCategory] = useState<string>("Todos");
   const [parseListModal, setParseListModal] = useState(false);
   const [rawListText, setRawListText] = useState("");
   const [rawSupplierName, setRawSupplierName] = useState("Mayorista Maracay - Lista WhatsApp");
@@ -1082,7 +1083,6 @@ export function SuppliersModule() {
     toast.info(`Abriendo WhatsApp comercial para cotizar con ${entry.name}`);
   }
   const [search, setSearch] = useState("");
-  const [supplyCategory, setSupplyCategory] = useState<string>("Todos");
   const [supModal, setSupModal] = useState(false);
   const [poModal, setPoModal] = useState(false);
   const [simModal, setSimModal] = useState(false);
