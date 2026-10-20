@@ -110,45 +110,7 @@ const initialRatesData: MultiSourceRatesData = {
   },
 };
 
-const initialDeliveries: DeliveryOrder[] = [
-  {
-    id: "del-101",
-    orderNumber: 101,
-    clientName: "Alfonzo Bolaños",
-    clientPhone: "+58 412-1499838",
-    addressGps: "6FF3+MJ4, Avenida Dr. Francisco Montoya, Turmero 2107, Aragua",
-    mapsUrl: "https://www.google.com/maps/search/?api=1&query=6FF3%2BMJ4%2C+Avenida+Dr.+Francisco+Montoya%2C+Turmero+2107%2C+Aragua",
-    itemsText: "2x Empanada Mechada, 1x Empanada Queso Llanero, 1x Malta Polar",
-    totalUsd: 6.50,
-    totalBs: 5720.00,
-    paymentMethod: "Pago Móvil Banesco",
-    paymentReference: "7541",
-    riderName: "Ezequiel",
-    status: "en_camino",
-    createdAt: Date.now() - 25 * 60000,
-    dispatchedAt: Date.now() - 15 * 60000,
-    notes: "Entregar en portón negro, timbre derecho.",
-  },
-  {
-    id: "del-100",
-    orderNumber: 100,
-    clientName: "Sra. Maryorit (San Jacinto)",
-    clientPhone: "+58 414-4969484",
-    addressGps: "Urb. San Jacinto, Sector 2, Manzana D, Casa 14, Maracay",
-    mapsUrl: "https://www.google.com/maps/search/?api=1&query=San+Jacinto+Maracay+Sector+2",
-    itemsText: "4x Empanada Pollo con Queso, 2x Jugo Natural Naranja",
-    totalUsd: 10.80,
-    totalBs: 9504.00,
-    paymentMethod: "Efectivo USD $40 (Vuelto entregado $29.20)",
-    paymentReference: "Efectivo",
-    riderName: "Alfonzo Bolaños",
-    status: "entregado",
-    createdAt: Date.now() - 75 * 60000,
-    dispatchedAt: Date.now() - 55 * 60000,
-    deliveredAt: Date.now() - 30 * 60000,
-    notes: "Ya le dio los $40 a la señora Maryorit. Entregado con éxito.",
-  },
-];
+const initialDeliveries: DeliveryOrder[] = [];
 
 const initial = (): PosState => ({
   theme: "light",
@@ -272,6 +234,8 @@ interface Ctx extends PosState {
   createDelivery: (d: Omit<DeliveryOrder, "id" | "orderNumber" | "createdAt" | "status">) => DeliveryOrder;
   updateDelivery: (id: string, patch: Partial<DeliveryOrder>) => void;
   deleteDelivery: (id: string) => void;
+  clearDeliveredDeliveries: () => void;
+  clearAllDeliveries: () => void;
   // Backup & Restore
   exportBackup: () => string;
   downloadBackup: (filename?: string) => void;
@@ -405,16 +369,26 @@ export function PosProvider({ children }: { children: ReactNode }) {
             if (parsedFromOldKey.suppliers && parsedFromOldKey.suppliers.length > 0) parsed.suppliers = parsedFromOldKey.suppliers;
           }
         }
-        if (parsed.companySettings) {
-          parsed.companySettings = {
-            ...initial().companySettings,
-            ...parsed.companySettings,
-          };
-          if (parsed.companySettings.name && parsed.companySettings.name !== "Dr. Empanadas C.A.") {
-            parsed.companySettings.isLive = true;
-            parsed.companySettings.isConfigured = true;
-          }
-        }
+        if (parsed.companySettings) {
+
+          parsed.companySettings = {
+
+            ...initial().companySettings,
+
+            ...parsed.companySettings,
+
+          };
+
+          if (parsed.companySettings.name && parsed.companySettings.name !== "Dr. Empanadas C.A.") {
+
+            parsed.companySettings.isLive = true;
+
+            parsed.companySettings.isConfigured = true;
+
+          }
+
+        }
+
         setS({ ...initial(), ...parsed });
       } else if (parsedFromOldKey) {
         // Migración transparente desde clave previa
@@ -1180,11 +1154,16 @@ export function PosProvider({ children }: { children: ReactNode }) {
           zigtfTax: 0,
         },
       })),
-    clearAllProducts: () =>
-      setS((x) => ({
-        ...x,
-        products: [],
-      })),
+    clearAllProducts: () =>
+
+      setS((x) => ({
+
+        ...x,
+
+        products: [],
+
+      })),
+
     resetProductionData: () => {
       setS((x) => {
         const fresh: PosState = {
@@ -1210,6 +1189,7 @@ export function PosProvider({ children }: { children: ReactNode }) {
           bankMovements: [],
           expenses: [],
           journalEntries: [],
+          deliveries: [],
           fiscal: {
             ...x.fiscal,
             lastInvoice: 0,
@@ -1248,6 +1228,18 @@ export function PosProvider({ children }: { children: ReactNode }) {
       setS((x) => ({
         ...x,
         deliveries: x.deliveries.filter((d) => d.id !== id),
+      }));
+    },
+    clearDeliveredDeliveries: () => {
+      setS((x) => ({
+        ...x,
+        deliveries: x.deliveries.filter((d) => d.status !== "entregado"),
+      }));
+    },
+    clearAllDeliveries: () => {
+      setS((x) => ({
+        ...x,
+        deliveries: [],
       }));
     },
     // Backup & Restore

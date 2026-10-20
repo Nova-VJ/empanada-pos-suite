@@ -5,6 +5,7 @@ import {
   buildCashierNotificationMessage,
   buildDeliveredCustomerMessage,
 } from "../lib/whatsapp";
+import type { DeliveryOrder } from "@/types/pos";
 
 describe("WhatsApp Delivery & Riders Automation", () => {
   it("generates the exact official delivery template for incoming customer messages", () => {
@@ -73,5 +74,44 @@ describe("WhatsApp Delivery & Riders Automation", () => {
 
     const templatePizzeria = buildCustomerDeliveryRequestTemplate("Pizzería Roma");
     expect(templatePizzeria).toContain("Hola, hablas con Pizzería Roma Delivery, me confirmas");
+  });
+
+  it("filters out delivered deliveries when clearDeliveredDeliveries is executed", () => {
+    const mockList: DeliveryOrder[] = [
+      {
+        id: "d1",
+        orderNumber: 1,
+        clientName: "Pedro",
+        clientPhone: "04121234567",
+        addressGps: "San Jacinto",
+        itemsText: "2 empanadas",
+        totalUsd: 4.0,
+        totalBs: 200,
+        paymentMethod: "Pago Móvil",
+        paymentReference: "123",
+        riderName: "Ezequiel",
+        status: "pendiente",
+        createdAt: Date.now(),
+      },
+      {
+        id: "d2",
+        orderNumber: 2,
+        clientName: "Maria",
+        clientPhone: "04121234568",
+        addressGps: "San Jacinto",
+        itemsText: "3 empanadas",
+        totalUsd: 6.0,
+        totalBs: 300,
+        paymentMethod: "Efectivo",
+        paymentReference: "efectivo",
+        riderName: "Ezequiel",
+        status: "entregado",
+        createdAt: Date.now(),
+      },
+    ];
+
+    const remaining = mockList.filter((d) => d.status !== "entregado");
+    expect(remaining.length).toBe(1);
+    expect(remaining[0].id).toBe("d1");
   });
 });

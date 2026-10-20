@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Bike,
   MessageSquare,
@@ -23,6 +23,10 @@ import {
   DollarSign,
   UserCheck,
   Smartphone,
+  ClipboardPaste,
+  HelpCircle,
+  Sparkles,
+  Info,
 } from "lucide-react";
 import { toast } from "sonner";
 import { usePos } from "@/context/PosContext";
@@ -47,17 +51,16 @@ export function DeliveryModule() {
   const [statusFilter, setStatusFilter] = useState<"todos" | "pendiente" | "en_camino" | "entregado">("todos");
   const [search, setSearch] = useState("");
   const [modalNew, setModalNew] = useState(false);
-  const [selectedDelivery, setSelectedDelivery] = useState<DeliveryOrder | null>(null);
+  const [autoDeleteDelivered, setAutoDeleteDelivered] = useState(false);
 
-  // Bot & Fast capture state
-  const [rawCustomerMessage, setRawCustomerMessage] = useState<string>(`Nombre: Carlos Mendoza
-Dirección GPS: 6FF3+MJ4, Avenida Dr. Francisco Montoya, Turmero 2107, Aragua
-Pedido: 3 Empanadas de Mechada, 2 Empanadas de Queso, 2 Maltas Polar`);
-  const [capturedClientPhone, setCapturedClientPhone] = useState<string>("0414-4969484");
-  const [capturedPaymentRef, setCapturedPaymentRef] = useState<string>("8921 (Pago Móvil)");
+  // Bot & Fast capture state - Completely blank by default so it never shows fake demo data
+  const [rawCustomerMessage, setRawCustomerMessage] = useState<string>("");
+  const [capturedClientPhone, setCapturedClientPhone] = useState<string>("");
+  const [capturedPaymentRef, setCapturedPaymentRef] = useState<string>("");
+  const [capturedTotalUsd, setCapturedTotalUsd] = useState<string>("5.00");
   const [capturedRider, setCapturedRider] = useState<string>("Ezequiel");
 
-  // Nuevo delivery form
+  // Nuevo delivery manual form
   const [form, setForm] = useState({
     clientName: "",
     clientPhone: "0412-",
@@ -137,27 +140,33 @@ Pedido: 3 Empanadas de Mechada, 2 Empanadas de Queso, 2 Maltas Polar`);
       status: "en_camino",
       dispatchedAt: Date.now(),
     });
-    toast.success(`🚨 Comanda #${delivery.orderNumber} en camino con ${delivery.riderName}`, {
-      description: "Se actualizó el estado del despacho.",
-    });
-    // Opcional: abrir WhatsApp hacia el cliente notificándole
+    toast.success(`🚨 Comanda #${delivery.orderNumber} en camino con ${delivery.riderName}`);
+    // Notificar al cliente por WhatsApp
     const clientMsg = `🛵 *¡HOLA ${delivery.clientName.toUpperCase()}! TU PEDIDO VA EN CAMINO*\nNuestro motorizado *${delivery.riderName}* ya va saliendo con tus empanadas calientitas.\n¡Estamos muy cerca! 🥟✨`;
     openWhatsApp({ phone: delivery.clientPhone, message: clientMsg });
   }
 
-  // Marcar como entregado
+  // Marcar como entregado (con opción de auto-eliminar si el usuario lo activó)
   function handleMarkDelivered(delivery: DeliveryOrder) {
-    pos.updateDelivery(delivery.id, {
-      status: "entregado",
-      deliveredAt: Date.now(),
-    });
+    if (autoDeleteDelivered) {
+      pos.deleteDelivery(delivery.id);
+      toast.success(`🎉 ¡Comanda #${delivery.orderNumber} entregada y eliminada de la pantalla!`);
+    } else {
+      pos.updateDelivery(delivery.id, {
+        status: "entregado",
+        deliveredAt: Date.now(),
+      });
+      toast.success(`🎉 ¡Comanda #${delivery.orderNumber} entregada con éxito!`, {
+        description: "Puedes eliminarla de la lista con el botón rojo de papelera.",
+      });
+    }
+
     const msg = buildDeliveredCustomerMessage({
       orderNumber: delivery.orderNumber,
       clientName: delivery.clientName,
       riderName: delivery.riderName,
     });
     openWhatsApp({ phone: delivery.clientPhone, message: msg });
-    toast.success(`🎉 ¡Comanda #${delivery.orderNumber} entregada con éxito!`);
   }
 
   // Copiar plantilla de saludo para WhatsApp
@@ -175,23 +184,76 @@ Pedido: 3 Empanadas de Mechada, 2 Empanadas de Queso, 2 Maltas Polar`);
     openWhatsApp({ phone, message: t });
   }
 
-  // Procesar texto pegado del cliente
-  function handleParseCustomerMessage() {
-    const lines = rawCustomerMessage.split("\n").map((l) => l.trim()).filter(Boolean);
-    let name = "Cliente WhatsApp";
-    let address = "San Jacinto, Maracay";
-    let order = "Empanadas Surtidas";
+  // Función inteligente para extraer campos del texto pegado
+  function parseFields(text: string) {
+    const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+    let name = "";
+    let address = "";
+    let order = "";
 
     for (const line of lines) {
       const lower = line.toLowerCase();
       if (lower.startsWith("nombre:")) {
         name = line.replace(/nombre:/i, "").trim();
-      } else if (lower.startsWith("dirección") || lower.startsWith("direccion") || lower.startsWith("gps:")) {
+      } else if (
+        lower.startsWith("dirección") ||
+        lower.startsWith("direccion") ||
+        lower.startsWith("gps:") ||
+        lower.startsWith("ubicación") ||
+        lower.startsWith("ubicacion")
+      ) {
         address = line.replace(/^(dirección|direccion|gps|ubicación|ubicacion)\s*(gps)?[:\-–=]/i, "").trim();
-      } else if (lower.startsWith("pedido:")) {
-        order = line.replace(/pedido:/i, "").trim();
+      } else if (lower.startsWith("pedido:") || lower.startsWith("orden:")) {
+        order = line.replace(/^(pedido|orden)[:\-–=]/i, "").trim();
       }
     }
+
+    return { name, address, order };
+  }
+
+  // Pegar directo desde el portapapeles con 1 toque
+  async function handlePasteFromClipboard() {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text.trim()) {
+        toast.info("El portapapeles está vacío. Copia el mensaje en WhatsApp primero.");
+        return;
+      }
+      setRawCustomerMessage(text);
+
+      // Auto-extract phone if present
+      const phoneMatch = text.match(/(?:04\d{2}|584\d{2}|\+584\d{2})[- \d]{7,12}/);
+      if (phoneMatch) setCapturedClientPhone(phoneMatch[0].trim());
+
+      // Auto-extract price if present
+      const priceMatch =
+        text.match(/\$?(\d+(?:[.,]\d{1,2})?)\s*(?:\$|usd|d[oó]lares)/i) ||
+        text.match(/(?:monto|total|precio)[:\s]*\$?(\d+(?:[.,]\d{1,2})?)/i);
+      if (priceMatch) setCapturedTotalUsd(priceMatch[1].replace(",", "."));
+
+      // Auto-extract payment reference if present
+      const refMatch = text.match(/(?:ref|referencia|pago)[:\s]*([a-zA-Z0-9 -]+)/i);
+      if (refMatch) setCapturedPaymentRef(refMatch[1].trim());
+
+      toast.success("✓ Mensaje pegado desde el portapapeles y analizado con éxito");
+    } catch {
+      toast.info("Por favor pega el mensaje manualmente en el recuadro.");
+    }
+  }
+
+  // Procesar texto pegado del cliente y crear delivery
+  function handleParseCustomerMessage() {
+    if (!rawCustomerMessage.trim()) {
+      toast.error("Por favor pega el mensaje que respondió el cliente en WhatsApp.");
+      return;
+    }
+
+    const { name: parsedName, address: parsedAddress, order: parsedOrder } = parseFields(rawCustomerMessage);
+    const name = parsedName || "Cliente WhatsApp";
+    const address = parsedAddress || "San Jacinto, Maracay";
+    const order = parsedOrder || rawCustomerMessage.split("\n")[0] || "Empanadas Surtidas";
+
+    const totalUsdNum = parseFloat(capturedTotalUsd) || 5.0;
 
     const mapsUrl = address.includes("http")
       ? address
@@ -199,24 +261,30 @@ Pedido: 3 Empanadas de Mechada, 2 Empanadas de Queso, 2 Maltas Polar`);
 
     const newDel = pos.createDelivery({
       clientName: name,
-      clientPhone: capturedClientPhone,
+      clientPhone: capturedClientPhone.trim() || "0412-0000000",
       addressGps: address,
       mapsUrl,
       itemsText: order,
-      totalUsd: 7.50,
-      totalBs: Math.round(7.50 * rate * 100) / 100,
+      totalUsd: totalUsdNum,
+      totalBs: Math.round(totalUsdNum * rate * 100) / 100,
       paymentMethod: "Pago Móvil Banesco",
-      paymentReference: capturedPaymentRef,
+      paymentReference: capturedPaymentRef.trim() || "Confirmado",
       riderName: capturedRider,
-      notes: "Capturado automáticamente de WhatsApp",
+      notes: "Capturado de WhatsApp",
     });
 
     toast.success(`✅ Delivery #${newDel.orderNumber} creado automáticamente`, {
       description: `Listo para despachar a ${capturedRider} y enviar al grupo.`,
     });
 
-    // Despachar de una vez al grupo si lo desea
+    // Despachar al grupo de WhatsApp
     handleSendToGroup(newDel);
+
+    // Resetear formulario para el próximo pedido
+    setRawCustomerMessage("");
+    setCapturedClientPhone("");
+    setCapturedPaymentRef("");
+    setCapturedTotalUsd("5.00");
     setTab("active");
   }
 
@@ -226,7 +294,9 @@ Pedido: 3 Empanadas de Mechada, 2 Empanadas de Queso, 2 Maltas Polar`);
       return;
     }
     const totalUsd = parseFloat(form.totalUsd) || 5.0;
-    const mapsUrl = form.mapsUrl.trim() || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(form.addressGps + " Aragua Venezuela")}`;
+    const mapsUrl =
+      form.mapsUrl.trim() ||
+      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(form.addressGps + " Aragua Venezuela")}`;
 
     const newDel = pos.createDelivery({
       clientName: form.clientName.trim(),
@@ -258,6 +328,12 @@ Pedido: 3 Empanadas de Mechada, 2 Empanadas de Queso, 2 Maltas Polar`);
     });
   }
 
+  // Detección en vivo de los campos mientras se escribe o pega
+  const livePreview = useMemo(() => {
+    if (!rawCustomerMessage.trim()) return null;
+    return parseFields(rawCustomerMessage);
+  }, [rawCustomerMessage]);
+
   return (
     <div className="space-y-6">
       {/* Header & Métricas */}
@@ -279,6 +355,40 @@ Pedido: 3 Empanadas de Mechada, 2 Empanadas de Queso, 2 Maltas Polar`);
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* Botón para limpiar entregados de una sola vez */}
+          {counts.entregados > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                pos.clearDeliveredDeliveries();
+                toast.success(`🧹 Se limpiaron ${counts.entregados} deliverys entregados`);
+              }}
+              className="rounded-xl border border-border bg-card hover:bg-secondary text-foreground px-3 py-2 text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+              title="Borra de la pantalla todos los pedidos que ya fueron entregados"
+            >
+              <Trash2 className="h-3.5 w-3.5 text-emerald-500" />
+              <span>Limpiar Entregados ({counts.entregados})</span>
+            </button>
+          )}
+
+          {/* Botón para vaciar toda la lista si hay deliverys */}
+          {deliveries.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                if (window.confirm("¿Seguro que deseas eliminar todos los deliverys de la lista?")) {
+                  pos.clearAllDeliveries();
+                  toast.success("✓ Lista de deliverys vaciada por completo");
+                }
+              }}
+              className="rounded-xl border border-red-500/30 hover:bg-red-500/10 text-red-500 px-3 py-2 text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+              title="Elimina todos los pedidos de prueba o viejos de la pantalla"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Vaciar Todo</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={handleCopyCustomerTemplate}
@@ -339,25 +449,40 @@ Pedido: 3 Empanadas de Mechada, 2 Empanadas de Queso, 2 Maltas Polar`);
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1.5 border-b border-border pb-2">
-        {[
-          { id: "active", label: `Deliverys Activos (${deliveries.length})`, icon: Bike },
-          { id: "capture", label: "📱 Bot WhatsApp & Captura Rápida", icon: MessageSquare },
-          { id: "riders", label: `Motorizados & Grupos (${ridersList.length})`, icon: UserCheck },
-        ].map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id as typeof tab)}
-            className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer ${
-              tab === t.id
-                ? "bg-primary text-primary-foreground shadow-2xs"
-                : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-            }`}
-          >
-            <t.icon className="h-3.5 w-3.5" />
-            <span>{t.label}</span>
-          </button>
-        ))}
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-2">
+        <div className="flex gap-1.5">
+          {[
+            { id: "active", label: `Deliverys Activos (${deliveries.length})`, icon: Bike },
+            { id: "capture", label: "📱 Bot WhatsApp & Captura Rápida", icon: MessageSquare },
+            { id: "riders", label: `Motorizados & Grupos (${ridersList.length})`, icon: UserCheck },
+          ].map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id as typeof tab)}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer ${
+                tab === t.id
+                  ? "bg-primary text-primary-foreground shadow-2xs"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+              }`}
+            >
+              <t.icon className="h-3.5 w-3.5" />
+              <span>{t.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Checkbox para auto-eliminar al entregar */}
+        {tab === "active" && (
+          <label className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={autoDeleteDelivered}
+              onChange={(e) => setAutoDeleteDelivered(e.target.checked)}
+              className="rounded text-primary focus:ring-primary h-3.5 w-3.5"
+            />
+            <span>Auto-eliminar pedidos al marcar como Entregado</span>
+          </label>
+        )}
       </div>
 
       {/* Tab 1: Deliverys Activos */}
@@ -402,9 +527,10 @@ Pedido: 3 Empanadas de Mechada, 2 Empanadas de Queso, 2 Maltas Polar`);
           {filteredDeliveries.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border p-12 text-center space-y-2">
               <Bike className="h-10 w-10 text-muted-foreground mx-auto" />
-              <div className="font-bold text-foreground text-sm">No hay deliverys con este filtro</div>
-              <p className="text-xs text-muted-foreground">
-                Haz clic en "+ Nuevo Delivery" o usa el capturador de WhatsApp para registrar uno.
+              <div className="font-bold text-foreground text-sm">No hay deliverys pendientes o en esta lista</div>
+              <p className="text-xs text-muted-foreground max-w-md mx-auto">
+                Tu pantalla está limpia. Cuando un cliente pida por WhatsApp, copia su mensaje y pégalo en la pestaña{" "}
+                <strong>«Bot WhatsApp & Captura Rápida»</strong> o pulsa <strong>«+ Nuevo Delivery»</strong>.
               </p>
             </div>
           ) : (
@@ -424,30 +550,42 @@ Pedido: 3 Empanadas de Mechada, 2 Empanadas de Queso, 2 Maltas Polar`);
                         </div>
                         <div className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
                           <PhoneCall className="h-3 w-3" />
-                          <a
-                            href={`tel:${del.clientPhone}`}
-                            className="hover:underline font-mono"
-                          >
+                          <a href={`tel:${del.clientPhone}`} className="hover:underline font-mono">
                             {del.clientPhone}
                           </a>
                         </div>
                       </div>
 
-                      <span
-                        className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold shrink-0 ${
-                          del.status === "en_camino"
-                            ? "bg-blue-500/15 text-blue-600 dark:text-blue-400 animate-pulse"
+                      <div className="flex items-center gap-1 shrink-0">
+                        <span
+                          className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                            del.status === "en_camino"
+                              ? "bg-blue-500/15 text-blue-600 dark:text-blue-400 animate-pulse"
+                              : del.status === "entregado"
+                              ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                              : "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+                          }`}
+                        >
+                          {del.status === "en_camino"
+                            ? "🛵 En Camino"
                             : del.status === "entregado"
-                            ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-                            : "bg-amber-500/15 text-amber-600 dark:text-amber-400"
-                        }`}
-                      >
-                        {del.status === "en_camino"
-                          ? "🛵 En Camino"
-                          : del.status === "entregado"
-                          ? "✅ Entregado"
-                          : "⏳ Pendiente"}
-                      </span>
+                            ? "✅ Entregado"
+                            : "⏳ Pendiente"}
+                        </span>
+
+                        {/* Botón para eliminar individualmente cualquier delivery */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            pos.deleteDelivery(del.id);
+                            toast.success(`Delivery #${del.orderNumber} eliminado`);
+                          }}
+                          className="h-6 w-6 rounded-md hover:bg-red-500/20 text-muted-foreground hover:text-red-500 flex items-center justify-center transition cursor-pointer"
+                          title="Eliminar este delivery"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
                     </div>
 
                     {/* Dirección con enlace GPS */}
@@ -550,6 +688,21 @@ Pedido: 3 Empanadas de Mechada, 2 Empanadas de Queso, 2 Maltas Polar`);
                         <span>✅ ¡PEDIDO ENTREGADO!</span>
                       </button>
                     )}
+
+                    {del.status === "entregado" && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          pos.deleteDelivery(del.id);
+                          toast.success(`Pedido #${del.orderNumber} eliminado de la pantalla`);
+                        }}
+                        className="w-full rounded-xl border border-border bg-secondary hover:bg-red-500/10 hover:text-red-500 text-muted-foreground py-1.5 text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer"
+                        title="Quitar pedido de la pantalla"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        <span>Eliminar de la Pantalla</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -560,120 +713,169 @@ Pedido: 3 Empanadas de Mechada, 2 Empanadas de Queso, 2 Maltas Polar`);
 
       {/* Tab 2: Bot WhatsApp & Captura Rápida */}
       {tab === "capture" && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 animate-in fade-in-50">
-          {/* Panel Izquierdo: Plantilla Oficial del Cliente */}
-          <div className="lg:col-span-5 rounded-2xl border border-border bg-card p-5 space-y-4 shadow-xs">
-            <div className="flex items-center gap-2">
-              <span className="text-xl">📱</span>
-              <h3 className="font-bold text-foreground text-sm">
-                Plantilla Oficial de Solicitud de Datos
-              </h3>
-            </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Este es el mensaje predeterminado que le envía el bot o la cajera al cliente cuando escribe para pedir empanadas por delivery:
-            </p>
-
-            <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 font-mono text-xs text-foreground whitespace-pre-wrap leading-relaxed">
-              {buildCustomerDeliveryRequestTemplate(pos.companySettings.name)}
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={handleCopyCustomerTemplate}
-                className="flex-1 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 py-2.5 px-3 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
-              >
-                <Copy className="h-3.5 w-3.5" />
-                <span>Copiar Plantilla</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSendGreetingToClient(capturedClientPhone)}
-                className="rounded-xl border border-border bg-card hover:bg-secondary text-foreground py-2.5 px-3 text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer"
-              >
-                <Send className="h-3.5 w-3.5 text-primary" />
-                <span>Enviar por WhatsApp</span>
-              </button>
+        <div className="space-y-4 animate-in fade-in-50">
+          {/* Explicación de seguridad y conexión con WhatsApp */}
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 text-xs text-foreground flex items-start gap-3">
+            <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <span className="font-bold text-foreground">¿Cómo funciona la captura de WhatsApp?</span>
+              <p className="text-muted-foreground leading-relaxed">
+                Por privacidad y seguridad de WhatsApp, los navegadores web no tienen permiso para leer tus mensajes privados directamente sin tu acción.
+                El flujo más rápido para tu cajera: <strong>copia el mensaje del cliente en WhatsApp</strong> y pulsa el botón{" "}
+                <strong>«📋 Pegar desde Portapapeles»</strong>. El sistema extraerá al instante el Nombre, la Dirección con GPS y el Pedido, creando la comanda y enviándola al grupo de motorizados en un solo clic.
+              </p>
             </div>
           </div>
 
-          {/* Panel Derecho: Extractor y Despachador Automático */}
-          <div className="lg:col-span-7 rounded-2xl border border-border bg-card p-5 space-y-4 shadow-xs">
-            <div className="flex items-center justify-between">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            {/* Panel Izquierdo: Plantilla Oficial del Cliente */}
+            <div className="lg:col-span-5 rounded-2xl border border-border bg-card p-5 space-y-4 shadow-xs">
               <div className="flex items-center gap-2">
-                <span className="text-xl">⚡</span>
-                <h3 className="font-bold text-foreground text-sm">
-                  Captura Rápida de Datos del Cliente
-                </h3>
+                <span className="text-xl">📱</span>
+                <h3 className="font-bold text-foreground text-sm">Plantilla Oficial de Solicitud de Datos</h3>
               </div>
-              <span className="rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] px-2 py-0.5">
-                Extractor Automático
-              </span>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Pega aquí el mensaje que respondió el cliente por WhatsApp y el sistema creará la comanda con su enlace GPS:
-            </p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Envía este mensaje al cliente cuando escriba para pedir delivery. Cuando responda con sus datos, solo copia su respuesta:
+              </p>
 
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs font-semibold text-foreground block mb-1">
-                  Respuesta del Cliente (Pegar mensaje):
-                </label>
-                <textarea
-                  rows={4}
-                  value={rawCustomerMessage}
-                  onChange={(e) => setRawCustomerMessage(e.target.value)}
-                  className="w-full rounded-xl border border-input bg-background p-3 text-xs font-mono text-foreground outline-none focus:border-primary resize-y leading-relaxed"
-                />
+              <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 font-mono text-xs text-foreground whitespace-pre-wrap leading-relaxed select-all">
+                {buildCustomerDeliveryRequestTemplate(pos.companySettings.name)}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                <div>
-                  <label className="font-semibold text-foreground block mb-1">Teléfono Cliente:</label>
-                  <input
-                    type="text"
-                    value={capturedClientPhone}
-                    onChange={(e) => setCapturedClientPhone(e.target.value)}
-                    className={`${inputCls} font-mono`}
-                  />
-                </div>
-
-                <div>
-                  <label className="font-semibold text-foreground block mb-1">Referencia Pago:</label>
-                  <input
-                    type="text"
-                    value={capturedPaymentRef}
-                    onChange={(e) => setCapturedPaymentRef(e.target.value)}
-                    className={inputCls}
-                    placeholder="Ej: 9812 Pago Móvil"
-                  />
-                </div>
-
-                <div>
-                  <label className="font-semibold text-foreground block mb-1">Motorizado Asignado:</label>
-                  <select
-                    value={capturedRider}
-                    onChange={(e) => setCapturedRider(e.target.value)}
-                    className={inputCls}
-                  >
-                    {ridersList.map((r) => (
-                      <option key={r} value={r}>
-                        {r}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="pt-2">
+              <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
-                  onClick={handleParseCustomerMessage}
-                  className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white py-3 text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-xs active:scale-95"
+                  onClick={handleCopyCustomerTemplate}
+                  className="flex-1 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 py-2.5 px-3 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
                 >
-                  <Bike className="h-4 w-4" />
-                  <span>🚀 Crear Delivery y Despachar de Inmediato al Grupo de WhatsApp</span>
+                  <Copy className="h-3.5 w-3.5" />
+                  <span>Copiar Plantilla</span>
                 </button>
+                <button
+                  type="button"
+                  onClick={() => handleSendGreetingToClient(capturedClientPhone)}
+                  className="rounded-xl border border-border bg-card hover:bg-secondary text-foreground py-2.5 px-3 text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Send className="h-3.5 w-3.5 text-primary" />
+                  <span>Enviar por WhatsApp</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Panel Derecho: Extractor y Despachador Automático */}
+            <div className="lg:col-span-7 rounded-2xl border border-border bg-card p-5 space-y-4 shadow-xs">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">⚡</span>
+                  <h3 className="font-bold text-foreground text-sm">Captura Rápida de Datos del Cliente</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={handlePasteFromClipboard}
+                  className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 py-1.5 transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                  title="Pega automáticamente lo que copiaste en WhatsApp"
+                >
+                  <ClipboardPaste className="h-3.5 w-3.5" />
+                  <span>📋 Pegar desde Portapapeles (1 Toque)</span>
+                </button>
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                Pega aquí el mensaje que respondió el cliente en WhatsApp:
+              </p>
+
+              <div className="space-y-3">
+                <div>
+                  <textarea
+                    rows={4}
+                    value={rawCustomerMessage}
+                    onChange={(e) => setRawCustomerMessage(e.target.value)}
+                    placeholder="Pega aquí el mensaje de WhatsApp. Por ejemplo:
+Nombre: Juan Carlos
+Dirección GPS: Urb. San Jacinto, Manzana 4, Casa 12
+Pedido: 3 Empanadas de Mechada, 1 Malta Polar"
+                    className="w-full rounded-xl border border-input bg-background p-3 text-xs font-mono text-foreground outline-none focus:border-primary resize-y leading-relaxed"
+                  />
+                </div>
+
+                {/* Vista previa detectada en vivo */}
+                {livePreview && (
+                  <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-3 text-xs space-y-1 font-sans">
+                    <span className="text-[10px] font-bold text-emerald-500 uppercase flex items-center gap-1">
+                      <Sparkles className="h-3 w-3" /> Datos Detectados Automáticamente:
+                    </span>
+                    <div className="text-foreground">
+                      <strong>Cliente:</strong> {livePreview.name || "(Esperando nombre)"}
+                    </div>
+                    <div className="text-foreground">
+                      <strong>Dirección:</strong> {livePreview.address || "(Esperando dirección)"}
+                    </div>
+                    <div className="text-foreground">
+                      <strong>Pedido:</strong> {livePreview.order || "(Esperando pedido)"}
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+                  <div>
+                    <label className="font-semibold text-foreground block mb-1">Teléfono Cliente:</label>
+                    <input
+                      type="text"
+                      value={capturedClientPhone}
+                      onChange={(e) => setCapturedClientPhone(e.target.value)}
+                      placeholder="0414-1234567"
+                      className={`${inputCls} font-mono`}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-semibold text-foreground block mb-1">Monto ($ USD):</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={capturedTotalUsd}
+                      onChange={(e) => setCapturedTotalUsd(e.target.value)}
+                      className={`${inputCls} font-mono font-bold text-emerald-600 dark:text-emerald-400`}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-semibold text-foreground block mb-1">Referencia Pago:</label>
+                    <input
+                      type="text"
+                      value={capturedPaymentRef}
+                      onChange={(e) => setCapturedPaymentRef(e.target.value)}
+                      className={inputCls}
+                      placeholder="Ej: Pago Móvil 8921"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-semibold text-foreground block mb-1">Motorizado:</label>
+                    <select
+                      value={capturedRider}
+                      onChange={(e) => setCapturedRider(e.target.value)}
+                      className={inputCls}
+                    >
+                      {ridersList.map((r) => (
+                        <option key={r} value={r}>
+                          {r}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={handleParseCustomerMessage}
+                    className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white py-3 text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-xs active:scale-95"
+                  >
+                    <Bike className="h-4 w-4" />
+                    <span>🚀 Crear Delivery y Despachar al Grupo de WhatsApp</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -685,9 +887,7 @@ Pedido: 3 Empanadas de Mechada, 2 Empanadas de Queso, 2 Maltas Polar`);
         <div className="rounded-2xl border border-border bg-card p-5 max-w-2xl space-y-4 shadow-xs animate-in fade-in-50">
           <div className="flex items-center gap-2">
             <span className="text-xl">⚙️</span>
-            <h3 className="font-bold text-foreground text-sm">
-              Configuración de Canales y Repartidores
-            </h3>
+            <h3 className="font-bold text-foreground text-sm">Configuración de Canales y Repartidores</h3>
           </div>
           <p className="text-xs text-muted-foreground">
             Ajusta los números de teléfono para que los botones de WhatsApp abran directamente los chats correspondientes:
@@ -798,9 +998,7 @@ Pedido: 3 Empanadas de Mechada, 2 Empanadas de Queso, 2 Maltas Polar`);
             </div>
 
             <div>
-              <label className="font-semibold text-foreground block mb-1">
-                Dirección / Coordenadas GPS *:
-              </label>
+              <label className="font-semibold text-foreground block mb-1">Dirección / Coordenadas GPS *:</label>
               <input
                 type="text"
                 value={form.addressGps}
