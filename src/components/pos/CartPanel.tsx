@@ -43,8 +43,8 @@ export function CartPanel() {
       </div>
 
       <div className="p-2.5 bg-secondary/20 border-b border-border">
-        <div className="grid grid-cols-2 gap-1.5 p-1 rounded-xl bg-secondary">
-          {([["dine_in", "🍽️ Comer Aquí"], ["takeout", "🥡 Para Llevar"]] as const).map(([v, l]) => (
+        <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-secondary">
+          {([["dine_in", "🍽️ En Local"], ["takeout", "🛵 Delivery"], ["pickup", "🛍️ Pickup"]] as const).map(([v, l]) => (
             <button
               key={v}
               onClick={() => pos.setOrderType(v)}

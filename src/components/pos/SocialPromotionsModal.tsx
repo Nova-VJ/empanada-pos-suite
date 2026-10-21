@@ -129,6 +129,10 @@ export function SocialPromotionsModal({ onClose }: SocialPromotionsModalProps) {
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [copied, setCopied] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState<string>("");
+  const [promoMode, setPromoMode] = useState<"packs" | "custom_builder">("packs");
+  const [comboBuilderItems, setComboBuilderItems] = useState<{ id: string; name: string; priceUsd: number; qty: number }[]>([]);
+  const [selectedFoodId, setSelectedFoodId] = useState("");
+  const [selectedDrinkId, setSelectedDrinkId] = useState("");
   const [customDiscount, setCustomDiscount] = useState<number>(15);
   const [phoneForDelivery, setPhoneForDelivery] = useState<string>(pos.companySettings.phone || "0412-1234567");
   const [zoneName, setZoneName] = useState<string>(pos.companySettings.city || "San Jacinto, Maracay");
@@ -183,6 +187,69 @@ export function SocialPromotionsModal({ onClose }: SocialPromotionsModalProps) {
         "Salsa Verde aragüeña de cortesía",
       ]);
     }
+  }
+
+  function applyComboBuilder(items: { id: string; name: string; priceUsd: number; qty: number }[], discountPct: number = customDiscount) {
+    if (items.length === 0) return;
+    const totalReg = items.reduce((sum, it) => sum + it.priceUsd * it.qty, 0);
+    const discounted = Number((totalReg * (1 - discountPct / 100)).toFixed(2));
+    const summaryTitle = items.length <= 2 
+      ? `Combo ${items.map(i => `${i.qty}x ${i.name.replace(/empanada|pastelito/gi, "").trim()}`).join(" + ")}`
+      : `Super Combo Dr. Empanadas (${items.reduce((s, i) => s + i.qty, 0)} piezas)`;
+
+    const lines = items.map(it => `${it.qty}x ${it.name}`);
+    lines.push("Salsa de Ajo casera de cortesía");
+    lines.push("Salsa Verde aragüeña de cortesía");
+
+    setCustomName(summaryTitle);
+    setCustomTagline("¡Recién hechas y crujientes con bebida fría!");
+    setCustomBadge(`OFERTA -${discountPct}% 🔥`);
+    setCustomRegularPrice(totalReg.toFixed(2));
+    setCustomPromoPrice(discounted.toFixed(2));
+    setCustomItems(lines);
+  }
+
+  function handleAddBuilderItem(prodId: string) {
+    if (!prodId) return;
+    const prod = pos.products.find(p => p.id === prodId);
+    if (!prod) return;
+
+    setComboBuilderItems(prev => {
+      const existing = prev.find(i => i.id === prod.id);
+      let updated;
+      if (existing) {
+        updated = prev.map(i => i.id === prod.id ? { ...i, qty: i.qty + 1 } : i);
+      } else {
+        updated = [...prev, { id: prod.id, name: prod.name, priceUsd: prod.priceUsd, qty: 1 }];
+      }
+      applyComboBuilder(updated, customDiscount);
+      return updated;
+    });
+    toast.success(`✓ ${prod.name} agregado al combo`);
+  }
+
+  function handleUpdateBuilderQty(id: string, delta: number) {
+    setComboBuilderItems(prev => {
+      const updated = prev.map(it => {
+        if (it.id === id) {
+          const next = Math.max(1, it.qty + delta);
+          return { ...it, qty: next };
+        }
+        return it;
+      });
+      applyComboBuilder(updated, customDiscount);
+      return updated;
+    });
+  }
+
+  function handleRemoveBuilderItem(id: string) {
+    setComboBuilderItems(prev => {
+      const updated = prev.filter(it => it.id !== id);
+      if (updated.length > 0) {
+        applyComboBuilder(updated, customDiscount);
+      }
+      return updated;
+    });
   }
 
   // Adjust empanada quantity stepper
@@ -577,93 +644,278 @@ ${displayPromo.items.map((i) => `✔ ${i}`).join("\n")}
         </div>
 
         {/* Top Controls: Choose Pack or Individual Product */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-secondary/50 p-3 rounded-2xl border border-border">
-          {/* Preset packs selector */}
-          <div className="space-y-1 md:col-span-2">
-            <label className="text-[11px] font-semibold text-muted-foreground uppercase flex items-center justify-between">
-              <span>Promociones Disponibles:</span>
-              <span className="text-[10px] text-primary">{packs.length} combos listos</span>
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {packs.map((pack) => (
-                <button
-                  key={pack.id}
-                  onClick={() => handleSelectPack(pack)}
-                  className={`p-2.5 rounded-xl border text-left transition flex items-start gap-2 ${
-                    !selectedProductId && selectedPack.id === pack.id
-                      ? "border-primary bg-primary/10 shadow-xs"
-                      : "border-border bg-card hover:border-primary/40"
-                  }`}
-                >
-                  <span className="text-xl">{pack.icon}</span>
-                  <div className="min-w-0">
-                    <div className="text-xs font-bold text-foreground truncate">{pack.name}</div>
-                    <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold font-mono">
-                      ${pack.promoPriceUsd.toFixed(2)} ({pack.discountPct}% OFF)
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
+        {/* Mode Selector: Combos Listos vs Armar Combo Personalizado */}
+        <div className="flex items-center gap-2 border-b border-border pb-2">
+          <button
+            type="button"
+            onClick={() => setPromoMode("packs")}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+              promoMode === "packs"
+                ? "bg-primary text-primary-foreground shadow-2xs"
+                : "bg-secondary text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            🥟 Combos Listos ({packs.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setPromoMode("custom_builder");
+              setIsCustomizing(true);
+            }}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+              promoMode === "custom_builder"
+                ? "bg-primary text-primary-foreground shadow-2xs"
+                : "bg-secondary text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <span>🛠️ Armar Combo Personalizado (Comidas + Bebidas)</span>
+            <span className="rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-1 text-[10px]">Nuevo</span>
+          </button>
+        </div>
 
-          {/* Or choose individual product */}
-          <div className="space-y-2">
-            <label className="text-[11px] font-semibold text-muted-foreground uppercase">
-              O Promocionar Producto:
-            </label>
-            <select
-              value={selectedProductId}
-              onChange={(e) => handleSelectProduct(e.target.value)}
-              className={`${inputCls} text-xs`}
-            >
-              <option value="">-- Elige un producto del menú --</option>
-              {pos.products.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name} (${p.priceUsd.toFixed(2)})
-                </option>
-              ))}
-            </select>
-
-            {selectedProductId && (
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">Descuento:</span>
-                {[10, 15, 20, 25].map((d) => (
+        {/* Content according to Mode */}
+        {promoMode === "packs" ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-secondary/50 p-3 rounded-2xl border border-border">
+            {/* Preset packs selector */}
+            <div className="space-y-1 md:col-span-2">
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase flex items-center justify-between">
+                <span>Promociones Listas para Compartir:</span>
+                <span className="text-[10px] text-primary">{packs.length} combos listos</span>
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {packs.map((pack) => (
                   <button
-                    key={d}
-                    onClick={() => {
-                      setCustomDiscount(d);
-                      if (activeProduct) {
-                        const discounted = Number((activeProduct.priceUsd * (1 - d / 100)).toFixed(2));
-                        setCustomPromoPrice(String(discounted));
-                        setCustomBadge(`OFERTA -${d}% 🏷️`);
-                      }
-                    }}
-                    className={`rounded-lg px-2 py-0.5 text-xs font-bold transition ${
-                      customDiscount === d
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-card border border-border text-foreground hover:bg-secondary"
+                    key={pack.id}
+                    onClick={() => handleSelectPack(pack)}
+                    className={`p-2.5 rounded-xl border text-left transition flex items-start gap-2 ${
+                      !selectedProductId && selectedPack.id === pack.id
+                        ? "border-primary bg-primary/10 shadow-xs"
+                        : "border-border bg-card hover:border-primary/40"
                     }`}
                   >
-                    {d}%
+                    <span className="text-xl">{pack.icon}</span>
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold text-foreground truncate">{pack.name}</div>
+                      <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold font-mono">
+                        ${pack.promoPriceUsd.toFixed(2)} ({pack.discountPct}% OFF)
+                      </div>
+                    </div>
                   </button>
                 ))}
               </div>
-            )}
+            </div>
 
-            <div className="space-y-1 pt-1">
-              <label className="text-[10px] font-semibold text-muted-foreground">
-                WhatsApp de Pedidos en San Jacinto:
+            {/* Individual product promo */}
+            <div className="space-y-2">
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase">
+                O Promocionar 1 Producto:
               </label>
-              <input
-                value={phoneForDelivery}
-                onChange={(e) => setPhoneForDelivery(e.target.value)}
-                placeholder="0412-1234567"
-                className={`${inputCls} text-xs py-1`}
-              />
+              <select
+                value={selectedProductId}
+                onChange={(e) => handleSelectProduct(e.target.value)}
+                className={`${inputCls} text-xs`}
+              >
+                <option value="">-- Elige un producto del menú --</option>
+                {pos.products.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} (${p.priceUsd.toFixed(2)})
+                  </option>
+                ))}
+              </select>
+
+              <div className="space-y-1 pt-1">
+                <label className="text-[10px] font-semibold text-muted-foreground">
+                  WhatsApp de Pedidos en San Jacinto:
+                </label>
+                <input
+                  value={phoneForDelivery}
+                  onChange={(e) => setPhoneForDelivery(e.target.value)}
+                  placeholder="0412-1234567"
+                  className={`${inputCls} text-xs py-1`}
+                />
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          /* Custom Multi-Item Combo Builder */
+          <div className="bg-secondary/40 p-4 rounded-2xl border border-primary/20 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-bold text-foreground text-xs flex items-center gap-1.5">
+                  <span>🍽️ Constructor de Combo: Elige Comidas + Bebidas</span>
+                </h4>
+                <p className="text-[11px] text-muted-foreground">
+                  Selecciona varios productos, ajusta las cantidades y el sistema calculará el precio regular y el descuento:
+                </p>
+              </div>
+              {comboBuilderItems.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setComboBuilderItems([]);
+                    handleSelectPack(selectedPack);
+                  }}
+                  className="text-[10px] text-destructive hover:underline"
+                >
+                  Vaciar Combo
+                </button>
+              )}
+            </div>
+
+            {/* Selectors for Food and Drink side by side */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-card p-3 rounded-xl border border-border">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1">
+                  🥟 Agregar Comida (Empanadas / Pastelitos):
+                </label>
+                <div className="flex gap-1.5">
+                  <select
+                    value={selectedFoodId}
+                    onChange={(e) => setSelectedFoodId(e.target.value)}
+                    className={`${inputCls} text-xs py-1 flex-1`}
+                  >
+                    <option value="">-- Elige una comida --</option>
+                    {pos.products
+                      .filter((p) => p.category === "Empanadas" || p.category === "Pastelitos" || p.category === "Combos" || p.category === "Horneados")
+                      .map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} (${p.priceUsd.toFixed(2)})
+                        </option>
+                      ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (selectedFoodId) {
+                        handleAddBuilderItem(selectedFoodId);
+                        setSelectedFoodId("");
+                      }
+                    }}
+                    className="rounded-lg bg-primary text-primary-foreground px-2.5 py-1 text-xs font-bold hover:bg-primary/90 shrink-0 cursor-pointer"
+                  >
+                    + Agregar
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1">
+                  🥤 Agregar Bebida (Maltas / Cafés / Jugos):
+                </label>
+                <div className="flex gap-1.5">
+                  <select
+                    value={selectedDrinkId}
+                    onChange={(e) => setSelectedDrinkId(e.target.value)}
+                    className={`${inputCls} text-xs py-1 flex-1`}
+                  >
+                    <option value="">-- Elige una bebida --</option>
+                    {pos.products
+                      .filter((p) => p.category === "Bebidas" || p.category === "Cafetería")
+                      .map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} (${p.priceUsd.toFixed(2)})
+                        </option>
+                      ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (selectedDrinkId) {
+                        handleAddBuilderItem(selectedDrinkId);
+                        setSelectedDrinkId("");
+                      }
+                    }}
+                    className="rounded-lg bg-primary text-primary-foreground px-2.5 py-1 text-xs font-bold hover:bg-primary/90 shrink-0 cursor-pointer"
+                  >
+                    + Agregar
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Selected items list in the builder */}
+            {comboBuilderItems.length > 0 ? (
+              <div className="space-y-2 bg-card p-3 rounded-xl border border-border">
+                <div className="text-[10px] font-bold text-muted-foreground uppercase">
+                  Productos incluidos en este combo ({comboBuilderItems.length}):
+                </div>
+                <div className="space-y-1.5">
+                  {comboBuilderItems.map((it) => (
+                    <div key={it.id} className="flex items-center justify-between bg-secondary/50 p-2 rounded-lg text-xs">
+                      <div className="min-w-0 flex-1">
+                        <span className="font-bold text-foreground truncate">{it.name}</span>
+                        <span className="text-[10px] text-muted-foreground ml-2 font-mono">
+                          (${it.priceUsd.toFixed(2)} c/u)
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 bg-card border border-border rounded-lg p-0.5">
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateBuilderQty(it.id, -1)}
+                            className="h-5 w-5 rounded bg-secondary hover:bg-primary/20 font-bold flex items-center justify-center text-xs"
+                          >
+                            -
+                          </button>
+                          <span className="px-1.5 font-mono font-bold text-primary text-xs">{it.qty}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateBuilderQty(it.id, 1)}
+                            className="h-5 w-5 rounded bg-secondary hover:bg-primary/20 font-bold flex items-center justify-center text-xs"
+                          >
+                            +
+                          </button>
+                        </div>
+                        <span className="font-mono font-bold text-foreground text-xs w-14 text-right">
+                          ${(it.priceUsd * it.qty).toFixed(2)}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveBuilderItem(it.id)}
+                          className="h-6 w-6 rounded hover:bg-destructive/15 text-muted-foreground hover:text-destructive flex items-center justify-center transition"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Quick discount selector */}
+                <div className="flex items-center justify-between pt-2 border-t border-border flex-wrap gap-2 text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-muted-foreground">Descuento del Combo:</span>
+                    {[10, 15, 20, 25].map((d) => (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => {
+                          setCustomDiscount(d);
+                          applyComboBuilder(comboBuilderItems, d);
+                        }}
+                        className={`rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer ${
+                          customDiscount === d
+                            ? "bg-primary text-primary-foreground shadow-2xs"
+                            : "bg-secondary text-foreground hover:bg-secondary/80"
+                        }`}
+                      >
+                        {d}% OFF
+                      </button>
+                    ))}
+                  </div>
+                  <div className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                    Total Regular: ${comboBuilderItems.reduce((s, i) => s + i.priceUsd * i.qty, 0).toFixed(2)} USD
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-4 text-xs text-muted-foreground bg-card/50 rounded-xl border border-dashed border-border">
+                👆 Selecciona una empanada o pastelito arriba y una bebida para armar la promoción personalizada.
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Customization Toolbar & Item/Sauce Editor */}
         <div className="flex items-center justify-between bg-card p-2.5 rounded-xl border border-border text-xs">
@@ -746,7 +998,7 @@ ${displayPromo.items.map((i) => `✔ ${i}`).join("\n")}
               </div>
               <div className="flex flex-col justify-end">
                 <div className="text-[11px] font-mono font-bold text-primary bg-primary/10 rounded-lg p-1.5 text-center">
-                  Bs. {fmtBs(priceBs)} ({displayPromo.discountPct}% Dto.)
+                  {fmtBs(priceBs)} ({displayPromo.discountPct}% Dto.)
                 </div>
               </div>
             </div>

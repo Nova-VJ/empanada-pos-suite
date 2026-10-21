@@ -633,6 +633,10 @@ export const defaultCompanySettings: CompanySettings = {
   teamViewerId: "1 492 810 334",
   printerWidth: "80mm",
   lowStockAlertsEnabled: true,
+  deliveryGroupPhone: "https://chat.whatsapp.com/Hzy4BgdplZpl4lZ19hcx9T",
+  deliveryGroupName: "Delivery Dr Empanadas",
+  cashierPhone: "+58 414-4926284",
+  activeRiders: ["Alfonzo Bolaños", "Ezequiel Girón", "Pedro Motorizado", "Luis Express"],
   ticketConfig: {
     width: "80mm",
     density: "normal",

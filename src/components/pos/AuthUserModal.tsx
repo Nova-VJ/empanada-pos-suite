@@ -41,25 +41,7 @@ const AUTH_USER_KEY = "novasystem_active_auth_user";
 export function AuthUserModal({ onClose }: { onClose: () => void }) {
   const pos = usePos();
 
-  const [activeUser, setActiveUser] = useState<AuthUserProfile>(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem(AUTH_USER_KEY);
-      if (stored) {
-        try {
-          return JSON.parse(stored);
-        } catch {}
-      }
-    }
-    return {
-      id: "u-1",
-      name: pos.shift.cashier || "María Pérez",
-      email: "maria.perez@drempanadas.com",
-      username: "mariap",
-      role: "propietario",
-      authProvider: "local",
-      avatarInitials: "MP",
-    };
-  });
+  const activeUser = pos.activeAuthUser;
 
   const [tab, setTab] = useState<"profile" | "team" | "login" | "register">("profile");
   const [showWizard, setShowWizard] = useState(false);
@@ -100,11 +82,7 @@ export function AuthUserModal({ onClose }: { onClose: () => void }) {
   const [regRole, setRegRole] = useState<AuthUserProfile["role"]>("cajero");
 
   function saveAuthUser(user: AuthUserProfile) {
-    setActiveUser(user);
-    pos.shift.cashier = user.name;
-    if (typeof window !== "undefined") {
-      localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
-    }
+    pos.setActiveAuthUser(user);
   }
 
   function handleSaveProfile(e: React.FormEvent) {

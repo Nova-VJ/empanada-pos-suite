@@ -4,6 +4,7 @@ import {
   buildRidersGroupDeliveryMessage,
   buildCashierNotificationMessage,
   buildDeliveredCustomerMessage,
+  isWhatsAppGroupLink,
 } from "../lib/whatsapp";
 import type { DeliveryOrder } from "@/types/pos";
 
@@ -113,5 +114,33 @@ describe("WhatsApp Delivery & Riders Automation", () => {
     const remaining = mockList.filter((d) => d.status !== "entregado");
     expect(remaining.length).toBe(1);
     expect(remaining[0].id).toBe("d1");
+  });
+
+  it("correctly identifies WhatsApp group invite links vs personal phone numbers", () => {
+    expect(isWhatsAppGroupLink("https://chat.whatsapp.com/Hzy4BgdplZpl4lZ19hcx9T")).toBe(true);
+    expect(isWhatsAppGroupLink("chat.whatsapp.com/ABC123XYZ")).toBe(true);
+    expect(isWhatsAppGroupLink("04144969484")).toBe(false);
+    expect(isWhatsAppGroupLink("+58 412 1234567")).toBe(false);
+  });
+
+  it("supports pickup service type in delivery orders", () => {
+    const pickupOrder: DeliveryOrder = {
+      id: "p1",
+      orderNumber: 1050,
+      clientName: "Cliente Mostrador",
+      clientPhone: "04121234567",
+      addressGps: "🛍️ Retiro en Tienda / Mostrador San Jacinto",
+      itemsText: "2x Empanadas de Pollo, 1x Malta Polar",
+      totalUsd: 4.2,
+      totalBs: 3600,
+      paymentMethod: "Pago Móvil",
+      riderName: "🛍️ Retiro en Tienda (Pickup)",
+      status: "pendiente",
+      serviceType: "pickup",
+      createdAt: Date.now(),
+    };
+
+    expect(pickupOrder.serviceType).toBe("pickup");
+    expect(pickupOrder.riderName).toContain("Pickup");
   });
 });

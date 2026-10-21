@@ -498,12 +498,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                 title="Mi Cuenta y Perfil de Usuario"
               >
                 <span className="text-xs font-bold text-primary group-hover:scale-105 transition">
-                  {pos.shift.cashier
-                    .split(" ")
-                    .map((n) => n[0])
-                    .slice(0, 2)
-                    .join("")
-                    .toUpperCase() || "MP"}
+                  {pos.activeAuthUser?.avatarInitials ||
+                    pos.activeAuthUser?.name
+                      ?.split(" ")
+                      .map((n) => n[0])
+                      .slice(0, 2)
+                      .join("")
+                      .toUpperCase() ||
+                    "EZ"}
                 </span>
                 <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-card" />
               </button>

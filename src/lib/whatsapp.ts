@@ -30,9 +30,35 @@ export function normalizeWhatsAppPhone(phone: string): string {
 }
 
 /**
- * Abre un chat de WhatsApp con un mensaje predeterminado
+ * Detecta si el destino configurado es un enlace directo de invitación a grupo de WhatsApp
+ */
+export function isWhatsAppGroupLink(target?: string): boolean {
+  if (!target) return false;
+  const trimmed = target.trim();
+  return trimmed.includes("chat.whatsapp.com") || trimmed.startsWith("http://") || trimmed.startsWith("https://");
+}
+
+/**
+ * Abre un chat o grupo de WhatsApp con un mensaje predeterminado.
+ * Si es un enlace de grupo (https://chat.whatsapp.com/...), copia automáticamente el texto al portapapeles
+ * y abre la invitación al grupo para pegar con 1 solo toque.
  */
 export function openWhatsApp({ phone, message }: { phone?: string; message: string }) {
+  if (phone && isWhatsAppGroupLink(phone)) {
+    const groupUrl = phone.trim().startsWith("http") ? phone.trim() : `https://${phone.trim()}`;
+    if (typeof window !== "undefined") {
+      try {
+        if (navigator.clipboard && message) {
+          navigator.clipboard.writeText(message);
+        }
+      } catch (err) {
+        console.warn("Could not copy message to clipboard", err);
+      }
+      window.open(groupUrl, "_blank", "noopener,noreferrer");
+    }
+    return groupUrl;
+  }
+
   const normPhone = phone ? normalizeWhatsAppPhone(phone) : "";
   const encodedText = encodeURIComponent(message);
   const url = normPhone 

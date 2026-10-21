@@ -49,6 +49,7 @@ import type {
   ShiftAudit,
   Supplier,
   SupplierInvoice,
+  AuthUserProfile,
 } from "@/types/pos";
 
 type ModalName = null | "payment" | "ticket" | "shift" | "printer" | "bcv" | "support";
@@ -229,6 +230,8 @@ interface Ctx extends PosState {
   clearDemoOrders: () => void;
   clearAllProducts: () => void;
   resetProductionData: () => void;
+  activeAuthUser: AuthUserProfile;
+  setActiveAuthUser: (u: AuthUserProfile) => void;
   // Delivery orders & Dispatch
   deliveries: DeliveryOrder[];
   createDelivery: (d: Omit<DeliveryOrder, "id" | "orderNumber" | "createdAt" | "status">) => DeliveryOrder;
@@ -253,8 +256,43 @@ const poStatusFlow: Record<POStatus, POStatus | undefined> = {
   cancelado: undefined,
 };
 
+const defaultAuthUser: AuthUserProfile = {
+  id: "u-1",
+  name: "Ezequiel Girón",
+  email: "ezequiel@novasystem.com",
+  username: "ezequielg",
+  role: "administrador",
+  authProvider: "local",
+  avatarInitials: "EZ",
+};
+
 export function PosProvider({ children }: { children: ReactNode }) {
   const [s, setS] = useState<PosState>(initial);
+  const [activeAuthUser, setActiveAuthUserState] = useState<AuthUserProfile>(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("novasystem_active_auth_user");
+      if (stored) {
+        try {
+          return JSON.parse(stored);
+        } catch {}
+      }
+    }
+    return defaultAuthUser;
+  });
+
+  const setActiveAuthUser = useCallback((u: AuthUserProfile) => {
+    setActiveAuthUserState(u);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("novasystem_active_auth_user", JSON.stringify(u));
+    }
+    setS((prev) => ({
+      ...prev,
+      shift: {
+        ...prev.shift,
+        cashier: u.name,
+      },
+    }));
+  }, []);
   const [hydrated, setHydrated] = useState(false);
   const [modal, setModal] = useState<ModalName>(null);
   const [ticketOrderId, setTicketOrderId] = useState<number | null>(null);
@@ -670,12 +708,39 @@ export function PosProvider({ children }: { children: ReactNode }) {
         }
       }
 
+      let newDeliveries = x.deliveries;
+      if (st.orderType === "takeout" || st.orderType === "pickup") {
+        const isPickup = st.orderType === "pickup";
+        const itemsText = lines.map((l) => `${l.qty}x ${l.name}`).join(", ");
+        const primaryPayment = payments[0]?.type || "Efectivo";
+        const primaryRef = payments.find((p) => p.reference)?.reference || "";
+        const autoDelivery: DeliveryOrder = {
+          id: crypto.randomUUID(),
+          orderNumber: order.id,
+          clientName: customer?.name || (isPickup ? "Cliente Mostrador (Pickup)" : "Cliente Delivery"),
+          clientPhone: customer?.phone || "0412-",
+          addressGps: isPickup ? "🛍️ Retiro en Tienda / Mostrador San Jacinto" : "Dirección para delivery",
+          mapsUrl: undefined,
+          itemsText,
+          totalUsd: order.totalUsd,
+          totalBs: order.totalBs,
+          paymentMethod: primaryPayment,
+          paymentReference: primaryRef,
+          riderName: isPickup ? "🛍️ Retiro en Tienda (Pickup)" : (x.companySettings.activeRiders?.[0] || "Por asignar"),
+          status: "pendiente",
+          serviceType: isPickup ? "pickup" : "delivery",
+          createdAt: Date.now(),
+        };
+        newDeliveries = [autoDelivery, ...x.deliveries];
+      }
+
       return {
         ...x,
         orders: [order, ...x.orders],
         cart: [],
         discount: 0,
         nextOrder: x.nextOrder + 1,
+        deliveries: newDeliveries,
         fiscal: { ...x.fiscal, lastInvoice: inv },
         inventoryMovements: [...newMovements, ...x.inventoryMovements],
         cashMovements: [newCashMove, ...x.cashMovements],
@@ -1154,6 +1219,8 @@ export function PosProvider({ children }: { children: ReactNode }) {
           zigtfTax: 0,
         },
       })),
+    activeAuthUser,
+    setActiveAuthUser,
     clearAllProducts: () =>
 
       setS((x) => ({

@@ -34,6 +34,7 @@ export interface DeliveryOrder {
   paymentCaptureUrl?: string;
   riderName: string;
   status: "pendiente" | "en_camino" | "entregado" | "cancelado";
+  serviceType?: "delivery" | "pickup";
   createdAt: number;
   dispatchedAt?: number;
   deliveredAt?: number;
@@ -355,7 +356,17 @@ export interface PaymentSplit {
   lot?: string | undefined;
 }
 
-export type OrderType = "dine_in" | "takeout";
+export type OrderType = "dine_in" | "takeout" | "pickup";
+
+export interface AuthUserProfile {
+  id: string;
+  name: string;
+  email: string;
+  username: string;
+  role: "propietario" | "administrador" | "cajero" | "contador" | "cocinero";
+  authProvider: "google" | "local";
+  avatarInitials: string;
+}
 export type KdsStatus = "fryer" | "ready" | "dispatched";
 
 export interface OrderLine {
